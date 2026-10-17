@@ -1,0 +1,41 @@
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { authClient } from "@/lib/auth-client";
+
+type DeleteWorkspaceRoleRequest = {
+  workspaceId: string;
+  roleName: string;
+};
+type OrganizationRoleClient = {
+  deleteRole(input: {
+    organizationId: string;
+    roleName: string;
+  }): Promise<{ data: unknown; error: { message?: string } | null }>;
+};
+
+function useDeleteWorkspaceRole() {
+  const queryClient = useQueryClient();
+  const organization =
+    authClient.organization as unknown as OrganizationRoleClient;
+  return useMutation({
+    mutationFn: async ({
+      workspaceId,
+      roleName,
+    }: DeleteWorkspaceRoleRequest) => {
+      const { data, error } = await organization.deleteRole({
+        organizationId: workspaceId,
+        roleName,
+      });
+      if (error) {
+        throw new Error(error.message || "Failed to delete role");
+      }
+      return data;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["workspace-roles", variables.workspaceId],
+      });
+    },
+  });
+}
+
+export default useDeleteWorkspaceRole;

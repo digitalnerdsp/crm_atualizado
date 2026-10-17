@@ -1,0 +1,83 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1785205014533,
+      "tag": "0000_nortys_baseline",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1785210341990,
+      "tag": "0001_calendar-performance-indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785220000000,
+      "tag": "0002_user-avatar",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785230000000,
+      "tag": "0003_crm-core",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1789003439982,
+      "tag": "0004_crm-task-client-link",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1789057678397,
+      "tag": "0005_crm-client-profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789057736133,
+      "tag": "0006_crm-drop-free-text",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1789129773086,
+      "tag": "0007_crm-service-catalog",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1789151464900,
+      "tag": "0008_crm-contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792200786525,
+      "tag": "0009_finance-phase-one",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792202789776,
+      "tag": "0010_contract-billing-recurrence",
+      "breakpoints": true
+    }
+  ]
+}

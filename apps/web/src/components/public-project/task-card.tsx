@@ -1,0 +1,167 @@
+import { Calendar, CalendarClock, CalendarX } from "lucide-react";
+import { useRef } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { dueDateStatusColors, getDueDateStatus } from "@/lib/due-date-status";
+import { formatDateShort } from "@/lib/format";
+import { getInitials } from "@/lib/get-initials";
+import { getPriorityIcon } from "@/lib/priority";
+import type { ExternalLink } from "@/types/external-link";
+import type Task from "@/types/task";
+import { PublicPRBadge } from "./public-pr-badge";
+import { PublicTaskLabels } from "./public-task-labels";
+
+type PublicTaskCardProps = {
+  task: Task & {
+    labels?: Array<{ id: string; name: string; color: string }>;
+    externalLinks?: Array<ExternalLink>;
+  };
+  projectSlug: string;
+  onTaskClick: (task: Task) => void;
+};
+
+export function PublicTaskCard({
+  task,
+  projectSlug,
+  onTaskClick,
+}: PublicTaskCardProps) {
+  const labels = task.labels || [];
+  const externalLinks = task.externalLinks || [];
+  const assignees =
+    task.assignees && task.assignees.length > 0
+      ? task.assignees
+      : task.assigneeName
+        ? [
+            {
+              id: task.assigneeId ?? task.userId ?? task.id,
+              name: task.assigneeName,
+              email: "",
+              image: task.assigneeImage ?? null,
+            },
+          ]
+        : [];
+  const assigneeTitle = assignees.map((assignee) => assignee.name).join(", ");
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(
+    null,
+  );
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+      time: Date.now(),
+    };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+    const deltaTime = Date.now() - touchStartRef.current.time;
+
+    if (deltaX > 10 || deltaY > 10 || deltaTime > 300) {
+      e.preventDefault();
+      touchStartRef.current = null;
+      return;
+    }
+
+    touchStartRef.current = null;
+    onTaskClick(task);
+  };
+
+  const handleClick = (e: React.MouseEvent) => {
+    if (e.detail === 0) return;
+    onTaskClick(task);
+  };
+
+  return (
+    <button
+      type="button"
+      className="group w-full text-left p-3 bg-card border border-border rounded-lg cursor-pointer transition-[background-color,border-color,box-shadow] duration-150 ease-out hover:border-border/70 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClick={handleClick}
+      aria-label={`View details for task ${task.title}`}
+    >
+      <div className="text-[10px] font-mono text-muted-foreground mb-2">
+        {projectSlug}-{task.number}
+      </div>
+
+      {assignees.length > 0 && (
+        <div className="flex items-center gap-1.5 mb-2" title={assigneeTitle}>
+          <div className="-space-x-1 flex">
+            {assignees.slice(0, 3).map((assignee) => (
+              <Avatar
+                className="h-5 w-5 border border-background"
+                key={assignee.id}
+              >
+                <AvatarImage src={assignee.image ?? ""} alt={assignee.name} />
+                <AvatarFallback className="text-[10px] font-medium border border-border/30">
+                  {getInitials(assignee.name)}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+          </div>
+          <span className="text-[10px] text-muted-foreground font-medium truncate">
+            {assignees.length > 1
+              ? `${assignees[0]?.name} +${assignees.length - 1}`
+              : assignees[0]?.name}
+          </span>
+        </div>
+      )}
+
+      <div className="mb-3">
+        <h3
+          className="font-medium text-foreground text-sm leading-relaxed overflow-hidden break-words"
+          style={{
+            display: "-webkit-box",
+            WebkitLineClamp: 3,
+            WebkitBoxOrient: "vertical",
+            wordBreak: "break-word",
+            hyphens: "auto",
+          }}
+        >
+          {task.title}
+        </h3>
+      </div>
+
+      {labels.length > 0 && (
+        <div className="mb-3">
+          <PublicTaskLabels labels={labels} />
+        </div>
+      )}
+
+      <div className="flex items-center gap-2">
+        {task.priority && (
+          <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded border border-border bg-sidebar text-[10px] font-medium text-muted-foreground">
+            {getPriorityIcon(task.priority ?? "")}
+          </span>
+        )}
+
+        {task.dueDate && (
+          <div
+            className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded ${dueDateStatusColors[getDueDateStatus(task.dueDate)]}`}
+          >
+            {getDueDateStatus(task.dueDate) === "overdue" && (
+              <CalendarX className="w-3 h-3" />
+            )}
+            {getDueDateStatus(task.dueDate) === "due-soon" && (
+              <CalendarClock className="w-3 h-3" />
+            )}
+            {(getDueDateStatus(task.dueDate) === "far-future" ||
+              getDueDateStatus(task.dueDate) === "no-due-date") && (
+              <Calendar className="w-3 h-3" />
+            )}
+            <span>{formatDateShort(task.dueDate)}</span>
+          </div>
+        )}
+
+        {externalLinks.length > 0 && (
+          <PublicPRBadge externalLinks={externalLinks} />
+        )}
+      </div>
+    </button>
+  );
+}
