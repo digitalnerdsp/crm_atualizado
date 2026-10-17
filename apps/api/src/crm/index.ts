@@ -5,6 +5,7 @@ import contact from "./contact";
 import contract from "./contract";
 import deal from "./deal";
 import field from "./field";
+import hosting from "./hosting";
 import importRoutes from "./import";
 import pipeline from "./pipeline";
 import report from "./report";
@@ -21,6 +22,7 @@ const crm = new Hono()
   .route("/deal", deal)
   .route("/contact", contact)
   .route("/company", company)
+  .route("/hosting", hosting)
   .route("/contract", contract)
   .route("/activity", activity)
   .route("/field", field)

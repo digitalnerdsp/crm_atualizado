@@ -210,3 +210,25 @@ export const sendTestEmail = async (
 
   return { success: true };
 };
+
+/** Client hosting notices use plain text and propagate transport failures. */
+export async function sendClientNoticeEmail(
+  to: string,
+  subject: string,
+  message: string,
+  config?: SmtpEmailConfig,
+): Promise<EmailResult> {
+  if (!hasRequiredSmtpConfig(config))
+    return { success: false, reason: "SMTP_NOT_CONFIGURED" };
+  const smtpConfig = resolveSmtpConfig(config);
+  const transport = createTransporter(smtpConfig);
+  const result = await transport.sendMail({
+    from: smtpConfig.from ?? undefined,
+    to,
+    subject,
+    text: message,
+  });
+  if (!result.accepted?.length)
+    throw new Error("SMTP did not accept recipient");
+  return { success: true };
+}

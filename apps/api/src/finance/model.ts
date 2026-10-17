@@ -13,6 +13,16 @@ export type Settlement = {
   reverseReason: string | null;
 };
 export type Entry = {
+  resultClass?:
+    | "unclassified"
+    | "direct"
+    | "operating"
+    | "tax"
+    | "financial"
+    | "commission";
+  commissionRateBps?: number;
+  commissionBasis?: "received" | "billed";
+  commissionRuleId?: string | null;
   contractId?: string | null;
   contractLineKey?: string | null;
   billingRevisionId?: string | null;

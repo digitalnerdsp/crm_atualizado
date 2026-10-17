@@ -23,9 +23,11 @@ import {
 export function CreateCompanyModal({
   workspaceId,
   onClose,
+  onCreated,
 }: {
   workspaceId: string;
   onClose: () => void;
+  onCreated?: (companyId: string) => void;
 }) {
   const { t } = useTranslation();
   const { mutateAsync, isPending } = useCreateCompany();
@@ -68,6 +70,7 @@ export function CreateCompanyModal({
         toast.success(t("crm:company.created"));
       }
       onClose();
+      onCreated?.(created.id);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t("crm:company.createError"),

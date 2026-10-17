@@ -15,6 +15,7 @@ import {
   status,
   today,
 } from "../model";
+import { commissionSnapshot } from "../performance/snapshot";
 import type { EntryInput, SettleInput } from "../validation";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -363,9 +364,15 @@ export async function createEntries(
       )
     )
       bad("Cronograma excede o limite de datas.");
+    const capturedRows = [];
+    for (const row of rows)
+      capturedRows.push({
+        ...row,
+        ...(await commissionSnapshot(tx, workspaceId, row)),
+      });
     const result = await tx
       .insert(schema.financeEntryTable)
-      .values(rows)
+      .values(capturedRows)
       .returning();
     await audit(
       tx,
@@ -391,6 +398,45 @@ export async function updateEntry(
 ) {
   return db.transaction(async (tx) => {
     const before = await entryForUpdate(tx, workspaceId, id);
+    const [payout] = await tx
+      .select()
+      .from(schema.financeCommissionPayoutTable)
+      .where(eq(schema.financeCommissionPayoutTable.payableEntryId, id));
+    if (payout)
+      conflict(
+        "Comissão gerada: cancele o título e gere novamente pela apuração para ajustar o valor.",
+      );
+    const [allocated] = await tx
+      .select({ id: schema.financeCommissionPayoutTable.id })
+      .from(schema.financeCommissionPayoutTable)
+      .innerJoin(
+        schema.financeEntryTable,
+        eq(
+          schema.financeEntryTable.id,
+          schema.financeCommissionPayoutTable.payableEntryId,
+        ),
+      )
+      .where(
+        and(
+          eq(schema.financeCommissionPayoutTable.sourceEntryId, id),
+          sql`${schema.financeEntryTable.cancelledAt} is null`,
+        ),
+      )
+      .limit(1);
+    if (allocated)
+      conflict(
+        "Cobrança com comissão emitida. Confira e cancele os títulos de comissão antes de editar a origem.",
+      );
+    if (
+      before.commissionRuleId &&
+      (before.serviceId !== input.serviceId ||
+        before.sellerId !== input.sellerId ||
+        before.direction !== input.direction ||
+        before.kind !== input.kind)
+    )
+      conflict(
+        "Cobrança com regra de comissão registrada: preserve serviço, vendedor, tipo e natureza; cancele e recrie se necessário.",
+      );
     if (before.contractId)
       conflict(
         "Cobrança gerenciada pelo contrato. Altere o contrato para ajustar os ciclos futuros.",

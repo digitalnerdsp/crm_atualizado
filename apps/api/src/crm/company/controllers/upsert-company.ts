@@ -10,6 +10,7 @@ import {
   crmCompanyTable,
   crmContactTable,
   crmContractTable,
+  crmHostingNoticeTable,
   crmSegmentTable,
   crmSourceTable,
 } from "../../../database/schema";
@@ -470,6 +471,21 @@ export async function deleteCompany({
     });
   }
 
+  const [notice] = await db
+    .select({ id: crmHostingNoticeTable.id })
+    .from(crmHostingNoticeTable)
+    .where(
+      and(
+        eq(crmHostingNoticeTable.companyId, companyId),
+        eq(crmHostingNoticeTable.workspaceId, workspaceId),
+      ),
+    )
+    .limit(1);
+  if (notice)
+    throw new HTTPException(409, {
+      message:
+        "Esta empresa possui histórico de avisos. Arquive-a para preservar os registros.",
+    });
   const [deleted] = await db
     .delete(crmCompanyTable)
     .where(

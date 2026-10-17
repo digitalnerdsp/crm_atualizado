@@ -5,6 +5,7 @@ import { markCompanyActive } from "../../crm/shared/company-lifecycle";
 import { sumMonthlyEquivalents } from "../../crm/shared/contract-value";
 import db, { schema } from "../../database";
 import { addMonths, isCivilDate, today } from "../model";
+import { commissionSnapshot } from "../performance/snapshot";
 import { day, effectiveDay, planCycles, snapshotItems } from "./schedule";
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Contract = typeof schema.crmContractTable.$inferSelect;
@@ -202,10 +203,27 @@ export async function reconcile(
       entry.sellerId !== cycle.revision.sellerId ||
       entry.categoryId !== config.categoryId;
     if (!differs && !entry.cancelledAt) continue;
-    if ((await amountsPaid(tx, entry.id)) > 0) {
+    const [commissionPayout] = await tx
+      .select({ id: schema.financeCommissionPayoutTable.id })
+      .from(schema.financeCommissionPayoutTable)
+      .innerJoin(
+        schema.financeEntryTable,
+        eq(
+          schema.financeEntryTable.id,
+          schema.financeCommissionPayoutTable.payableEntryId,
+        ),
+      )
+      .where(
+        and(
+          eq(schema.financeCommissionPayoutTable.sourceEntryId, entry.id),
+          sql`${schema.financeEntryTable.cancelledAt} is null`,
+        ),
+      )
+      .limit(1);
+    if ((await amountsPaid(tx, entry.id)) > 0 || commissionPayout) {
       if (differs)
         warnings.push(
-          `Cobrança de ${entry.cycleStart} já possui baixa e foi preservada.`,
+          `Cobrança de ${entry.cycleStart} já possui baixa ou comissão emitida e foi preservada.`,
         );
       continue;
     }
@@ -252,6 +270,13 @@ export async function reconcile(
     const [entry] = await tx
       .insert(schema.financeEntryTable)
       .values({
+        ...(await commissionSnapshot(tx, c.workspaceId, {
+          serviceId: cycle.item.serviceId,
+          sellerId: cycle.revision.sellerId,
+          direction: "receivable",
+          kind: "operating",
+          competenceDate: cycle.start,
+        })),
         workspaceId: c.workspaceId,
         description: `Contrato #${c.number} · ${cycle.item.name} · ${cycle.start}`,
         direction: "receivable",

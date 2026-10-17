@@ -6,8 +6,10 @@ import { requireWorkspacePermission } from "../utils/require-workspace-permissio
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import * as ctl from "./controllers/finance";
 import { excel, pdf } from "./export";
-import { dashboard } from "./model";
+import { dashboard, remaining, status } from "./model";
+import performance from "./performance";
 import recurrence from "./recurrence";
+import taxes from "./taxes";
 import {
   categorySchema,
   createEntrySchema,
@@ -40,6 +42,8 @@ const finance = new Hono<{
     requireWorkspacePermission({ finance: ["read"] }),
   )
   .route("/:workspaceId/recurrence", recurrence)
+  .route("/:workspaceId/performance", performance)
+  .route("/:workspaceId/taxes", taxes)
   .get(
     "/:workspaceId/metadata",
     doc("financeMetadata", "Cadastros financeiros do workspace"),
@@ -151,6 +155,23 @@ const finance = new Hono<{
           c.req.valid("json"),
         ),
       ),
+  )
+  .get(
+    "/:workspaceId/entries/:id",
+    doc("financeGetEntry", "Consultar título financeiro vinculado"),
+    validator("param", params),
+    async (c) => {
+      const entry = (await ctl.loadEntries(c.get("workspaceId"))).find(
+        (e) => e.id === c.req.valid("param").id,
+      );
+      if (!entry)
+        throw new HTTPException(404, { message: "Lançamento não encontrado." });
+      return c.json({
+        ...entry,
+        reportBalanceCents: remaining(entry),
+        reportStatus: status(entry),
+      });
+    },
   )
   .patch(
     "/:workspaceId/entries/:id",

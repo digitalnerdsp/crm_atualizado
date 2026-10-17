@@ -1,5 +1,6 @@
 export {
   type SmtpEmailConfig,
+  sendClientNoticeEmail,
   sendMagicLinkEmail,
   sendNotificationEmail,
   sendOtpEmail,

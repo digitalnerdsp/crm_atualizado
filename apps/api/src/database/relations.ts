@@ -10,6 +10,7 @@ import {
   columnTable,
   commentTable,
   crmActivityTable,
+  crmCompanyServiceFlagTable,
   crmCompanyTable,
   crmContactTable,
   crmContractEventTable,
@@ -21,6 +22,9 @@ import {
   crmEntityTagTable,
   crmFieldDefinitionTable,
   crmFieldValueTable,
+  crmHostingNoticeTable,
+  crmHostingRevisionTable,
+  crmHostingTable,
   crmLostReasonTable,
   crmPipelineTable,
   crmSegmentTable,
@@ -32,9 +36,15 @@ import {
   crmTagTable,
   externalLinkTable,
   financeCategoryTable,
+  financeCommissionPayoutTable,
+  financeCommissionRuleTable,
   financeEntryTable,
   financePartyTable,
+  financeResultSettingsTable,
   financeSettlementTable,
+  financeTaxProfileRevisionTable,
+  financeTaxProfileTable,
+  financeTaxSimulationTable,
   globalRoleTable,
   integrationTable,
   invitationTable,
@@ -1017,6 +1027,16 @@ export const financeEntryRelations = relations(
       references: [crmServiceTable.id],
     }),
     settlements: many(financeSettlementTable),
+    commissionRule: one(financeCommissionRuleTable, {
+      fields: [financeEntryTable.commissionRuleId],
+      references: [financeCommissionRuleTable.id],
+    }),
+    commissionPayouts: many(financeCommissionPayoutTable, {
+      relationName: "commissionSource",
+    }),
+    commissionPayment: many(financeCommissionPayoutTable, {
+      relationName: "commissionPayable",
+    }),
   }),
 );
 export const financeSettlementRelations = relations(
@@ -1025,6 +1045,138 @@ export const financeSettlementRelations = relations(
     entry: one(financeEntryTable, {
       fields: [financeSettlementTable.entryId],
       references: [financeEntryTable.id],
+    }),
+  }),
+);
+
+export const financeCommissionRuleRelations = relations(
+  financeCommissionRuleTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [financeCommissionRuleTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    service: one(crmServiceTable, {
+      fields: [financeCommissionRuleTable.serviceId],
+      references: [crmServiceTable.id],
+    }),
+    actor: one(userTable, {
+      fields: [financeCommissionRuleTable.actorUserId],
+      references: [userTable.id],
+    }),
+    entries: many(financeEntryTable),
+  }),
+);
+export const financeCommissionPayoutRelations = relations(
+  financeCommissionPayoutTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [financeCommissionPayoutTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    source: one(financeEntryTable, {
+      relationName: "commissionSource",
+      fields: [financeCommissionPayoutTable.sourceEntryId],
+      references: [financeEntryTable.id],
+    }),
+    payable: one(financeEntryTable, {
+      relationName: "commissionPayable",
+      fields: [financeCommissionPayoutTable.payableEntryId],
+      references: [financeEntryTable.id],
+    }),
+  }),
+);
+export const financeResultSettingsRelations = relations(
+  financeResultSettingsTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [financeResultSettingsTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+  }),
+);
+
+export const financeTaxProfileRelations = relations(
+  financeTaxProfileTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [financeTaxProfileTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    revisions: many(financeTaxProfileRevisionTable),
+    simulations: many(financeTaxSimulationTable),
+  }),
+);
+export const financeTaxProfileRevisionRelations = relations(
+  financeTaxProfileRevisionTable,
+  ({ one, many }) => ({
+    profile: one(financeTaxProfileTable, {
+      fields: [financeTaxProfileRevisionTable.profileId],
+      references: [financeTaxProfileTable.id],
+    }),
+    simulations: many(financeTaxSimulationTable),
+  }),
+);
+export const financeTaxSimulationRelations = relations(
+  financeTaxSimulationTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [financeTaxSimulationTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    profile: one(financeTaxProfileTable, {
+      fields: [financeTaxSimulationTable.profileId],
+      references: [financeTaxProfileTable.id],
+    }),
+    revision: one(financeTaxProfileRevisionTable, {
+      fields: [financeTaxSimulationTable.revisionId],
+      references: [financeTaxProfileRevisionTable.id],
+    }),
+  }),
+);
+
+export const crmHostingRelations = relations(crmHostingTable, ({ one }) => ({
+  company: one(crmCompanyTable, {
+    fields: [crmHostingTable.companyId],
+    references: [crmCompanyTable.id],
+  }),
+  contact: one(crmContactTable, {
+    fields: [crmHostingTable.contactId],
+    references: [crmContactTable.id],
+  }),
+}));
+export const crmHostingRevisionRelations = relations(
+  crmHostingRevisionTable,
+  ({ one }) => ({
+    company: one(crmCompanyTable, {
+      fields: [crmHostingRevisionTable.companyId],
+      references: [crmCompanyTable.id],
+    }),
+  }),
+);
+export const crmHostingNoticeRelations = relations(
+  crmHostingNoticeTable,
+  ({ one }) => ({
+    company: one(crmCompanyTable, {
+      fields: [crmHostingNoticeTable.companyId],
+      references: [crmCompanyTable.id],
+    }),
+    workspace: one(workspaceTable, {
+      fields: [crmHostingNoticeTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+  }),
+);
+export const crmCompanyServiceFlagRelations = relations(
+  crmCompanyServiceFlagTable,
+  ({ one }) => ({
+    company: one(crmCompanyTable, {
+      fields: [crmCompanyServiceFlagTable.companyId],
+      references: [crmCompanyTable.id],
+    }),
+    service: one(crmServiceTable, {
+      fields: [crmCompanyServiceFlagTable.serviceId],
+      references: [crmServiceTable.id],
     }),
   }),
 );

@@ -42,30 +42,39 @@ export function NavCommercial() {
     isCheckingPermissions,
   } = useWorkspacePermission();
 
-  if (!workspace || isCheckingPermissions || !canViewCrm()) return null;
+  if (
+    !workspace ||
+    isCheckingPermissions ||
+    (!canViewCrm() && !canViewCompanies())
+  )
+    return null;
 
   const base = `/dashboard/workspace/${workspace.id}/crm`;
   const path = window.location.pathname;
 
   const items = [
-    {
-      title: t("crm:nav.pipeline"),
-      url: base,
-      isActive: path === base || path === `${base}/`,
-      icon: Handshake,
-    },
-    {
-      title: t("crm:nav.deals"),
-      url: `${base}/deals`,
-      isActive: path.startsWith(`${base}/deals`),
-      icon: TrendingUp,
-    },
-    {
-      title: t("crm:nav.contracts"),
-      url: `${base}/contracts`,
-      isActive: path.startsWith(`${base}/contracts`),
-      icon: FileSignature,
-    },
+    ...(canViewCrm()
+      ? [
+          {
+            title: t("crm:nav.pipeline"),
+            url: base,
+            isActive: path === base || path === `${base}/`,
+            icon: Handshake,
+          },
+          {
+            title: t("crm:nav.deals"),
+            url: `${base}/deals`,
+            isActive: path.startsWith(`${base}/deals`),
+            icon: TrendingUp,
+          },
+          {
+            title: t("crm:nav.contracts"),
+            url: `${base}/contracts`,
+            isActive: path.startsWith(`${base}/contracts`),
+            icon: FileSignature,
+          },
+        ]
+      : []),
     ...(canViewContacts()
       ? [
           {
@@ -84,14 +93,24 @@ export function NavCommercial() {
             isActive: path.startsWith(`${base}/companies`),
             icon: Building2,
           },
+          {
+            title: "Carteira e hospedagem",
+            url: `${base}/hosting`,
+            isActive: path.startsWith(`${base}/hosting`),
+            icon: Building2,
+          },
         ]
       : []),
-    {
-      title: t("crm:nav.activities"),
-      url: `${base}/activities`,
-      isActive: path.startsWith(`${base}/activities`),
-      icon: PhoneCall,
-    },
+    ...(canViewCrm()
+      ? [
+          {
+            title: t("crm:nav.activities"),
+            url: `${base}/activities`,
+            isActive: path.startsWith(`${base}/activities`),
+            icon: PhoneCall,
+          },
+        ]
+      : []),
     ...(canViewCrmReports()
       ? [
           {

@@ -181,7 +181,13 @@ const company = new Hono<{
       return c.json(
         await createCompany({
           workspaceId: c.get("workspaceId"),
-          input: toCompanyInput(input),
+          input: toCompanyInput({
+            ...input,
+            ownerUserId:
+              input.ownerUserId === undefined
+                ? c.get("userId")
+                : input.ownerUserId,
+          }),
           primaryContact,
         }),
       );

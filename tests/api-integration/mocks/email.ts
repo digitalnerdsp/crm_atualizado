@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import type { EmailResult } from "../../../packages/email/src/send-email";
 
 export async function sendMagicLinkEmail(
@@ -23,3 +24,7 @@ export async function sendWorkspaceInvitationEmail(
 ): Promise<EmailResult> {
   return { success: true };
 }
+
+export const sendClientNoticeEmail = vi.fn(
+  async (..._args: unknown[]): Promise<EmailResult> => ({ success: true }),
+);

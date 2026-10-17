@@ -62,14 +62,17 @@ import { Route as LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRouteImp
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/search'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes'
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdGeneralRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/general'
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/integrations'
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility'
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -386,6 +389,15 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute =
     path: '/members',
     getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
   } as any)
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRouteImport.update(
+    {
+      id: '/performance',
+      path: '/performance',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRouteImport.update({
     id: '/recurrence',
@@ -396,6 +408,12 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRouteImport.update({
     id: '/search',
     path: '/search',
+    getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+  } as any)
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRouteImport.update({
+    id: '/taxes',
+    path: '/taxes',
     getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
   } as any)
 const LayoutAuthenticatedDashboardSettingsProjectsProjectIdGeneralRoute =
@@ -445,6 +463,12 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute =
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport.update({
+    id: '/crm/hosting',
+    path: '/crm/hosting',
+    getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+  } as any)
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRouteImport.update({
     id: '/crm/reports',
@@ -620,14 +644,17 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/workspace/templates': typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
+  '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   '/dashboard/workspace/$workspaceId/recurrence': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   '/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  '/dashboard/workspace/$workspaceId/taxes': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
   '/dashboard/workspace/$workspaceId/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
   '/dashboard/settings/projects/$projectId/general': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdGeneralRoute
   '/dashboard/settings/projects/$projectId/integrations': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRoute
   '/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  '/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/dashboard/workspace/$workspaceId/crm/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   '/dashboard/workspace/$workspaceId/crm/companies/$companyId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -691,14 +718,17 @@ export interface FileRoutesByTo {
   '/dashboard/settings/workspace/templates': typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
+  '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   '/dashboard/workspace/$workspaceId/recurrence': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   '/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  '/dashboard/workspace/$workspaceId/taxes': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
   '/dashboard/workspace/$workspaceId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
   '/dashboard/settings/projects/$projectId/general': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdGeneralRoute
   '/dashboard/settings/projects/$projectId/integrations': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRoute
   '/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  '/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/dashboard/workspace/$workspaceId/crm': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   '/dashboard/workspace/$workspaceId/crm/companies/$companyId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -769,14 +799,17 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/settings/workspace/templates': typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/general': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdGeneralRoute
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/integrations': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdIntegrationsRoute
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/$companyId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -846,14 +879,17 @@ export interface FileRouteTypes {
     | '/dashboard/settings/workspace/templates'
     | '/dashboard/workspace/$workspaceId/finance'
     | '/dashboard/workspace/$workspaceId/members'
+    | '/dashboard/workspace/$workspaceId/performance'
     | '/dashboard/workspace/$workspaceId/recurrence'
     | '/dashboard/workspace/$workspaceId/search'
+    | '/dashboard/workspace/$workspaceId/taxes'
     | '/dashboard/workspace/$workspaceId/'
     | '/dashboard/settings/projects/$projectId/general'
     | '/dashboard/settings/projects/$projectId/integrations'
     | '/dashboard/settings/projects/$projectId/visibility'
     | '/dashboard/settings/projects/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/crm/activities'
+    | '/dashboard/workspace/$workspaceId/crm/hosting'
     | '/dashboard/workspace/$workspaceId/crm/reports'
     | '/dashboard/workspace/$workspaceId/crm/'
     | '/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -917,14 +953,17 @@ export interface FileRouteTypes {
     | '/dashboard/settings/workspace/templates'
     | '/dashboard/workspace/$workspaceId/finance'
     | '/dashboard/workspace/$workspaceId/members'
+    | '/dashboard/workspace/$workspaceId/performance'
     | '/dashboard/workspace/$workspaceId/recurrence'
     | '/dashboard/workspace/$workspaceId/search'
+    | '/dashboard/workspace/$workspaceId/taxes'
     | '/dashboard/workspace/$workspaceId'
     | '/dashboard/settings/projects/$projectId/general'
     | '/dashboard/settings/projects/$projectId/integrations'
     | '/dashboard/settings/projects/$projectId/visibility'
     | '/dashboard/settings/projects/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/crm/activities'
+    | '/dashboard/workspace/$workspaceId/crm/hosting'
     | '/dashboard/workspace/$workspaceId/crm/reports'
     | '/dashboard/workspace/$workspaceId/crm'
     | '/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -994,14 +1033,17 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/settings/workspace/templates'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/search'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/'
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/general'
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/integrations'
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility'
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -1404,6 +1446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
+      path: '/performance'
+      fullPath: '/dashboard/workspace/$workspaceId/performance'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence'
       path: '/recurrence'
@@ -1416,6 +1465,13 @@ declare module '@tanstack/react-router' {
       path: '/search'
       fullPath: '/dashboard/workspace/$workspaceId/search'
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes'
+      path: '/taxes'
+      fullPath: '/dashboard/workspace/$workspaceId/taxes'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
     '/_layout/_authenticated/dashboard/settings/projects/$projectId/general': {
@@ -1458,6 +1514,13 @@ declare module '@tanstack/react-router' {
       path: '/crm/activities'
       fullPath: '/dashboard/workspace/$workspaceId/crm/activities'
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
+      path: '/crm/hosting'
+      fullPath: '/dashboard/workspace/$workspaceId/crm/hosting'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports': {
@@ -1697,10 +1760,13 @@ const LayoutAuthenticatedDashboardSettingsRouteWithChildren =
 interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -1724,14 +1790,20 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute:

@@ -2,6 +2,7 @@ import { asc, count, desc, eq, isNull } from "drizzle-orm";
 import db from "../../../database";
 import {
   crmCompanyTable,
+  crmHostingTable,
   crmSegmentTable,
   crmSourceTable,
   userTable,
@@ -60,6 +61,7 @@ async function getCompanies({
   const rows = await db
     .select({
       company: crmCompanyTable,
+      hostingMode: crmHostingTable.mode,
       owner: {
         id: userTable.id,
         name: userTable.name,
@@ -70,6 +72,10 @@ async function getCompanies({
       source: { id: crmSourceTable.id, name: crmSourceTable.name },
     })
     .from(crmCompanyTable)
+    .leftJoin(
+      crmHostingTable,
+      eq(crmHostingTable.companyId, crmCompanyTable.id),
+    )
     .leftJoin(userTable, eq(crmCompanyTable.ownerUserId, userTable.id))
     .leftJoin(
       crmSegmentTable,
@@ -87,6 +93,7 @@ async function getCompanies({
     offset: offset ?? 0,
     items: rows.map((row) => ({
       ...row.company,
+      hostingMode: row.hostingMode ?? "unknown",
       owner: row.owner,
       segment: row.segment,
       source: row.source,

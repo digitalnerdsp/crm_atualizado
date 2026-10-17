@@ -2605,6 +2605,80 @@ export const financePartyTable = pgTable(
   ],
 );
 
+export const financeCommissionRuleTable = pgTable(
+  "finance_commission_rule",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    serviceId: text("service_id")
+      .notNull()
+      .references(() => crmServiceTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    effectiveDate: date("effective_date").notNull(),
+    rateBps: integer("rate_bps").notNull(),
+    basis: text("basis").$type<"billed" | "received">().notNull(),
+    sequence: integer("sequence").notNull(),
+    actorUserId: text("actor_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("finance_commission_rule_version_unique").on(
+      t.serviceId,
+      t.sequence,
+    ),
+    index("finance_commission_rule_workspace_idx").on(t.workspaceId),
+    check(
+      "finance_commission_rate_check",
+      sql`${t.rateBps} between 0 and 10000`,
+    ),
+    check(
+      "finance_commission_basis_check",
+      sql`${t.basis} in ('billed','received')`,
+    ),
+  ],
+);
+
+export const financeResultSettingsTable = pgTable(
+  "finance_result_settings",
+  {
+    workspaceId: text("workspace_id")
+      .primaryKey()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    presumptionBps: integer("presumption_bps"),
+    version: integer("version").default(1).notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    check(
+      "finance_presumption_rate_check",
+      sql`${t.presumptionBps} is null or ${t.presumptionBps} between 0 and 10000`,
+    ),
+  ],
+);
+
 export const financeEntryTable = pgTable(
   "finance_entry",
   {
@@ -2623,6 +2697,26 @@ export const financeEntryTable = pgTable(
       .$type<"operating" | "opening" | "transfer">()
       .default("operating")
       .notNull(),
+    resultClass: text("result_class")
+      .$type<
+        | "unclassified"
+        | "direct"
+        | "operating"
+        | "tax"
+        | "financial"
+        | "commission"
+      >()
+      .default("unclassified")
+      .notNull(),
+    commissionRateBps: integer("commission_rate_bps").default(0).notNull(),
+    commissionBasis: text("commission_basis")
+      .$type<"billed" | "received">()
+      .default("received")
+      .notNull(),
+    commissionRuleId: text("commission_rule_id").references(
+      () => financeCommissionRuleTable.id,
+      { onDelete: "restrict", onUpdate: "cascade" },
+    ),
     amountCents: bigint("amount_cents", { mode: "number" }).notNull(),
     competenceDate: date("competence_date").notNull(),
     dueDate: date("due_date").notNull(),
@@ -2697,6 +2791,18 @@ export const financeEntryTable = pgTable(
       t.workspaceId,
       t.seriesId,
       t.installment,
+    ),
+    check(
+      "finance_entry_result_class_check",
+      sql`${t.resultClass} in ('unclassified','direct','operating','tax','financial','commission')`,
+    ),
+    check(
+      "finance_entry_commission_rate_check",
+      sql`${t.commissionRateBps} between 0 and 10000`,
+    ),
+    check(
+      "finance_entry_commission_basis_check",
+      sql`${t.commissionBasis} in ('billed','received')`,
     ),
     check(
       "finance_entry_amount_check",
@@ -2854,6 +2960,354 @@ export const financeContractRevisionTable = pgTable(
     index("finance_contract_revision_date_idx").on(
       t.contractId,
       t.effectiveDate,
+    ),
+  ],
+);
+
+export const financeCommissionPayoutTable = pgTable(
+  "finance_commission_payout",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    sourceEntryId: text("source_entry_id")
+      .notNull()
+      .references(() => financeEntryTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    payableEntryId: text("payable_entry_id")
+      .notNull()
+      .references(() => financeEntryTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    requestId: text("request_id").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("finance_commission_payout_entry_unique").on(t.payableEntryId),
+    uniqueIndex("finance_commission_payout_request_unique").on(
+      t.workspaceId,
+      t.requestId,
+    ),
+    index("finance_commission_payout_source_idx").on(t.sourceEntryId),
+  ],
+);
+
+export const financeTaxProfileTable = pgTable(
+  "finance_tax_profile",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [index("finance_tax_profile_workspace_idx").on(t.workspaceId)],
+);
+
+export const financeTaxProfileRevisionTable = pgTable(
+  "finance_tax_profile_revision",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => financeTaxProfileTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    sequence: integer("sequence").notNull(),
+    name: text("name").notNull(),
+    notes: text("notes").default("").notNull(),
+    items: jsonb("items")
+      .$type<import("../finance/taxes/model").TaxItem[]>()
+      .notNull(),
+    actorUserId: text("actor_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("finance_tax_profile_revision_unique").on(
+      t.profileId,
+      t.sequence,
+    ),
+  ],
+);
+
+export const financeTaxSimulationTable = pgTable(
+  "finance_tax_simulation",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    profileId: text("profile_id")
+      .notNull()
+      .references(() => financeTaxProfileTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    revisionId: text("revision_id")
+      .notNull()
+      .references(() => financeTaxProfileRevisionTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    requestId: text("request_id").notNull(),
+    requestSignature: text("request_signature").notNull(),
+    title: text("title").notNull(),
+    date: date("date").notNull(),
+    serviceId: text("service_id").references(() => crmServiceTable.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+    sellerId: text("seller_id").references(() => userTable.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+    actorUserId: text("actor_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    snapshot: jsonb("snapshot")
+      .$type<{
+        profileName: string;
+        profileVersion: number;
+        notes: string;
+        serviceName: string | null;
+        sellerName: string | null;
+        input: import("../finance/taxes/model").SaleInput;
+        result: import("../finance/taxes/model").SaleResult;
+        commissionSource: string;
+      }>()
+      .notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("finance_tax_simulation_request_unique").on(
+      t.workspaceId,
+      t.requestId,
+    ),
+    index("finance_tax_simulation_date_idx").on(t.workspaceId, t.date),
+    index("finance_tax_simulation_profile_idx").on(t.profileId),
+    index("finance_tax_simulation_revision_idx").on(t.revisionId),
+    index("finance_tax_simulation_service_idx").on(t.serviceId),
+    index("finance_tax_simulation_seller_idx").on(t.sellerId),
+  ],
+);
+
+export type HostingMode = "unknown" | "own" | "third_party" | "none";
+export type HostingSnapshot = {
+  mode: HostingMode;
+  provider: string;
+  domain: string;
+  renewsOn: string | null;
+  leadDays: number;
+  contactId: string | null;
+  emailAllowed: boolean;
+  whatsappAllowed: boolean;
+  notes: string;
+  services: { id: string; name: string }[];
+};
+export const crmHostingTable = pgTable(
+  "crm_hosting",
+  {
+    companyId: text("company_id")
+      .primaryKey()
+      .references(() => crmCompanyTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    mode: text("mode").$type<HostingMode>().default("unknown").notNull(),
+    provider: text("provider").default("").notNull(),
+    domain: text("domain").default("").notNull(),
+    renewsOn: date("renews_on"),
+    leadDays: integer("lead_days").default(30).notNull(),
+    contactId: text("contact_id").references(() => crmContactTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    emailAllowed: boolean("email_allowed").default(false).notNull(),
+    whatsappAllowed: boolean("whatsapp_allowed").default(false).notNull(),
+    notes: text("notes").default("").notNull(),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("crm_hosting_mode_idx").on(t.mode),
+    check(
+      "crm_hosting_mode_check",
+      sql`${t.mode} in ('unknown','own','third_party','none')`,
+    ),
+    check("crm_hosting_lead_days_check", sql`${t.leadDays} between 0 and 365`),
+  ],
+);
+export const crmCompanyServiceFlagTable = pgTable(
+  "crm_company_service_flag",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => crmCompanyTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    serviceId: text("service_id")
+      .notNull()
+      .references(() => crmServiceTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("crm_company_service_flag_unique").on(t.companyId, t.serviceId),
+    index("crm_company_service_flag_service_idx").on(t.serviceId),
+  ],
+);
+export const crmHostingRevisionTable = pgTable(
+  "crm_hosting_revision",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => crmCompanyTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    sequence: integer("sequence").notNull(),
+    snapshot: jsonb("snapshot").$type<HostingSnapshot>().notNull(),
+    actorUserId: text("actor_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("crm_hosting_revision_unique").on(t.companyId, t.sequence),
+    index("crm_hosting_revision_date_idx").on(t.createdAt),
+  ],
+);
+export const crmHostingNoticeTable = pgTable(
+  "crm_hosting_notice",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => crmCompanyTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    requestId: text("request_id").notNull(),
+    signature: text("signature").notNull(),
+    channel: text("channel").$type<"email" | "whatsapp">().notNull(),
+    status: text("status")
+      .$type<
+        | "sending"
+        | "accepted"
+        | "failed"
+        | "uncertain"
+        | "prepared"
+        | "confirmed"
+      >()
+      .notNull(),
+    recipient: text("recipient").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    error: text("error"),
+    actorUserId: text("actor_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    confirmedBy: text("confirmed_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    confirmedAt: timestamp("confirmed_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("crm_hosting_notice_request_unique").on(
+      t.workspaceId,
+      t.requestId,
+    ),
+    index("crm_hosting_notice_company_idx").on(t.companyId),
+    index("crm_hosting_notice_date_idx").on(t.workspaceId, t.createdAt),
+    check(
+      "crm_hosting_notice_channel_check",
+      sql`${t.channel} in ('email','whatsapp')`,
+    ),
+    check(
+      "crm_hosting_notice_status_check",
+      sql`${t.status} in ('sending','accepted','failed','uncertain','prepared','confirmed')`,
     ),
   ],
 );

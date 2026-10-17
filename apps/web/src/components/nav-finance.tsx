@@ -49,6 +49,30 @@ export function NavFinance() {
               <span>Contratos e recorrência</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname.endsWith("/performance")}
+              onClick={() =>
+                navigate({
+                  to: `/dashboard/workspace/${workspace.id}/performance`,
+                })
+              }
+            >
+              <Wallet className="size-4" />
+              <span>Comissões e resultados</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              isActive={pathname.endsWith("/taxes")}
+              onClick={() =>
+                navigate({ to: `/dashboard/workspace/${workspace.id}/taxes` })
+              }
+            >
+              <Wallet className="size-4" />
+              <span>Taxas e impostos</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>

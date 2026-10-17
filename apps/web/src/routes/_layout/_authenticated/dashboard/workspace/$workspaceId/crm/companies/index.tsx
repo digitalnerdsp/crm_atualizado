@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import CompanyStatusBadge from "@/components/crm/company-status-badge";
 import CreateCompanyModal from "@/components/crm/forms/create-company-modal";
+import { hostingModes } from "@/components/crm/hosting/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import {
@@ -97,6 +98,7 @@ function RouteComponent() {
                 <TableRow>
                   <TableHead>{t("crm:company.name")}</TableHead>
                   <TableHead>{t("crm:company.status")}</TableHead>
+                  <TableHead>Hospedagem</TableHead>
                   <TableHead>{t("crm:company.taxId")}</TableHead>
                   <TableHead>{t("crm:company.segment")}</TableHead>
                   <TableHead>{t("crm:company.source")}</TableHead>
@@ -118,6 +120,11 @@ function RouteComponent() {
                     <TableCell>{company.name}</TableCell>
                     <TableCell>
                       <CompanyStatusBadge status={company.status} />
+                    </TableCell>
+                    <TableCell>
+                      <span className="rounded-full bg-muted px-2 py-1 text-xs">
+                        {hostingModes[company.hostingMode]}
+                      </span>
                     </TableCell>
                     <TableCell className="tabular-nums text-muted-foreground">
                       {formatTaxId(company.taxId) ?? "—"}
