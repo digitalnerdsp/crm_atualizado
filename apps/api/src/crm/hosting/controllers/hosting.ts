@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lte, or } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db, { schema } from "../../../database";
 import type { Tx } from "../../../finance/performance/snapshot";
@@ -89,6 +89,65 @@ export async function metadata(s: Scope) {
   ];
   return { services, owners, providers };
 }
+type ServiceFlag = {
+  id: string;
+  name: string;
+  fromContract?: boolean;
+  manual?: boolean;
+};
+/**
+ * Serviços de contratos vigentes (ativos, já iniciados e não encerrados).
+ * Não são gravados como flag: acompanham o contrato, então somem sozinhos
+ * quando ele é pausado, cancelado ou termina.
+ */
+async function contractServices(
+  tx: typeof db | Tx,
+  workspaceId: string,
+  companyId?: string,
+) {
+  const k = schema.crmContractTable;
+  // Colunas sem fuso guardam UTC: compara com Date, não com now() do banco.
+  const now = new Date();
+  const rows = await tx
+    .selectDistinct({
+      companyId: k.companyId,
+      id: schema.crmServiceTable.id,
+      name: schema.crmServiceTable.name,
+    })
+    .from(schema.crmContractServiceTable)
+    .innerJoin(k, eq(k.id, schema.crmContractServiceTable.contractId))
+    .innerJoin(
+      schema.crmServiceTable,
+      and(
+        eq(schema.crmServiceTable.id, schema.crmContractServiceTable.serviceId),
+        eq(schema.crmServiceTable.workspaceId, workspaceId),
+      ),
+    )
+    .where(
+      and(
+        eq(k.workspaceId, workspaceId),
+        companyId ? eq(k.companyId, companyId) : undefined,
+        eq(k.status, "active"),
+        lte(k.startsAt, now),
+        or(isNull(k.endsAt), gt(k.endsAt, now)),
+      ),
+    );
+  const map = new Map<string, ServiceFlag[]>();
+  for (const { companyId: id, ...service } of rows) {
+    const list = map.get(id) ?? [];
+    list.push({ ...service, fromContract: true });
+    map.set(id, list);
+  }
+  return map;
+}
+/** Flags manuais somadas às do contrato, sem repetir o mesmo serviço. */
+function mergeFlags(manual: ServiceFlag[], contract: ServiceFlag[] = []) {
+  const byId = new Map<string, ServiceFlag>(manual.map((m) => [m.id, m]));
+  for (const c of contract) byId.set(c.id, { ...byId.get(c.id), ...c });
+  return [...byId.values()].sort((a, b) =>
+    a.name.localeCompare(b.name, "pt-BR"),
+  );
+}
 export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
   const c = schema.crmCompanyTable;
   const rows = await db
@@ -112,53 +171,55 @@ export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
       "Mais de 10.000 empresas nesta carteira. Solicite processamento de grande volume.",
     );
   if (!rows.length) return [];
-  const [revisions, notices, flags, digestRows] = await Promise.all([
-    db
-      .select({ revision: schema.crmHostingRevisionTable })
-      .from(schema.crmHostingRevisionTable)
-      .innerJoin(c, eq(c.id, schema.crmHostingRevisionTable.companyId))
-      .where(where(s)),
-    db
-      .select({ notice: schema.crmHostingNoticeTable })
-      .from(schema.crmHostingNoticeTable)
-      .innerJoin(c, eq(c.id, schema.crmHostingNoticeTable.companyId))
-      .where(where(s)),
-    db
-      .select({
-        companyId: schema.crmCompanyServiceFlagTable.companyId,
-        id: schema.crmServiceTable.id,
-        name: schema.crmServiceTable.name,
-      })
-      .from(schema.crmCompanyServiceFlagTable)
-      .innerJoin(c, eq(c.id, schema.crmCompanyServiceFlagTable.companyId))
-      .innerJoin(
-        schema.crmServiceTable,
-        eq(
-          schema.crmServiceTable.id,
-          schema.crmCompanyServiceFlagTable.serviceId,
-        ),
-      )
-      .where(where(s)),
-    db
-      .select({
-        companyId: schema.crmHostingDigestItemTable.companyId,
-        renewsOn: schema.crmHostingDigestItemTable.renewsOn,
-        markDays: schema.crmHostingDigestItemTable.markDays,
-        listed: schema.crmHostingDigestItemTable.listed,
-        runStatus: schema.crmHostingDigestRunTable.status,
-        createdAt: schema.crmHostingDigestItemTable.createdAt,
-      })
-      .from(schema.crmHostingDigestItemTable)
-      .innerJoin(
-        schema.crmHostingDigestRunTable,
-        eq(
-          schema.crmHostingDigestRunTable.id,
-          schema.crmHostingDigestItemTable.runId,
-        ),
-      )
-      .innerJoin(c, eq(c.id, schema.crmHostingDigestItemTable.companyId))
-      .where(where(s)),
-  ]);
+  const [revisions, notices, flags, digestRows, contractFlags] =
+    await Promise.all([
+      db
+        .select({ revision: schema.crmHostingRevisionTable })
+        .from(schema.crmHostingRevisionTable)
+        .innerJoin(c, eq(c.id, schema.crmHostingRevisionTable.companyId))
+        .where(where(s)),
+      db
+        .select({ notice: schema.crmHostingNoticeTable })
+        .from(schema.crmHostingNoticeTable)
+        .innerJoin(c, eq(c.id, schema.crmHostingNoticeTable.companyId))
+        .where(where(s)),
+      db
+        .select({
+          companyId: schema.crmCompanyServiceFlagTable.companyId,
+          id: schema.crmServiceTable.id,
+          name: schema.crmServiceTable.name,
+        })
+        .from(schema.crmCompanyServiceFlagTable)
+        .innerJoin(c, eq(c.id, schema.crmCompanyServiceFlagTable.companyId))
+        .innerJoin(
+          schema.crmServiceTable,
+          eq(
+            schema.crmServiceTable.id,
+            schema.crmCompanyServiceFlagTable.serviceId,
+          ),
+        )
+        .where(where(s)),
+      db
+        .select({
+          companyId: schema.crmHostingDigestItemTable.companyId,
+          renewsOn: schema.crmHostingDigestItemTable.renewsOn,
+          markDays: schema.crmHostingDigestItemTable.markDays,
+          listed: schema.crmHostingDigestItemTable.listed,
+          runStatus: schema.crmHostingDigestRunTable.status,
+          createdAt: schema.crmHostingDigestItemTable.createdAt,
+        })
+        .from(schema.crmHostingDigestItemTable)
+        .innerJoin(
+          schema.crmHostingDigestRunTable,
+          eq(
+            schema.crmHostingDigestRunTable.id,
+            schema.crmHostingDigestItemTable.runId,
+          ),
+        )
+        .innerJoin(c, eq(c.id, schema.crmHostingDigestItemTable.companyId))
+        .where(where(s)),
+      contractServices(db, s.workspaceId),
+    ]);
   const grouped = <T>(values: T[], key: (v: T) => string) => {
     const map = new Map<string, T[]>();
     for (const value of values) {
@@ -191,12 +252,19 @@ export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
     hosting: {
       ...emptyHosting,
       ...h,
-      services: (services.get(c.id) ?? []).map(({ id, name }) => ({
-        id,
-        name,
-      })),
+      services: mergeFlags(
+        (services.get(c.id) ?? []).map(({ id, name }) => ({ id, name })),
+        contractFlags.get(c.id),
+      ),
     },
-    revisions: revs.get(c.id) ?? [],
+    // O contrato não guarda histórico: períodos passados usam os contratos de hoje.
+    revisions: (revs.get(c.id) ?? []).map((r) => ({
+      ...r,
+      snapshot: {
+        ...r.snapshot,
+        services: mergeFlags(r.snapshot.services, contractFlags.get(c.id)),
+      },
+    })),
     notices: notes.get(c.id) ?? [],
     digest: digests.get(c.id) ?? [],
   }));
@@ -280,7 +348,10 @@ export async function detail(s: Scope, id: string) {
         ...emptyHosting,
         ...h,
         version: h?.version ?? 0,
-        services: flags,
+        services: mergeFlags(
+          flags.map((f) => ({ ...f, manual: true })),
+          (await contractServices(tx, s.workspaceId, id)).get(id),
+        ),
       },
       contacts,
       revisions,

@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import crm from "../../apps/api/src/crm";
 import { createCompany } from "../../apps/api/src/crm/company/controllers/upsert-company";
 import {
+  detail,
   report,
   type Scope,
   saveHosting,
@@ -415,5 +416,111 @@ describe("Aviso interno de renovação de hospedagem", () => {
       "Hostgator",
       "Locaweb",
     ]);
+  });
+
+  describe("flags de serviço vindas de contratos", () => {
+    async function contract(
+      m: Seed,
+      companyId: string,
+      serviceId: string,
+      patch: Partial<typeof schema.crmContractTable.$inferInsert> = {},
+    ) {
+      const [k] = await db
+        .insert(schema.crmContractTable)
+        .values({
+          workspaceId: m.workspace.id,
+          number: Math.floor(Math.random() * 1e6),
+          companyId,
+          title: "Contrato",
+          startsAt: new Date(Date.now() - 86_400_000),
+          ...patch,
+        })
+        .returning();
+      if (!k) throw new Error("Sem contrato");
+      await db.insert(schema.crmContractServiceTable).values({
+        contractId: k.id,
+        serviceId,
+        name: "Linha do contrato",
+        billingType: "monthly",
+        unitPriceCents: 1000,
+        totalCents: 1000,
+      });
+      return k;
+    }
+    async function service(m: Seed, name: string) {
+      const [row] = await db
+        .insert(schema.crmServiceTable)
+        .values({ workspaceId: m.workspace.id, name })
+        .returning();
+      if (!row) throw new Error("Sem serviço");
+      return row;
+    }
+    it("soma serviços de contratos vigentes às flags manuais, sem gravá-los", async () => {
+      const m = await seed();
+      const site = await service(m, "Site");
+      const seo = await service(m, "SEO");
+      const company = await client(m, "Alfa", inDays(30), {
+        serviceIds: [seo.id],
+      });
+      await contract(m, company.id, site.id);
+      const d = await detail(m.scope, company.id);
+      expect(
+        d.hosting.services.map((s) => [s.name, s.fromContract ?? false]),
+      ).toEqual([
+        ["SEO", false],
+        ["Site", true],
+      ]);
+      const stored = await db.select().from(schema.crmCompanyServiceFlagTable);
+      expect(stored.map((f) => f.serviceId)).toEqual([seo.id]);
+      const r = await report(m.scope, {
+        from: today(),
+        to: today(),
+        serviceId: site.id,
+      });
+      expect(r.rows.map((x) => x.name)).toEqual(["Alfa"]);
+    });
+    it("ignora contratos pausados, cancelados, encerrados, futuros e de outro workspace", async () => {
+      const m = await seed();
+      const other = await seed();
+      const site = await service(m, "Site");
+      const company = await client(m, "Alfa", inDays(30));
+      await contract(m, company.id, site.id, { status: "paused" });
+      await contract(m, company.id, site.id, { status: "cancelled" });
+      await contract(m, company.id, site.id, { status: "finished" });
+      await contract(m, company.id, site.id, {
+        endsAt: new Date(Date.now() - 1000),
+      });
+      await contract(m, company.id, site.id, {
+        startsAt: new Date(Date.now() + 5 * 86_400_000),
+      });
+      expect((await detail(m.scope, company.id)).hosting.services).toEqual([]);
+      const foreign = await service(other, "Alheio");
+      const foreignCompany = await client(other, "Beta", inDays(30));
+      await contract(other, foreignCompany.id, foreign.id);
+      expect((await detail(m.scope, company.id)).hosting.services).toEqual([]);
+      const r = await report(m.scope, { from: today(), to: today() });
+      expect(r.rows.every((x) => x.name !== "Beta")).toBe(true);
+    });
+    it("a flag some quando o contrato termina e a manual permanece", async () => {
+      const m = await seed();
+      const site = await service(m, "Site");
+      const company = await client(m, "Alfa", inDays(30), {
+        serviceIds: [site.id],
+      });
+      const k = await contract(m, company.id, site.id);
+      const before = await detail(m.scope, company.id);
+      expect(before.hosting.services).toHaveLength(1);
+      expect(before.hosting.services[0]).toMatchObject({
+        fromContract: true,
+        manual: true,
+      });
+      await db
+        .update(schema.crmContractTable)
+        .set({ status: "cancelled" })
+        .where(eq(schema.crmContractTable.id, k.id));
+      const after = await detail(m.scope, company.id);
+      expect(after.hosting.services).toHaveLength(1);
+      expect(after.hosting.services[0]?.fromContract).toBeUndefined();
+    });
   });
 });

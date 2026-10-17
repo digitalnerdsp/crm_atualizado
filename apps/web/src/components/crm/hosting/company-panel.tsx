@@ -54,6 +54,10 @@ export function CompanyHostingPanel({
     );
   if (!data) return null;
   const h = data.hosting;
+  const locked = (id: string) =>
+    h.services.some((v) => v.id === id && v.fromContract);
+  const isManual = (id: string) =>
+    h.services.some((v) => v.id === id && "manual" in v && v.manual);
   const canUpdate = permissions.canUpdateCompanies() && !data.company.archived;
   return (
     <section className="space-y-4 rounded-xl border bg-card p-5">
@@ -72,6 +76,7 @@ export function CompanyHostingPanel({
         {h.services.map((s) => (
           <span className="rounded-full border px-3 py-1" key={s.id}>
             {s.name}
+            {s.fromContract ? " · contrato" : ""}
           </span>
         ))}
       </div>
@@ -200,6 +205,11 @@ export function CompanyHostingPanel({
               <legend className="px-1 text-sm font-medium">
                 Flags de serviços
               </legend>
+              <p className="text-xs text-muted-foreground">
+                Serviços de contratos ativos aparecem automaticamente e saem
+                quando o contrato é pausado, cancelado ou termina. Os demais
+                podem ser marcados manualmente.
+              </p>
               <div className="grid gap-2 sm:grid-cols-2">
                 {meta.data?.services
                   .filter(
@@ -213,12 +223,17 @@ export function CompanyHostingPanel({
                     >
                       <input
                         type="checkbox"
-                        name="service"
+                        name={locked(s.id) ? undefined : "service"}
                         value={s.id}
+                        disabled={locked(s.id)}
                         defaultChecked={h.services.some((v) => v.id === s.id)}
                       />
+                      {locked(s.id) && isManual(s.id) && (
+                        <input type="hidden" name="service" value={s.id} />
+                      )}
                       {s.name}
                       {s.archivedAt ? " (arquivado)" : ""}
+                      {locked(s.id) ? " · via contrato ativo" : ""}
                     </label>
                   ))}
               </div>

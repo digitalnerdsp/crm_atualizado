@@ -3147,7 +3147,7 @@ export type HostingSnapshot = {
   emailAllowed: boolean;
   whatsappAllowed: boolean;
   notes: string;
-  services: { id: string; name: string }[];
+  services: { id: string; name: string; fromContract?: boolean }[];
 };
 export const crmHostingTable = pgTable(
   "crm_hosting",

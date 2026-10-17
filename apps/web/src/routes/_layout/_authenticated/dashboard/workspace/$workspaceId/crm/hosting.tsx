@@ -370,6 +370,7 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                                     key={s.id}
                                   >
                                     {s.name}
+                                    {s.fromContract ? " · contrato" : ""}
                                   </p>
                                 ))}
                               </td>

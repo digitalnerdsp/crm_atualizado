@@ -51,3 +51,15 @@ Recomenda-se backup antes de migrar.
 - Correção do DDI no WhatsApp e flags de serviço derivadas de contrato.
 - Os avisos antigos enviados ao cliente continuam visíveis, somente leitura, no
   histórico da empresa.
+
+## Flags de serviço (atualização)
+
+- A flag de serviço da empresa passa a somar duas origens: a **marcação manual**
+  (como antes) e os **serviços de contratos vigentes** (status ativo, já iniciado
+  e sem data de término vencida).
+- As flags de contrato **não são gravadas**: aparecem travadas ("via contrato
+  ativo") e desaparecem sozinhas quando o contrato é pausado, cancelado,
+  encerrado ou termina. A marcação manual permanece.
+- O filtro por serviço na carteira considera as duas origens. Como o contrato não
+  guarda histórico, períodos passados usam os contratos de hoje.
+- Sem migração: nenhuma flag existente foi alterada ou removida.
