@@ -1,29 +1,22 @@
-import { createHash } from "node:crypto";
-import { sendClientNoticeEmail } from "@kaneo/email";
-import { and, asc, desc, eq, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
-import * as v from "valibot";
 import db, { schema } from "../../../database";
 import type { Tx } from "../../../finance/performance/snapshot";
-import { getRuntimeSmtpEmailConfig } from "../../../settings/email-settings";
 import { ownerScope } from "../../shared/list-filters";
 import type { CrmVisibility } from "../../shared/resolve-visibility";
+import { DEFAULT_MARKS, normalizeMarks } from "../digest/model";
 import {
   emptyHosting,
   type PortfolioCompany,
   type PortfolioFilters,
-  phoneNumber,
   portfolioReport,
-  whatsappUrl,
 } from "../model";
-import type { HostingInput, previewSchema, sendSchema } from "../validation";
+import type { HostingInput } from "../validation";
 export type Scope = {
   workspaceId: string;
   userId: string;
   visibility: CrmVisibility;
 };
-const digest = (value: unknown) =>
-  createHash("sha256").update(JSON.stringify(value)).digest("hex");
 function fail(status: 400 | 404 | 409 | 413, message: string): never {
   throw new HTTPException(status, { message });
 }
@@ -61,7 +54,7 @@ async function audit(
   });
 }
 export async function metadata(s: Scope) {
-  const [services, owners] = await Promise.all([
+  const [services, owners, providerRows] = await Promise.all([
     db
       .select({
         id: schema.crmServiceTable.id,
@@ -79,8 +72,22 @@ export async function metadata(s: Scope) {
         eq(schema.userTable.id, schema.crmCompanyTable.ownerUserId),
       )
       .where(where(s)),
+    db
+      .selectDistinct({ provider: schema.crmHostingTable.provider })
+      .from(schema.crmHostingTable)
+      .innerJoin(
+        schema.crmCompanyTable,
+        eq(schema.crmCompanyTable.id, schema.crmHostingTable.companyId),
+      )
+      .where(and(where(s), isNull(schema.crmCompanyTable.archivedAt)))
+      .orderBy(asc(schema.crmHostingTable.provider)),
   ]);
-  return { services, owners };
+  const providers = [
+    ...new Set(
+      providerRows.map((r) => r.provider.trim()).filter((p) => p.length > 0),
+    ),
+  ];
+  return { services, owners, providers };
 }
 export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
   const c = schema.crmCompanyTable;
@@ -105,7 +112,7 @@ export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
       "Mais de 10.000 empresas nesta carteira. Solicite processamento de grande volume.",
     );
   if (!rows.length) return [];
-  const [revisions, notices, flags] = await Promise.all([
+  const [revisions, notices, flags, digestRows] = await Promise.all([
     db
       .select({ revision: schema.crmHostingRevisionTable })
       .from(schema.crmHostingRevisionTable)
@@ -132,6 +139,25 @@ export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
         ),
       )
       .where(where(s)),
+    db
+      .select({
+        companyId: schema.crmHostingDigestItemTable.companyId,
+        renewsOn: schema.crmHostingDigestItemTable.renewsOn,
+        markDays: schema.crmHostingDigestItemTable.markDays,
+        listed: schema.crmHostingDigestItemTable.listed,
+        runStatus: schema.crmHostingDigestRunTable.status,
+        createdAt: schema.crmHostingDigestItemTable.createdAt,
+      })
+      .from(schema.crmHostingDigestItemTable)
+      .innerJoin(
+        schema.crmHostingDigestRunTable,
+        eq(
+          schema.crmHostingDigestRunTable.id,
+          schema.crmHostingDigestItemTable.runId,
+        ),
+      )
+      .innerJoin(c, eq(c.id, schema.crmHostingDigestItemTable.companyId))
+      .where(where(s)),
   ]);
   const grouped = <T>(values: T[], key: (v: T) => string) => {
     const map = new Map<string, T[]>();
@@ -152,6 +178,7 @@ export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
     (n) => n.companyId,
   );
   const services = grouped(flags, (f) => f.companyId);
+  const digests = grouped(digestRows, (d) => d.companyId);
   return rows.map(({ company: c, hosting: h, ownerName }) => ({
     id: c.id,
     name: c.name,
@@ -171,10 +198,22 @@ export async function loadPortfolio(s: Scope): Promise<PortfolioCompany[]> {
     },
     revisions: revs.get(c.id) ?? [],
     notices: notes.get(c.id) ?? [],
+    digest: digests.get(c.id) ?? [],
   }));
 }
 export async function report(s: Scope, f: PortfolioFilters) {
-  return portfolioReport(await loadPortfolio(s), f);
+  const [portfolio, [setting]] = await Promise.all([
+    loadPortfolio(s),
+    db
+      .select({ marks: schema.crmHostingDigestSettingTable.marks })
+      .from(schema.crmHostingDigestSettingTable)
+      .where(
+        eq(schema.crmHostingDigestSettingTable.workspaceId, s.workspaceId),
+      ),
+  ]);
+  return portfolioReport(portfolio, f, {
+    marks: normalizeMarks(setting?.marks ?? DEFAULT_MARKS),
+  });
 }
 export async function detail(s: Scope, id: string) {
   return db.transaction(async (tx) => {
@@ -276,8 +315,6 @@ export async function saveHosting(s: Scope, id: string, input: HostingInput) {
       if (!contact)
         fail(400, "O contato precisa pertencer à empresa e estar ativo.");
     }
-    if ((input.emailAllowed || input.whatsappAllowed) && !input.contactId)
-      fail(400, "Selecione um contato antes de habilitar os canais de aviso.");
     const services = input.serviceIds.length
       ? await tx
           .select()
@@ -337,223 +374,6 @@ export async function saveHosting(s: Scope, id: string, input: HostingInput) {
       ...saved,
       services: snapshot.services,
     });
-    if (!saved) throw new Error("Falha ao atualizar cadastro");
-    return saved;
-  });
-}
-async function previewInTx(
-  tx: Tx,
-  s: Scope,
-  id: string,
-  input: v.InferOutput<typeof previewSchema>,
-) {
-  const c = await company(tx, s, id);
-  const [h] = await tx
-    .select()
-    .from(schema.crmHostingTable)
-    .where(eq(schema.crmHostingTable.companyId, id));
-  if (c.archivedAt || c.status !== "active" || h?.mode !== "third_party")
-    fail(
-      400,
-      "Avisos estão disponíveis para clientes ativos com hospedagem de terceiros.",
-    );
-  if (!h.contactId) fail(400, "Selecione um contato para os avisos.");
-  const [contact] = await tx
-    .select()
-    .from(schema.crmContactTable)
-    .where(
-      and(
-        eq(schema.crmContactTable.id, h.contactId),
-        eq(schema.crmContactTable.companyId, id),
-        eq(schema.crmContactTable.workspaceId, s.workspaceId),
-        isNull(schema.crmContactTable.archivedAt),
-      ),
-    );
-  if (!contact) fail(400, "Contato indisponível. Atualize o cadastro.");
-  let recipient = "";
-  if (input.channel === "email") {
-    if (!h.emailAllowed || contact.emailOptOut)
-      fail(400, "Contato não está habilitado para este aviso por e-mail.");
-    if (!v.safeParse(v.pipe(v.string(), v.email()), contact.email).success)
-      fail(400, "Cadastre um e-mail válido no contato.");
-    recipient = contact.email ?? "";
-  } else {
-    if (!h.whatsappAllowed)
-      fail(400, "Contato não está habilitado para avisos por WhatsApp.");
-    const phone = phoneNumber(contact.mobile || contact.phone);
-    if (!phone)
-      fail(400, "Cadastre um telefone válido com DDI e DDD no contato.");
-    recipient = phone;
-  }
-  const subject =
-    input.subject ||
-    `Hospedagem de ${c.name}`.replace(/[\r\n]/g, " ").slice(0, 180);
-  const body =
-    input.body ||
-    `Olá, ${contact.firstName}. Estamos entrando em contato sobre a hospedagem de ${c.name}${h.domain ? ` (${h.domain})` : ""}, mantida com ${h.provider || "um provedor terceiro"}.${h.renewsOn ? ` A data de renovação registrada é ${h.renewsOn.split("-").reverse().join("/")}.` : ""} Podemos confirmar as informações e os próximos passos?`;
-  return {
-    channel: input.channel,
-    recipient,
-    subject,
-    body,
-    signature: digest({
-      companyId: id,
-      companyName: c.name,
-      version: h.version,
-      contactId: contact.id,
-      recipient,
-      subject,
-      body,
-      channel: input.channel,
-    }),
-  };
-}
-export async function preview(
-  s: Scope,
-  id: string,
-  input: v.InferOutput<typeof previewSchema>,
-) {
-  return db.transaction((tx) => previewInTx(tx, s, id, input));
-}
-export async function sendNotice(
-  s: Scope,
-  id: string,
-  input: v.InferOutput<typeof sendSchema>,
-) {
-  const claim = await db.transaction(async (tx) => {
-    await tx.execute(
-      sql`select pg_advisory_xact_lock(hashtextextended(${`hosting:${s.workspaceId}:${input.requestId}`},0))`,
-    );
-    await company(tx, s, id);
-    const requestHash = digest({
-      signature: input.signature,
-      channel: input.channel,
-      subject: input.subject,
-      body: input.body,
-    });
-    const [retry] = await tx
-      .select()
-      .from(schema.crmHostingNoticeTable)
-      .where(
-        and(
-          eq(schema.crmHostingNoticeTable.workspaceId, s.workspaceId),
-          eq(schema.crmHostingNoticeTable.requestId, input.requestId),
-        ),
-      );
-    if (retry) {
-      if (retry.companyId !== id || retry.signature !== requestHash)
-        fail(409, "Solicitação já utilizada com outros dados.");
-      return { notice: retry, fresh: false };
-    }
-    const current = await previewInTx(tx, s, id, input);
-    if (current.signature !== input.signature)
-      fail(
-        409,
-        "O destinatário ou o cadastro mudou. Revise o aviso novamente.",
-      );
-    const [notice] = await tx
-      .insert(schema.crmHostingNoticeTable)
-      .values({
-        workspaceId: s.workspaceId,
-        companyId: id,
-        requestId: input.requestId,
-        signature: requestHash,
-        channel: input.channel,
-        status: input.channel === "email" ? "sending" : "prepared",
-        recipient: current.recipient,
-        subject: current.subject,
-        body: current.body,
-        actorUserId: s.userId,
-      })
-      .returning();
-    if (!notice) throw new Error("Falha ao registrar aviso");
-    await audit(tx, s, id, "aviso_preparado", null, notice);
-    return { notice, fresh: true };
-  });
-  let notice = claim.notice;
-  if (claim.fresh && notice.channel === "email") {
-    let status: "accepted" | "failed" | "uncertain" = "uncertain";
-    let error: string | null = null;
-    try {
-      const config = await getRuntimeSmtpEmailConfig();
-      const result = await sendClientNoticeEmail(
-        notice.recipient,
-        notice.subject,
-        notice.body,
-        config,
-      );
-      status = result.success ? "accepted" : "failed";
-      if (!result.success)
-        error =
-          "SMTP não configurado. Configure o envio antes de tentar um novo aviso.";
-    } catch {
-      error =
-        "O envio não foi confirmado. Verifique o provedor antes de reenviar para evitar duplicação.";
-    }
-    const updated = await db.transaction(async (tx) => {
-      const [row] = await tx
-        .update(schema.crmHostingNoticeTable)
-        .set({ status, error })
-        .where(eq(schema.crmHostingNoticeTable.id, notice.id))
-        .returning();
-      await audit(
-        tx,
-        s,
-        id,
-        "resultado_email",
-        { id: notice.id, status: notice.status },
-        row,
-      );
-      return row;
-    });
-    if (updated) notice = updated;
-  }
-  return {
-    notice,
-    whatsappUrl:
-      notice.channel === "whatsapp"
-        ? whatsappUrl(notice.recipient, notice.body)
-        : null,
-  };
-}
-export async function confirmWhatsApp(s: Scope, id: string) {
-  return db.transaction(async (tx) => {
-    const [row] = await tx
-      .select()
-      .from(schema.crmHostingNoticeTable)
-      .where(
-        and(
-          eq(schema.crmHostingNoticeTable.workspaceId, s.workspaceId),
-          eq(schema.crmHostingNoticeTable.id, id),
-        ),
-      );
-    if (!row) fail(404, "Aviso não encontrado.");
-    await company(tx, s, row.companyId);
-    const [current] = await tx
-      .select()
-      .from(schema.crmHostingNoticeTable)
-      .where(eq(schema.crmHostingNoticeTable.id, id))
-      .for("update");
-    if (!current) fail(404, "Aviso não encontrado.");
-    if (
-      current.channel !== "whatsapp" ||
-      !["prepared", "confirmed"].includes(current.status)
-    )
-      fail(
-        400,
-        "Confirmação manual é exclusiva de aviso preparado por WhatsApp.",
-      );
-    if (current.status === "confirmed") return current;
-    const [saved] = await tx
-      .update(schema.crmHostingNoticeTable)
-      .set({
-        status: "confirmed",
-        confirmedBy: s.userId,
-        confirmedAt: new Date(),
-      })
-      .where(eq(schema.crmHostingNoticeTable.id, id))
-      .returning();
-    await audit(tx, s, row.companyId, "whatsapp_confirmado", current, saved);
     if (!saved) throw new Error("Falha ao atualizar cadastro");
     return saved;
   });

@@ -1,4 +1,5 @@
 import { Cron } from "croner";
+import { processDigests } from "../crm/hosting/digest/controller";
 import { runContractBilling } from "../finance/recurrence/billing";
 import { generateRecurringTasks } from "../task/recurrence";
 import { checkCrmActivityReminders, checkRottingDeals } from "./crm-reminders";
@@ -19,6 +20,17 @@ export function initializeScheduler(): void {
   );
   void runContractBilling().catch((error) =>
     console.error("Contract billing startup failed", error),
+  );
+  // Aviso interno de renovação de hospedagens de terceiros: a cada hora, mas só
+  // registra novidades depois das 8h (America/Sao_Paulo) e reenvia falhas.
+  jobs.push(
+    new Cron("23 * * * *", async () => {
+      try {
+        await processDigests();
+      } catch (error) {
+        console.error("Hosting renewal digest failed", error);
+      }
+    }),
   );
   jobs.push(new Cron("*/5 * * * *", checkDueDateReminders));
   jobs.push(new Cron("*/5 * * * *", checkProjectWebhookReminders));

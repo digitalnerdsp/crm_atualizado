@@ -17,8 +17,6 @@ export function HostingDashboard({
     ["due", "Renovações em atenção"],
     ["newCompanies", "Novas empresas no período"],
     ["changes", "Atualizações de cadastro"],
-    ["emailsAccepted", "E-mails aceitos pelo SMTP"],
-    ["whatsappConfirmed", "WhatsApp: envio informado"],
   ] as const;
   return (
     <div className="space-y-5">
@@ -91,27 +89,17 @@ export function HostingDashboard({
           />
         </section>
         <section className="rounded-xl border p-5">
-          <h2 className="mb-4 font-semibold">
-            Novas empresas e avisos por mês
-          </h2>
+          <h2 className="mb-4 font-semibold">Novas empresas por mês</h2>
           <GroupedBars
             rows={data.months.map((m) => ({
               key: m.month,
               label: m.month,
               values: {
                 companies: m.newCompanies,
-                email: m.emailsAccepted,
-                whatsapp: m.whatsappConfirmed,
               },
             }))}
             series={[
               { key: "companies", label: "Novas empresas", color: "#8b5cf6" },
-              { key: "email", label: "Aceito SMTP", color: "#16a34a" },
-              {
-                key: "whatsapp",
-                label: "WhatsApp informado",
-                color: "#0d9488",
-              },
             ]}
             formatValue={(v) => String(v)}
             emptyLabel="Sem registros."

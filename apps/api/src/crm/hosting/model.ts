@@ -1,5 +1,6 @@
 import type { HostingSnapshot } from "../../database/schema";
 import { addMonths, DAY, previousPeriod, today } from "../../finance/model";
+import { DEFAULT_MARKS, nextNotice } from "./digest/model";
 export const modeLabels = {
   unknown: "Não informado",
   own: "Hospedagem nossa",
@@ -36,10 +37,10 @@ export const emptyHosting: HostingSnapshot = {
   notes: "",
   services: [],
 };
-export function attention(s: HostingSnapshot, ref = today()) {
+export function attention(s: HostingSnapshot, ref = today(), lead?: number) {
   if (s.mode !== "third_party") return "none";
   if (!s.renewsOn) return "no_date";
-  return Date.parse(s.renewsOn) - Date.parse(ref) <= s.leadDays * DAY
+  return Date.parse(s.renewsOn) - Date.parse(ref) <= (lead ?? s.leadDays) * DAY
     ? "due"
     : "scheduled";
 }
@@ -58,6 +59,13 @@ export type PortfolioCompany = {
     createdAt: Date | string;
     snapshot: HostingSnapshot;
   }[];
+  digest?: {
+    renewsOn: string;
+    markDays: number;
+    listed: boolean;
+    runStatus: string;
+    createdAt: Date | string;
+  }[];
   notices: {
     id: string;
     channel: string;
@@ -67,6 +75,22 @@ export type PortfolioCompany = {
     updatedAt?: Date | string;
   }[];
 };
+function lastNoticeOf(c: PortfolioCompany) {
+  const last = [...(c.digest ?? [])]
+    .filter((d) => d.listed)
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    )[0];
+  return last
+    ? {
+        markDays: last.markDays,
+        sentAt: last.createdAt,
+        status: last.runStatus,
+        renewsOn: last.renewsOn,
+      }
+    : null;
+}
 export type PortfolioFilters = {
   from: string;
   to: string;
@@ -77,11 +101,17 @@ export type PortfolioFilters = {
   companyId?: string;
   attention?: string;
   search?: string;
+  provider?: string;
+  window?: "overdue" | "15" | "30" | "60" | "90";
 };
 export function portfolioReport(
   companies: PortfolioCompany[],
   f: PortfolioFilters,
+  options: { marks?: number[] } = {},
 ) {
+  const marks = options.marks ?? DEFAULT_MARKS;
+  // O prazo de atenção segue a primeira marca do aviso interno (a maior).
+  const lead = Math.max(...marks);
   const reference = f.to > today() ? today() : f.to;
   const base = companies.filter(
     (c) =>
@@ -101,9 +131,12 @@ export function portfolioReport(
   const matches = (s: HostingSnapshot, day: string) =>
     (!f.mode || s.mode === f.mode) &&
     (!f.serviceId || s.services.some((v) => v.id === f.serviceId)) &&
+    (!f.provider ||
+      s.provider.trim().toLocaleLowerCase() ===
+        f.provider.trim().toLocaleLowerCase()) &&
     (!f.attention ||
       f.attention === "all" ||
-      attention(s, day) === f.attention);
+      attention(s, day, lead) === f.attention);
   const range = (date: Date | string, p: { from: string; to: string }) => {
     const d = civilDay(date);
     return d >= p.from && d <= p.to;
@@ -128,7 +161,8 @@ export function portfolioReport(
       unknown: scoped.filter((c) => stateAt(c, ref).mode === "unknown").length,
       due: scoped.filter(
         (c) =>
-          c.status === "active" && attention(stateAt(c, ref), ref) === "due",
+          c.status === "active" &&
+          attention(stateAt(c, ref), ref, lead) === "due",
       ).length,
       newCompanies: scoped.filter((c) => range(c.createdAt, period)).length,
       changes: revisions.length,
@@ -165,14 +199,35 @@ export function portfolioReport(
         ownerName: c.ownerName,
         hosting: state,
         version: c.version,
-        attention: attention(state, reference),
+        attention: attention(state, reference, lead),
         daysRemaining: state.renewsOn
           ? Math.round(
               (Date.parse(state.renewsOn) - Date.parse(reference)) / DAY,
             )
           : null,
         noticeCount: c.notices.length,
+        nextNotice:
+          c.status === "active"
+            ? nextNotice(
+                state.mode === "third_party" ? state.renewsOn : null,
+                marks,
+                new Set(
+                  (c.digest ?? [])
+                    .filter((d) => d.renewsOn === state.renewsOn)
+                    .map((d) => d.markDays),
+                ),
+                reference,
+              )
+            : null,
+        lastNotice: lastNoticeOf(c),
       };
+    })
+    .filter((r) => {
+      if (!f.window) return true;
+      if (r.daysRemaining === null) return false;
+      return f.window === "overdue"
+        ? r.daysRemaining < 0
+        : r.daysRemaining >= 0 && r.daysRemaining <= Number(f.window);
     });
   const months = [];
   for (
@@ -200,6 +255,6 @@ export function portfolioReport(
     rows,
     total: rows.length,
     historyNote:
-      "Responsável e situação filtram a carteira atual. Comparações de hospedagem usam as versões registradas desde a implantação; períodos sem esse histórico não representam a situação antiga. Avisos preparados não comprovam envio; aceitação SMTP não comprova entrega.",
+      "Responsável e situação filtram a carteira atual. Comparações de hospedagem usam as versões registradas desde a implantação; períodos sem esse histórico não representam a situação antiga.",
   };
 }

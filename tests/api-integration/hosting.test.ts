@@ -9,13 +9,10 @@ import {
   deleteCompany,
 } from "../../apps/api/src/crm/company/controllers/upsert-company";
 import {
-  confirmWhatsApp,
   detail,
-  preview,
   report,
   type Scope,
   saveHosting,
-  sendNotice,
 } from "../../apps/api/src/crm/hosting/controllers/hosting";
 import type { HostingInput } from "../../apps/api/src/crm/hosting/validation";
 import db, { schema } from "../../apps/api/src/database";
@@ -106,18 +103,6 @@ async function seed(role: "admin" | "sales" = "admin") {
 type Seed = Awaited<ReturnType<typeof seed>>;
 async function enable(m: Seed) {
   return saveHosting(m.scope, m.company.id, m.input);
-}
-async function send(
-  m: Seed,
-  channel: "email" | "whatsapp",
-  requestId = crypto.randomUUID(),
-) {
-  const review = await preview(m.scope, m.company.id, {
-    channel,
-    subject: "",
-    body: "",
-  });
-  return sendNotice(m.scope, m.company.id, { ...review, requestId });
 }
 const range = () => ({ from: today(), to: today() });
 function post(
@@ -232,166 +217,26 @@ describe("Fase 5: carteira e hospedagem", () => {
     expect(
       (await read.request(`${m.base}/companies/${m.company.id}`)).status,
     ).toBe(200);
-    expect(
-      (
-        await post(read, `${m.base}/companies/${m.company.id}/preview`, {
-          channel: "email",
-          subject: "",
-          body: "",
-        })
-      ).status,
-    ).toBe(403);
+    expect((await read.request(`${m.base}/digest`)).status).toBe(403);
     expect(
       (await post(read, `${m.base}/companies/${m.company.id}`, m.input, "PUT"))
         .status,
     ).toBe(403);
   });
-  it("prévia não envia mensagens e mudança do contato invalida a confirmação", async () => {
-    const m = await seed();
-    await enable(m);
-    const review = await preview(m.scope, m.company.id, {
-      channel: "email",
-      subject: "",
-      body: "",
-    });
-    expect(review.recipient).toBe("cliente@example.test");
-    expect(sendClientNoticeEmail).not.toHaveBeenCalled();
-    await db
-      .update(schema.crmContactTable)
-      .set({ email: "outro@example.test" })
-      .where(eq(schema.crmContactTable.id, m.input.contactId ?? ""));
-    await expect(
-      sendNotice(m.scope, m.company.id, {
-        ...review,
-        requestId: crypto.randomUUID(),
-      }),
-    ).rejects.toMatchObject({ status: 409 });
-    expect(sendClientNoticeEmail).not.toHaveBeenCalled();
-  });
-  it("reenvio da mesma solicitação não repete a chamada SMTP", async () => {
-    const m = await seed();
-    await enable(m);
-    const review = await preview(m.scope, m.company.id, {
-      channel: "email",
-      subject: "",
-      body: "",
-    });
-    const input = { ...review, requestId: crypto.randomUUID() };
-    const first = await sendNotice(m.scope, m.company.id, input);
-    const second = await sendNotice(m.scope, m.company.id, input);
-    expect(first.notice.status).toBe("accepted");
-    expect(second.notice.id).toBe(first.notice.id);
-    expect(sendClientNoticeEmail).toHaveBeenCalledTimes(1);
-    expect((await report(m.scope, range())).current.emailsAccepted).toBe(1);
-    await expect(
-      sendNotice(m.scope, m.company.id, {
-        ...input,
-        body: "Conteúdo diferente",
-      }),
-    ).rejects.toMatchObject({ status: 409 });
-  });
-  it("respeita opt-out, canais desabilitados e situação do cliente", async () => {
-    const m = await seed();
-    await enable(m);
-    await db
-      .update(schema.crmContactTable)
-      .set({ emailOptOut: true })
-      .where(eq(schema.crmContactTable.id, m.input.contactId ?? ""));
-    await expect(
-      preview(m.scope, m.company.id, {
-        channel: "email",
-        subject: "",
-        body: "",
-      }),
-    ).rejects.toMatchObject({ status: 400 });
-    await saveHosting(m.scope, m.company.id, {
-      ...m.input,
-      whatsappAllowed: false,
-      version: 1,
-    });
-    await expect(
-      preview(m.scope, m.company.id, {
-        channel: "whatsapp",
-        subject: "",
-        body: "",
-      }),
-    ).rejects.toMatchObject({ status: 400 });
-    await db
-      .update(schema.crmCompanyTable)
-      .set({ status: "inactive" })
-      .where(eq(schema.crmCompanyTable.id, m.company.id));
-    await expect(
-      preview(m.scope, m.company.id, {
-        channel: "email",
-        subject: "",
-        body: "",
-      }),
-    ).rejects.toMatchObject({ status: 400 });
-  });
-  it("registra SMTP ausente como falha sem declarar entrega", async () => {
-    const m = await seed();
-    await enable(m);
-    sendClientNoticeEmail.mockResolvedValueOnce({
-      success: false,
-      reason: "SMTP_NOT_CONFIGURED",
-    });
-    const result = await send(m, "email");
-    expect(result.notice.status).toBe("failed");
-    expect(result.notice.error).toContain("SMTP");
-    expect((await report(m.scope, range())).current.emailsAccepted).toBe(0);
-  });
-  it("falha de confirmação de transporte fica incerta e não é reenviada automaticamente", async () => {
-    const m = await seed();
-    await enable(m);
-    sendClientNoticeEmail.mockRejectedValueOnce(
-      new Error("transport connection reset"),
-    );
-    const p = await preview(m.scope, m.company.id, {
-      channel: "email",
-      subject: "",
-      body: "",
-    });
-    const input = { ...p, requestId: crypto.randomUUID() };
-    expect((await sendNotice(m.scope, m.company.id, input)).notice.status).toBe(
-      "uncertain",
-    );
-    expect((await sendNotice(m.scope, m.company.id, input)).notice.status).toBe(
-      "uncertain",
-    );
-    expect(sendClientNoticeEmail).toHaveBeenCalledTimes(1);
-  });
-  it("WhatsApp preparado gera link, não usa SMTP e só confirma por ação explícita", async () => {
-    const m = await seed();
-    await enable(m);
-    const result = await send(m, "whatsapp");
-    expect(result.notice.status).toBe("prepared");
-    expect(result.whatsappUrl).toMatch(
-      /^https:\/\/wa.me\/5515999999999\?text=/,
-    );
-    expect(sendClientNoticeEmail).not.toHaveBeenCalled();
-    expect((await report(m.scope, range())).current.whatsappConfirmed).toBe(0);
-    const confirmed = await confirmWhatsApp(m.scope, result.notice.id);
-    expect(confirmed.status).toBe("confirmed");
-    const twice = await confirmWhatsApp(m.scope, result.notice.id);
-    expect(twice.confirmedAt).toEqual(confirmed.confirmedAt);
-    expect((await report(m.scope, range())).current.whatsappConfirmed).toBe(1);
-  });
-  it("não permite confirmar email como WhatsApp nem acessar histórico fora da carteira", async () => {
-    const m = await seed();
-    await enable(m);
-    const result = await send(m, "email");
-    await expect(
-      confirmWhatsApp(m.scope, result.notice.id),
-    ).rejects.toMatchObject({ status: 400 });
-    const other = await seed();
-    await expect(
-      confirmWhatsApp(other.scope, result.notice.id),
-    ).rejects.toMatchObject({ status: 404 });
-  });
   it("bloqueia exclusão da empresa com avisos e permite arquivar preservando o histórico", async () => {
     const m = await seed();
     await enable(m);
-    await send(m, "whatsapp");
+    await db.insert(schema.crmHostingNoticeTable).values({
+      workspaceId: m.workspace.id,
+      companyId: m.company.id,
+      requestId: "historico-anterior",
+      signature: "x",
+      channel: "email",
+      status: "accepted",
+      recipient: "cliente@example.test",
+      subject: "Aviso anterior",
+      body: "Registro antigo",
+    });
     await expect(
       deleteCompany({ workspaceId: m.workspace.id, companyId: m.company.id }),
     ).rejects.toMatchObject({ status: 409 });
@@ -425,15 +270,6 @@ describe("Fase 5: carteira e hospedagem", () => {
           { ...m.input, serviceIds: [m.service.id, m.service.id] },
           "PUT",
         )
-      ).status,
-    ).toBe(400);
-    expect(
-      (
-        await post(m.app, `${m.base}/companies/${m.company.id}/preview`, {
-          channel: "email",
-          subject: "Assunto\r\nBcc: terceiro@example.test",
-          body: "Texto",
-        })
       ).status,
     ).toBe(400);
     expect(

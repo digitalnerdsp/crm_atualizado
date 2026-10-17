@@ -99,6 +99,13 @@
       "when": 1792243142671,
       "tag": "0013_commercial-hosting-phase-five",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792267949031,
+      "tag": "0014_hosting-digest-internal",
+      "breakpoints": true
     }
   ]
 }

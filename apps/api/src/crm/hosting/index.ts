@@ -4,13 +4,8 @@ import { requireWorkspacePermission } from "../../utils/require-workspace-permis
 import { workspaceAccess } from "../../utils/workspace-access-middleware";
 import { resolveVisibility } from "../shared/resolve-visibility";
 import * as ctl from "./controllers/hosting";
-import {
-  configSchema,
-  filters,
-  params,
-  previewSchema,
-  sendSchema,
-} from "./validation";
+import * as digest from "./digest/controller";
+import { configSchema, digestSchema, filters, params } from "./validation";
 
 const doc = (operationId: string, description: string) =>
   describeRoute({
@@ -19,7 +14,10 @@ const doc = (operationId: string, description: string) =>
     tags: ["Carteira e hospedagem"],
     responses: { 200: { description: "Operação concluída" } },
   });
-const notify = requireWorkspacePermission({ crmCompany: ["notify"] });
+// O aviso interno lista a carteira inteira: só quem enxerga tudo e pode avisar.
+const digestAdmin = requireWorkspacePermission({
+  crmCompany: ["read_all", "notify"],
+});
 const hosting = new Hono<{
   Variables: { workspaceId: string; userId: string };
 }>()
@@ -91,57 +89,46 @@ const hosting = new Hono<{
         ),
       ),
   )
-  .post(
-    "/:workspaceId/companies/:id/preview",
-    doc("crmHostingPreview", "Revisar destinatário e mensagem do aviso"),
-    notify,
-    validator("param", params),
-    validator("json", previewSchema),
+  .get(
+    "/:workspaceId/digest",
+    doc(
+      "crmHostingDigestConfig",
+      "Configuração, destinatários e histórico do aviso interno de renovação",
+    ),
+    digestAdmin,
+    async (c) => c.json(await digest.getConfig(c.get("workspaceId"))),
+  )
+  .put(
+    "/:workspaceId/digest",
+    doc(
+      "crmHostingDigestSave",
+      "Definir destinatários, marcas de dias e ativação do aviso interno",
+    ),
+    digestAdmin,
+    validator("json", digestSchema),
     async (c) =>
       c.json(
-        await ctl.preview(
-          {
-            workspaceId: c.get("workspaceId"),
-            userId: c.get("userId"),
-            visibility: await resolveVisibility(c, "crmCompany"),
-          },
-          c.req.valid("param").id,
+        await digest.saveConfig(
+          { workspaceId: c.get("workspaceId"), userId: c.get("userId") },
           c.req.valid("json"),
         ),
       ),
   )
-  .post(
-    "/:workspaceId/companies/:id/notices",
-    doc("crmHostingNotice", "Enviar e-mail ou preparar conversa de WhatsApp"),
-    notify,
-    validator("param", params),
-    validator("json", sendSchema),
-    async (c) =>
-      c.json(
-        await ctl.sendNotice(
-          {
-            workspaceId: c.get("workspaceId"),
-            userId: c.get("userId"),
-            visibility: await resolveVisibility(c, "crmCompany"),
-          },
-          c.req.valid("param").id,
-          c.req.valid("json"),
-        ),
-      ),
+  .get(
+    "/:workspaceId/digest/preview",
+    doc("crmHostingDigestPreview", "O que seria avisado hoje, sem registrar"),
+    digestAdmin,
+    async (c) => c.json(await digest.previewDue(c.get("workspaceId"))),
   )
   .post(
-    "/:workspaceId/notices/:id/confirm",
-    doc("crmHostingConfirmWhatsApp", "Registrar confirmação manual de envio"),
-    notify,
+    "/:workspaceId/digest/runs/:id/retry",
+    doc("crmHostingDigestRetry", "Reenviar um aviso interno que falhou"),
+    digestAdmin,
     validator("param", params),
     async (c) =>
       c.json(
-        await ctl.confirmWhatsApp(
-          {
-            workspaceId: c.get("workspaceId"),
-            userId: c.get("userId"),
-            visibility: await resolveVisibility(c, "crmCompany"),
-          },
+        await digest.retryRun(
+          { workspaceId: c.get("workspaceId"), userId: c.get("userId") },
           c.req.valid("param").id,
         ),
       ),

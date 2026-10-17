@@ -3,7 +3,6 @@ import { civilDate } from "../../finance/validation";
 export const id = v.pipe(v.string(), v.minLength(1), v.maxLength(128));
 export const params = v.object({ workspaceId: id, id });
 const text = (max: number) => v.pipe(v.string(), v.trim(), v.maxLength(max));
-export const channel = v.picklist(["email", "whatsapp"]);
 export const configSchema = v.object({
   mode: v.picklist(["unknown", "own", "third_party", "none"]),
   provider: text(180),
@@ -19,10 +18,13 @@ export const configSchema = v.object({
     ),
   ),
   renewsOn: v.nullable(civilDate),
-  leadDays: v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(365)),
+  leadDays: v.optional(
+    v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(365)),
+    30,
+  ),
   contactId: v.nullable(id),
-  emailAllowed: v.boolean(),
-  whatsappAllowed: v.boolean(),
+  emailAllowed: v.optional(v.boolean(), false),
+  whatsappAllowed: v.optional(v.boolean(), false),
   notes: text(2000),
   serviceIds: v.pipe(
     v.array(id),
@@ -32,19 +34,6 @@ export const configSchema = v.object({
   version: v.pipe(v.number(), v.integer(), v.minValue(0)),
 });
 export type HostingInput = v.InferOutput<typeof configSchema>;
-export const previewSchema = v.object({
-  channel,
-  subject: v.pipe(
-    text(180),
-    v.check((s) => !/[\r\n]/.test(s), "Assunto inválido."),
-  ),
-  body: text(3000),
-});
-export const sendSchema = v.object({
-  ...previewSchema.entries,
-  requestId: id,
-  signature: id,
-});
 export const filters = v.pipe(
   v.object({
     from: civilDate,
@@ -58,6 +47,8 @@ export const filters = v.pipe(
     companyId: v.optional(id),
     attention: v.optional(v.picklist(["due", "no_date", "all"])),
     search: v.optional(text(200)),
+    provider: v.optional(text(180)),
+    window: v.optional(v.picklist(["overdue", "15", "30", "60", "90"])),
   }),
   v.check(
     (f) =>
@@ -66,3 +57,23 @@ export const filters = v.pipe(
     "Período inválido; máximo de 731 dias.",
   ),
 );
+export const digestSchema = v.object({
+  enabled: v.boolean(),
+  marks: v.pipe(
+    v.array(v.pipe(v.number(), v.integer(), v.minValue(1), v.maxValue(365))),
+    v.minLength(1),
+    v.maxLength(5),
+    v.check((m) => new Set(m).size === m.length, "Marcas duplicadas."),
+  ),
+  includeOwner: v.boolean(),
+  recipientUserIds: v.pipe(
+    v.array(id),
+    v.maxLength(100),
+    v.check(
+      (ids) => new Set(ids).size === ids.length,
+      "Destinatários duplicados.",
+    ),
+  ),
+  version: v.pipe(v.number(), v.integer(), v.minValue(0)),
+});
+export type DigestInput = v.InferOutput<typeof digestSchema>;

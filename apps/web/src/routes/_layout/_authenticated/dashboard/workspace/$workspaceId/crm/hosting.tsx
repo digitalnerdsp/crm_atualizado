@@ -5,6 +5,7 @@ import WorkspaceLayout from "@/components/common/workspace-layout";
 import CreateCompanyModal from "@/components/crm/forms/create-company-modal";
 import { CompanyHostingPanel } from "@/components/crm/hosting/company-panel";
 import { HostingDashboard } from "@/components/crm/hosting/dashboard";
+import { HostingDigestSettings } from "@/components/crm/hosting/digest-settings";
 import { hostingModes } from "@/components/crm/hosting/shared";
 import {
   dateLabel,
@@ -109,6 +110,11 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                       f.get("attention") || "",
                     ) as HostingFilters["attention"]) || undefined,
                   search: String(f.get("search") || "") || undefined,
+                  provider: String(f.get("provider") || "") || undefined,
+                  window:
+                    (String(
+                      f.get("window") || "",
+                    ) as HostingFilters["window"]) || undefined,
                 });
                 setPage(1);
               }}
@@ -199,6 +205,34 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                   </option>
                 </select>
               </Field>
+              <Field label="Provedor">
+                <select
+                  name="provider"
+                  className={selectClass}
+                  defaultValue={filters.provider ?? ""}
+                >
+                  <option value="">Todos</option>
+                  {meta.data?.providers.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Prazo da renovação">
+                <select
+                  name="window"
+                  className={selectClass}
+                  defaultValue={filters.window ?? ""}
+                >
+                  <option value="">Todos</option>
+                  <option value="overdue">Vencidas</option>
+                  <option value="15">Até 15 dias</option>
+                  <option value="30">Até 30 dias</option>
+                  <option value="60">Até 60 dias</option>
+                  <option value="90">Até 90 dias</option>
+                </select>
+              </Field>
               <Field label="Empresa, domínio ou provedor">
                 <Input
                   name="search"
@@ -251,6 +285,9 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
               <TabsList>
                 <TabsTab value="dashboard">Resumo</TabsTab>
                 <TabsTab value="companies">Empresas e hospedagens</TabsTab>
+                {permissions.canNotifyCompanies() && (
+                  <TabsTab value="digest">Aviso interno</TabsTab>
+                )}
               </TabsList>
               <TabsPanel value="dashboard">
                 {report.isLoading ? (
@@ -265,15 +302,20 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                   )
                 )}
               </TabsPanel>
+              {permissions.canNotifyCompanies() && (
+                <TabsPanel value="digest">
+                  <HostingDigestSettings workspaceId={workspaceId} />
+                </TabsPanel>
+              )}
               <TabsPanel value="companies">
                 <section className="space-y-4 rounded-xl border bg-card p-4">
                   <h2 className="font-semibold">
                     {report.data?.total ?? 0} empresas encontradas
                   </h2>
                   <p className="text-xs text-muted-foreground">
-                    A lista sinaliza a antecedência da renovação cadastrada.
-                    Avisos ao cliente são revisados e acionados individualmente;
-                    não há disparo automático.
+                    A lista sinaliza as renovações próximas. Os avisos de 30 e
+                    15 dias vão somente para a equipe interna (aba Aviso
+                    interno); nenhuma mensagem é enviada ao cliente.
                   </p>
                   <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
@@ -284,6 +326,7 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                             "Hospedagem",
                             "Serviços",
                             "Renovação / atenção",
+                            "Aviso interno",
                             "Ações",
                           ].map((h) => (
                             <th key={h} className="p-3">
@@ -347,13 +390,44 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                                   </p>
                                 )}
                               </td>
+                              <td className="min-w-44 p-3 text-xs">
+                                {c.nextNotice ? (
+                                  <p>
+                                    Próximo: {dateLabel(c.nextNotice.date)} (
+                                    {c.nextNotice.markDays} dias)
+                                  </p>
+                                ) : (
+                                  <p className="text-muted-foreground">
+                                    Sem próximo aviso
+                                  </p>
+                                )}
+                                {c.lastNotice ? (
+                                  <p className="mt-1 text-muted-foreground">
+                                    Último:{" "}
+                                    {new Date(
+                                      c.lastNotice.sentAt,
+                                    ).toLocaleDateString("pt-BR")}{" "}
+                                    ({c.lastNotice.markDays} dias
+                                    {c.lastNotice.status === "sent"
+                                      ? ""
+                                      : c.lastNotice.status === "failed"
+                                        ? ", falhou"
+                                        : ", pendente"}
+                                    )
+                                  </p>
+                                ) : (
+                                  <p className="mt-1 text-muted-foreground">
+                                    Nenhum enviado
+                                  </p>
+                                )}
+                              </td>
                               <td className="p-3">
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   onClick={() => setCompanyId(c.id)}
                                 >
-                                  Gerenciar e avisar
+                                  Gerenciar
                                 </Button>
                               </td>
                             </tr>

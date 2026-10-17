@@ -3311,3 +3311,170 @@ export const crmHostingNoticeTable = pgTable(
     ),
   ],
 );
+
+export type HostingDigestItemSnapshot = {
+  companyName: string;
+  provider: string;
+  domain: string;
+  ownerUserId: string | null;
+  ownerName: string | null;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+};
+export type HostingDigestDelivery = {
+  userId: string;
+  email: string;
+  name: string;
+  companyIds: string[];
+  status: "pending" | "accepted" | "failed";
+  error: string | null;
+};
+// Aviso interno de renovação de hospedagem de terceiros. Nunca é enviado ao
+// cliente: os destinatários são usuários do workspace escolhidos manualmente.
+export const crmHostingDigestSettingTable = pgTable(
+  "crm_hosting_digest_setting",
+  {
+    workspaceId: text("workspace_id")
+      .primaryKey()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    enabled: boolean("enabled").default(false).notNull(),
+    marks: jsonb("marks")
+      .$type<number[]>()
+      .default(sql`'[30,15]'::jsonb`)
+      .notNull(),
+    includeOwner: boolean("include_owner").default(false).notNull(),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+);
+export const crmHostingDigestRecipientTable = pgTable(
+  "crm_hosting_digest_recipient",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("crm_hosting_digest_recipient_unique").on(
+      t.workspaceId,
+      t.userId,
+    ),
+  ],
+);
+export const crmHostingDigestRunTable = pgTable(
+  "crm_hosting_digest_run",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    status: text("status")
+      .$type<"pending" | "sent" | "failed">()
+      .default("pending")
+      .notNull(),
+    attempts: integer("attempts").default(0).notNull(),
+    nextAttemptAt: timestamp("next_attempt_at", { mode: "date" })
+      .defaultNow()
+      .notNull(),
+    deliveries: jsonb("deliveries")
+      .$type<HostingDigestDelivery[]>()
+      .default(sql`'[]'::jsonb`)
+      .notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("crm_hosting_digest_run_workspace_idx").on(
+      t.workspaceId,
+      t.createdAt,
+    ),
+    index("crm_hosting_digest_run_due_idx").on(t.status, t.nextAttemptAt),
+    check(
+      "crm_hosting_digest_run_status_check",
+      sql`${t.status} in ('pending','sent','failed')`,
+    ),
+  ],
+);
+export const crmHostingDigestItemTable = pgTable(
+  "crm_hosting_digest_item",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    runId: text("run_id")
+      .notNull()
+      .references(() => crmHostingDigestRunTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => crmCompanyTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    renewsOn: date("renews_on").notNull(),
+    markDays: integer("mark_days").notNull(),
+    // false: a marca já tinha passado quando foi registrada e outra, mais
+    // próxima, foi listada no lugar. Fica gravada para não reaparecer.
+    listed: boolean("listed").default(true).notNull(),
+    snapshot: jsonb("snapshot").$type<HostingDigestItemSnapshot>().notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("crm_hosting_digest_item_unique").on(
+      t.companyId,
+      t.renewsOn,
+      t.markDays,
+    ),
+    index("crm_hosting_digest_item_run_idx").on(t.runId),
+    index("crm_hosting_digest_item_workspace_idx").on(t.workspaceId),
+    check(
+      "crm_hosting_digest_item_mark_check",
+      sql`${t.markDays} between 1 and 365`,
+    ),
+  ],
+);
