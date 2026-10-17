@@ -37,6 +37,6 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "react-email": "5.2.10",
-    "vitest": "^4.1.10"
+    "vitest": "^5.0.4"
   }
 }
