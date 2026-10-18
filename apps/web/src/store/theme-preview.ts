@@ -4,12 +4,14 @@ import { create } from "zustand";
 type ThemePreviewState = {
   name: string | null;
   css: string | null;
-  start: (name: string, css: string) => void;
+  layout: string;
+  start: (name: string, css: string, layout?: string) => void;
   stop: () => void;
 };
 export const useThemePreviewStore = create<ThemePreviewState>((set) => ({
   name: null,
   css: null,
-  start: (name, css) => set({ name, css }),
-  stop: () => set({ name: null, css: null }),
+  layout: "default",
+  start: (name, css, layout = "default") => set({ name, css, layout }),
+  stop: () => set({ name: null, css: null, layout: "default" }),
 }));

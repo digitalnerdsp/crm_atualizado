@@ -84,6 +84,21 @@ const theme = new Hono<{
       return c.json({ ok: true });
     },
   )
+  .put(
+    "/:workspaceId/:id",
+    doc("workspaceThemeUpdate", "Substituir o pacote de um tema"),
+    manage,
+    validator("param", idParams),
+    validator("json", themePackageSchema),
+    async (c) =>
+      c.json(
+        await ctl.updateTheme(
+          { workspaceId: c.get("workspaceId"), userId: c.get("userId") },
+          c.req.valid("param").id,
+          c.req.valid("json"),
+        ),
+      ),
+  )
   .delete(
     "/:workspaceId/:id",
     doc("workspaceThemeDelete", "Remover um tema"),

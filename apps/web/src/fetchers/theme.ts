@@ -34,6 +34,11 @@ export const createTheme = async (
   workspaceId: string,
   json: ThemePackageInput,
 ) => unwrap(await api.$post({ param: { workspaceId }, json }));
+export const updateTheme = async (
+  workspaceId: string,
+  id: string,
+  json: ThemePackageInput,
+) => unwrap(await api[":id"].$put({ param: { workspaceId, id }, json }));
 export const activateTheme = async (workspaceId: string, id: string) =>
   unwrap(await api[":id"].activate.$put({ param: { workspaceId, id } }));
 export const resetTheme = async (workspaceId: string) =>

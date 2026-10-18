@@ -89,9 +89,10 @@ function RouteComponent() {
         </h1>
         <p className="text-sm text-muted-foreground">
           O tema ativo vale para todos os usuários deste workspace: cores, raio
-          das bordas e fonte. O visual padrão do sistema nunca é apagado e pode
-          ser restaurado a qualquer momento. Cada usuário continua escolhendo
-          entre claro e escuro.
+          das bordas, fonte e, quando o tema pedir, o formato da tela (menu,
+          cabeçalho, cards e tabelas). O visual padrão do sistema nunca é
+          apagado e pode ser restaurado a qualquer momento. Cada usuário
+          continua escolhendo entre claro e escuro.
         </p>
       </header>
 
@@ -172,7 +173,10 @@ function RouteComponent() {
           >
             <div className="min-w-0">
               <p className="text-sm font-medium">
-                {t.name} {t.isActive && <Badge variant="outline">Em uso</Badge>}
+                {t.name} {t.isActive && <Badge variant="outline">Em uso</Badge>}{" "}
+                {t.layout === "qerza" && (
+                  <Badge variant="info">Layout Qerza</Badge>
+                )}
               </p>
               {t.description && (
                 <p className="text-xs text-muted-foreground">{t.description}</p>
@@ -193,10 +197,26 @@ function RouteComponent() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => preview.start(t.name, t.css)}
+                onClick={() => preview.start(t.name, t.css, t.layout)}
               >
                 <Eye className="size-4" /> Pré-visualizar
               </Button>
+              {t.name === qerzaTheme.name && t.layout !== "qerza" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={m.update.isPending}
+                  onClick={() =>
+                    run(
+                      () =>
+                        m.update.mutateAsync({ id: t.id, json: qerzaTheme }),
+                      "Tema Qerza atualizado com o novo formato.",
+                    )
+                  }
+                >
+                  Atualizar para o formato Qerza
+                </Button>
+              )}
               {!t.isActive && (
                 <Button
                   size="sm"
@@ -230,6 +250,7 @@ function RouteComponent() {
       <p className="text-xs text-muted-foreground">
         Limite de {data?.max ?? 20} temas. O arquivo é um JSON com{" "}
         <code>schema</code>, <code>name</code> e, opcionalmente,{" "}
+        <code>layout</code> (<code>"default"</code> ou <code>"qerza"</code>),{" "}
         <code>radius</code>, <code>fonts</code>, <code>light</code> e{" "}
         <code>dark</code>. Use “Baixar modelo” como ponto de partida. Arquivos
         de fonte e CSS próprio não são aceitos.

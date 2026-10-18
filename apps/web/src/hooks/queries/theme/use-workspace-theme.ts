@@ -7,6 +7,7 @@ import {
   listThemes,
   resetTheme,
   type ThemePackageInput,
+  updateTheme,
 } from "@/fetchers/theme";
 
 export const themeKeys = {
@@ -34,6 +35,11 @@ export function useThemeMutations(workspaceId: string) {
   return {
     create: useMutation({
       mutationFn: (json: ThemePackageInput) => createTheme(workspaceId, json),
+      onSuccess: done,
+    }),
+    update: useMutation({
+      mutationFn: ({ id, json }: { id: string; json: ThemePackageInput }) =>
+        updateTheme(workspaceId, id, json),
       onSuccess: done,
     }),
     activate: useMutation({

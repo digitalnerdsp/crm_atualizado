@@ -37,6 +37,7 @@ export const THEME_COLOR_KEYS = [
   "sidebarBorder",
 ] as const;
 export type ThemeColorKey = (typeof THEME_COLOR_KEYS)[number];
+export const THEME_LAYOUTS = ["default", "qerza"] as const;
 export const MAX_THEMES_PER_WORKSPACE = 20;
 export const MAX_PACKAGE_BYTES = 20_000;
 
@@ -77,6 +78,8 @@ export const themePackageSchema = v.object({
   schema: v.literal(1),
   name: v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(80)),
   description: v.optional(v.pipe(v.string(), v.trim(), v.maxLength(300)), ""),
+  // Estrutura visual (menu, cabeçalho, cards...). Os estilos são do app.
+  layout: v.optional(v.picklist(THEME_LAYOUTS), "default"),
   radius: v.optional(
     v.pipe(v.string(), v.trim(), v.check(isSafeRadius, "Raio inválido.")),
   ),
@@ -97,6 +100,7 @@ export function toTokens(pkg: ThemePackage): ThemeTokens {
       ),
     );
   return {
+    layout: pkg.layout ?? "default",
     radius: pkg.radius ?? null,
     fontSans: pkg.fonts?.sans ?? null,
     fontHeading: pkg.fonts?.heading ?? null,
@@ -106,6 +110,8 @@ export function toTokens(pkg: ThemePackage): ThemeTokens {
 }
 const kebab = (k: string) => k.replace(/[A-Z]/g, (m) => `-${m.toLowerCase()}`);
 /** CSS do tema; só chaves conhecidas e valores já validados. */
+export const themeLayout = (t: ThemeTokens) =>
+  t.layout === "qerza" ? "qerza" : "default";
 export function themeCss(t: ThemeTokens) {
   const known = new Set<string>(THEME_COLOR_KEYS);
   const block = (c: ThemeColors) =>

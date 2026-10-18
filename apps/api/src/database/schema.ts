@@ -3481,7 +3481,10 @@ export const crmHostingDigestItemTable = pgTable(
 
 /** Valores de cor aceitos em um tema, por modo (claro/escuro). */
 export type ThemeColors = Partial<Record<string, string>>;
+export type ThemeLayout = "default" | "qerza";
 export type ThemeTokens = {
+  /** Ausente em temas antigos = layout padrão. */
+  layout?: ThemeLayout;
   radius: string | null;
   fontSans: string | null;
   fontHeading: string | null;

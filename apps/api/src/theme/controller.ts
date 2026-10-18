@@ -5,6 +5,7 @@ import {
   MAX_THEMES_PER_WORKSPACE,
   type ThemePackage,
   themeCss,
+  themeLayout,
   toTokens,
 } from "./model";
 
@@ -36,6 +37,7 @@ const view = (row: typeof t.$inferSelect) => ({
   name: row.name,
   description: row.description,
   isActive: row.isActive,
+  layout: themeLayout(row.tokens),
   tokens: row.tokens,
   css: themeCss(row.tokens),
   createdAt: row.createdAt,
@@ -47,7 +49,14 @@ export async function activeTheme(workspaceId: string) {
     .select()
     .from(t)
     .where(and(eq(t.workspaceId, workspaceId), eq(t.isActive, true)));
-  return row ? { id: row.id, name: row.name, css: themeCss(row.tokens) } : null;
+  return row
+    ? {
+        id: row.id,
+        name: row.name,
+        layout: themeLayout(row.tokens),
+        css: themeCss(row.tokens),
+      }
+    : null;
 }
 export async function listThemes(workspaceId: string) {
   const rows = await db
@@ -85,6 +94,37 @@ export async function createTheme(s: Scope, pkg: ThemePackage) {
       .returning();
     if (!row) throw new Error("Falha ao salvar o tema");
     await audit(tx, s, row.id, "enviado", { name: row.name });
+    return view(row);
+  });
+}
+/** Substitui o pacote de um tema já enviado (mantém id e estado ativo). */
+export async function updateTheme(s: Scope, id: string, pkg: ThemePackage) {
+  return db.transaction(async (tx) => {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(hashtextextended(${`theme:${s.workspaceId}`},0))`,
+    );
+    const rows = await tx
+      .select({ id: t.id, name: t.name })
+      .from(t)
+      .where(eq(t.workspaceId, s.workspaceId));
+    if (!rows.some((r) => r.id === id)) fail(404, "Tema não encontrado.");
+    if (
+      rows.some(
+        (r) => r.id !== id && r.name.toLowerCase() === pkg.name.toLowerCase(),
+      )
+    )
+      fail(409, "Já existe um tema com esse nome.");
+    const [row] = await tx
+      .update(t)
+      .set({
+        name: pkg.name,
+        description: pkg.description ?? "",
+        tokens: toTokens(pkg),
+      })
+      .where(and(eq(t.id, id), eq(t.workspaceId, s.workspaceId)))
+      .returning();
+    if (!row) throw new Error("Falha ao salvar o tema");
+    await audit(tx, s, row.id, "atualizado", { name: row.name });
     return view(row);
   });
 }

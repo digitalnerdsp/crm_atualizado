@@ -79,4 +79,11 @@ describe("Pacote de tema", () => {
     });
     expect(css).toBe(":root{}:root:not(.dark){--primary:#fff;}.dark{}");
   });
+  it("aceita só layouts conhecidos e usa o padrão quando ausente", () => {
+    const ok = parse({ ...base, layout: "qerza" });
+    expect(ok.success && toTokens(ok.output).layout).toBe("qerza");
+    const none = parse(base);
+    expect(none.success && toTokens(none.output).layout).toBe("default");
+    expect(parse({ ...base, layout: "<script>" }).success).toBe(false);
+  });
 });

@@ -65,3 +65,13 @@ seguem o padrão do sistema.
 
 Migração `0015_workspace-theme-center.sql`: apenas cria a tabela
 `workspace_theme`. Faça backup antes de migrar.
+
+## Layout (formato da tela)
+
+Além de cores, raio e fonte, o pacote aceita `"layout": "default"` (padrão) ou `"layout": "qerza"`.
+Com `qerza`, o app aplica o formato inspirado no template Qerza: menu lateral claro com ícones em blocos, conteúdo cinza-claro, cabeçalho branco, cards arredondados com sombra suave, campos, tabelas e selos em pílula.
+
+- Os estilos do layout são do próprio app (`apps/web/src/styles/layout-qerza.css`); o JSON só escolhe o nome, nunca traz CSS.
+- Temas antigos sem `layout` continuam no formato padrão.
+- Para um tema já enviado (ex.: "Qerza"), use **Atualizar para o formato Qerza** em Configurações → Temas, ou envie o pacote de novo pela rota `PUT /api/theme/:workspaceId/:id`.
+- Não exige migração.

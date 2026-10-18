@@ -15,7 +15,23 @@ export function WorkspaceThemeStyle() {
   const workspaceId = user ? organization?.id : undefined;
   const { data } = useActiveWorkspaceTheme(workspaceId);
   const preview = useThemePreviewStore((s) => s.css);
+  const previewLayout = useThemePreviewStore((s) => s.layout);
   const css = preview ?? (workspaceId ? (data?.theme?.css ?? null) : null);
+  const layout = preview
+    ? previewLayout
+    : workspaceId
+      ? (data?.theme?.layout ?? "default")
+      : "default";
+
+  // Estrutura visual do tema (menu, cabeçalho, cards...), definida em CSS do app.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (layout === "qerza") root.dataset.themeLayout = "qerza";
+    else delete root.dataset.themeLayout;
+    return () => {
+      delete root.dataset.themeLayout;
+    };
+  }, [layout]);
 
   useEffect(() => {
     let el = document.getElementById(STYLE_ID);

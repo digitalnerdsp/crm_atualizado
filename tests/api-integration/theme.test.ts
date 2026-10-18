@@ -193,4 +193,46 @@ describe("Central de temas do workspace", () => {
       ).theme,
     ).toBeNull();
   });
+
+  it("guarda o layout e substitui o pacote de um tema existente", async () => {
+    const m = await seed();
+    const created = await send(m.app, m.base, "POST", pkg("Qerza"));
+    const id = ((await created.json()) as { id: string }).id;
+    await send(m.app, `${m.base}/${id}/activate`, "PUT");
+    const active = async () =>
+      (await (await m.app.request(`${m.base}/active`)).json()) as {
+        theme: { layout: string; css: string } | null;
+      };
+    expect((await active()).theme?.layout).toBe("default");
+
+    const up = await send(
+      m.app,
+      `${m.base}/${id}`,
+      "PUT",
+      pkg("Qerza", { layout: "qerza", light: { primary: "#111111" } }),
+    );
+    expect(up.status).toBe(200);
+    const now = (await active()).theme;
+    expect(now?.layout).toBe("qerza");
+    expect(now?.css).toContain("--primary:#111111;");
+    const rows = await db.select().from(schema.workspaceThemeTable);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.isActive).toBe(true);
+
+    expect(
+      (await send(m.app, `${m.base}/${id}`, "PUT", pkg("X", { layout: "x" })))
+        .status,
+    ).toBe(400);
+    expect(
+      (await send(m.app, `${m.base}/nao-existe`, "PUT", pkg("Y"))).status,
+    ).toBe(404);
+    await send(m.app, m.base, "POST", pkg("Outro"));
+    expect(
+      (await send(m.app, `${m.base}/${id}`, "PUT", pkg("outro"))).status,
+    ).toBe(409);
+    const member = await addMember(m, "member");
+    expect(
+      (await send(member, `${m.base}/${id}`, "PUT", pkg("Qerza"))).status,
+    ).toBe(403);
+  });
 });
