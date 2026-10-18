@@ -60,6 +60,7 @@ import task from "./task";
 import taskRelation from "./task-relation";
 import taskTemplate from "./task-template";
 import telegramIntegration from "./telegram-integration";
+import theme from "./theme";
 import timeEntry from "./time-entry";
 import {
   authenticateApiRequest,
@@ -567,6 +568,7 @@ export function createApp() {
 
   const financeApi = api.route("/finance", finance);
   const crmApi = api.route("/crm", crm);
+  const themeApi = api.route("/theme", theme);
   const projectApi = api.route("/project", project);
   const profileApi = api.route("/profile", profile);
   const taskApi = api.route("/task", task);
@@ -821,6 +823,7 @@ export function createApp() {
     oauthApi,
     adminApi,
     crmApi,
+    themeApi,
     financeApi,
   };
 }
@@ -936,6 +939,7 @@ const {
   oauthApi,
   adminApi,
   crmApi,
+  themeApi,
   financeApi,
 } = createdApp;
 
@@ -976,6 +980,7 @@ export type AppType =
   | typeof oauthApi
   | typeof adminApi
   | typeof crmApi
+  | typeof themeApi
   | typeof financeApi;
 
 export default app;

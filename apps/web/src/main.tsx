@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers/auth-provider/hooks/use-auth";
 import { KeyboardShortcutsHelp } from "./components/keyboard-shortcuts-help";
 import AuthProvider from "./components/providers/auth-provider";
 import { ThemeProvider } from "./components/providers/theme-provider";
+import { WorkspaceThemeStyle } from "./components/theme/workspace-theme-style";
 import { KeyboardShortcutsProvider } from "./hooks/use-keyboard-shortcuts";
 import { AppI18nProvider } from "./lib/i18n/provider";
 import { routeTree } from "./routeTree.gen";
@@ -46,7 +47,12 @@ const router = createRouter({
 function App() {
   const { user } = useAuth();
 
-  return <RouterProvider router={router} context={{ user }} />;
+  return (
+    <>
+      <WorkspaceThemeStyle />
+      <RouterProvider router={router} context={{ user }} />
+    </>
+  );
 }
 
 const rootElement = document.getElementById("root") as HTMLElement;

@@ -8,6 +8,7 @@ import {
 import {
   LayoutTemplate,
   Package,
+  Palette,
   Settings,
   Shield,
   Tag,
@@ -57,7 +58,7 @@ export const Route = createFileRoute(
 
 function RouteComponent() {
   const { t } = useTranslation();
-  const { workspace, role, canViewTemplates, canViewCrm } =
+  const { workspace, role, canViewTemplates, canViewCrm, canManageWorkspace } =
     useWorkspacePermission();
   const location = useLocation();
   const menuItems = [
@@ -76,6 +77,15 @@ function RouteComponent() {
       url: "/dashboard/settings/workspace/labels",
       icon: Tag,
     },
+    ...(canManageWorkspace()
+      ? [
+          {
+            title: "Temas",
+            url: "/dashboard/settings/workspace/themes",
+            icon: Palette,
+          },
+        ]
+      : []),
     ...(canViewCrm()
       ? [
           {

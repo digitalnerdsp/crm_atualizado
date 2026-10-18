@@ -158,6 +158,7 @@ import {
   workflowRuleTable,
   workspaceRoleTable,
   workspaceTable,
+  workspaceThemeTable,
   workspaceUserTable,
 } from "./schema";
 
@@ -205,6 +206,7 @@ export const schema = {
   crmHostingDigestRecipientTable,
   crmHostingDigestRunTable,
   crmHostingDigestItemTable,
+  workspaceThemeTable,
   crmCompanyServiceFlagTable,
   crmContactTable,
   crmContractEventTable,

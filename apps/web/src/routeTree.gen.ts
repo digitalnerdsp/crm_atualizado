@@ -59,6 +59,7 @@ import { Route as LayoutAuthenticatedDashboardSettingsWorkspaceGeneralRouteImpor
 import { Route as LayoutAuthenticatedDashboardSettingsWorkspaceLabelsRouteImport } from './routes/_layout/_authenticated/dashboard/settings/workspace/labels'
 import { Route as LayoutAuthenticatedDashboardSettingsWorkspaceRolesRouteImport } from './routes/_layout/_authenticated/dashboard/settings/workspace/roles'
 import { Route as LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRouteImport } from './routes/_layout/_authenticated/dashboard/settings/workspace/templates'
+import { Route as LayoutAuthenticatedDashboardSettingsWorkspaceThemesRouteImport } from './routes/_layout/_authenticated/dashboard/settings/workspace/themes'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
@@ -371,6 +372,12 @@ const LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute =
     path: '/templates',
     getParentRoute: () => LayoutAuthenticatedDashboardSettingsWorkspaceRoute,
   } as any)
+const LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute =
+  LayoutAuthenticatedDashboardSettingsWorkspaceThemesRouteImport.update({
+    id: '/themes',
+    path: '/themes',
+    getParentRoute: () => LayoutAuthenticatedDashboardSettingsWorkspaceRoute,
+  } as any)
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRouteImport.update({
     id: '/',
@@ -642,6 +649,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/workspace/labels': typeof LayoutAuthenticatedDashboardSettingsWorkspaceLabelsRoute
   '/dashboard/settings/workspace/roles': typeof LayoutAuthenticatedDashboardSettingsWorkspaceRolesRoute
   '/dashboard/settings/workspace/templates': typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute
+  '/dashboard/settings/workspace/themes': typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
@@ -716,6 +724,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/workspace/labels': typeof LayoutAuthenticatedDashboardSettingsWorkspaceLabelsRoute
   '/dashboard/settings/workspace/roles': typeof LayoutAuthenticatedDashboardSettingsWorkspaceRolesRoute
   '/dashboard/settings/workspace/templates': typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute
+  '/dashboard/settings/workspace/themes': typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
@@ -797,6 +806,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/settings/workspace/labels': typeof LayoutAuthenticatedDashboardSettingsWorkspaceLabelsRoute
   '/_layout/_authenticated/dashboard/settings/workspace/roles': typeof LayoutAuthenticatedDashboardSettingsWorkspaceRolesRoute
   '/_layout/_authenticated/dashboard/settings/workspace/templates': typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute
+  '/_layout/_authenticated/dashboard/settings/workspace/themes': typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
@@ -877,6 +887,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/workspace/labels'
     | '/dashboard/settings/workspace/roles'
     | '/dashboard/settings/workspace/templates'
+    | '/dashboard/settings/workspace/themes'
     | '/dashboard/workspace/$workspaceId/finance'
     | '/dashboard/workspace/$workspaceId/members'
     | '/dashboard/workspace/$workspaceId/performance'
@@ -951,6 +962,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/workspace/labels'
     | '/dashboard/settings/workspace/roles'
     | '/dashboard/settings/workspace/templates'
+    | '/dashboard/settings/workspace/themes'
     | '/dashboard/workspace/$workspaceId/finance'
     | '/dashboard/workspace/$workspaceId/members'
     | '/dashboard/workspace/$workspaceId/performance'
@@ -1031,6 +1043,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/settings/workspace/labels'
     | '/_layout/_authenticated/dashboard/settings/workspace/roles'
     | '/_layout/_authenticated/dashboard/settings/workspace/templates'
+    | '/_layout/_authenticated/dashboard/settings/workspace/themes'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
@@ -1425,6 +1438,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceRoute
     }
+    '/_layout/_authenticated/dashboard/settings/workspace/themes': {
+      id: '/_layout/_authenticated/dashboard/settings/workspace/themes'
+      path: '/themes'
+      fullPath: '/dashboard/settings/workspace/themes'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/'
       path: '/'
@@ -1711,6 +1731,7 @@ interface LayoutAuthenticatedDashboardSettingsWorkspaceRouteChildren {
   LayoutAuthenticatedDashboardSettingsWorkspaceLabelsRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceLabelsRoute
   LayoutAuthenticatedDashboardSettingsWorkspaceRolesRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceRolesRoute
   LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute
+  LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute: typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute
 }
 
 const LayoutAuthenticatedDashboardSettingsWorkspaceRouteChildren: LayoutAuthenticatedDashboardSettingsWorkspaceRouteChildren =
@@ -1729,6 +1750,8 @@ const LayoutAuthenticatedDashboardSettingsWorkspaceRouteChildren: LayoutAuthenti
       LayoutAuthenticatedDashboardSettingsWorkspaceRolesRoute,
     LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute:
       LayoutAuthenticatedDashboardSettingsWorkspaceTemplatesRoute,
+    LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute:
+      LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute,
   }
 
 const LayoutAuthenticatedDashboardSettingsWorkspaceRouteWithChildren =

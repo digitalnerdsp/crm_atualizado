@@ -3478,3 +3478,49 @@ export const crmHostingDigestItemTable = pgTable(
     ),
   ],
 );
+
+/** Valores de cor aceitos em um tema, por modo (claro/escuro). */
+export type ThemeColors = Partial<Record<string, string>>;
+export type ThemeTokens = {
+  radius: string | null;
+  fontSans: string | null;
+  fontHeading: string | null;
+  light: ThemeColors;
+  dark: ThemeColors;
+};
+export const workspaceThemeTable = pgTable(
+  "workspace_theme",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    tokens: jsonb("tokens").$type<ThemeTokens>().notNull(),
+    // Sem tema ativo = aparência padrão do sistema.
+    isActive: boolean("is_active").notNull().default(false),
+    createdBy: text("created_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("workspace_theme_workspace_idx").on(t.workspaceId),
+    uniqueIndex("workspace_theme_name_unique").on(t.workspaceId, t.name),
+    // No máximo um tema ativo por workspace.
+    uniqueIndex("workspace_theme_active_unique")
+      .on(t.workspaceId)
+      .where(sql`${t.isActive}`),
+  ],
+);
