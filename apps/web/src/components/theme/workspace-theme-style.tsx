@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { useActiveWorkspaceTheme } from "@/hooks/queries/theme/use-workspace-theme";
+import { useThemeLayout } from "@/hooks/use-theme-layout";
 import { authClient } from "@/lib/auth-client";
 import { useThemePreviewStore } from "@/store/theme-preview";
 
@@ -15,14 +16,8 @@ export function WorkspaceThemeStyle() {
   const workspaceId = user ? organization?.id : undefined;
   const { data } = useActiveWorkspaceTheme(workspaceId);
   const preview = useThemePreviewStore((s) => s.css);
-  const previewLayout = useThemePreviewStore((s) => s.layout);
   const css = preview ?? (workspaceId ? (data?.theme?.css ?? null) : null);
-  const layout = preview
-    ? previewLayout
-    : workspaceId
-      ? (data?.theme?.layout ?? "default")
-      : "default";
-
+  const layout = useThemeLayout();
   // Estrutura visual do tema (menu, cabeçalho, cards...), definida em CSS do app.
   useEffect(() => {
     const root = document.documentElement;

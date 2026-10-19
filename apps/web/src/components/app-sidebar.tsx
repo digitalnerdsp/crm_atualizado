@@ -16,10 +16,12 @@ import { VersionDisplay } from "@/components/version-display";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { shortcuts } from "@/constants/shortcuts";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
+import { useThemeLayout } from "@/hooks/use-theme-layout";
 import Search from "./search";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { toggleSidebar } = useSidebar();
+  const qerza = useThemeLayout() === "qerza";
 
   useRegisterShortcuts({
     modifierShortcuts: {
@@ -36,11 +38,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       className="border-none pt-1.5"
       {...props}
     >
-      <SidebarHeader className="pt-1 pb-1.5">
-        <WorkspaceSwitcher />
-      </SidebarHeader>
+      {!qerza && (
+        <SidebarHeader className="pt-1 pb-1.5">
+          <WorkspaceSwitcher />
+        </SidebarHeader>
+      )}
       <SidebarContent className="overflow-hidden gap-1 py-1">
-        <Search />
+        {!qerza && <Search />}
         <NavMain />
         <NavCommercial />
         <NavFinance />

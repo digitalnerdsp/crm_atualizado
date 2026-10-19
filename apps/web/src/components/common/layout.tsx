@@ -2,8 +2,10 @@ import type React from "react";
 import type { ReactNode } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
 import { DemoAlert } from "@/components/demo-alert";
+import { QerzaTopbar } from "@/components/qerza-topbar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { isDemoMode } from "@/constants/urls";
+import { useThemeLayout } from "@/hooks/use-theme-layout";
 import { useUserPreferencesEffects } from "@/hooks/use-user-preferences-effects";
 import { cn } from "@/lib/cn";
 import { useUserPreferencesStore } from "@/store/user-preferences";
@@ -48,6 +50,7 @@ function Layout({ children, className }: LayoutProps) {
   const { sidebarDefaultOpen } = useUserPreferencesStore();
 
   useUserPreferencesEffects();
+  const qerza = useThemeLayout() === "qerza";
 
   return (
     <div className="flex w-full bg-background">
@@ -60,6 +63,7 @@ function Layout({ children, className }: LayoutProps) {
           } as React.CSSProperties
         }
       >
+        {qerza && <QerzaTopbar />}
         <AppSidebar />
         <SidebarInset
           className={cn(
