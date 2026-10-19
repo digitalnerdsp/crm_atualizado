@@ -1,11 +1,13 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
   Building2,
+  ChartColumn,
   ChevronRight,
   Contact,
   FileSignature,
   Handshake,
   PhoneCall,
+  Server,
   TrendingUp,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -97,7 +99,7 @@ export function NavCommercial() {
             title: "Carteira e hospedagem",
             url: `${base}/hosting`,
             isActive: path.startsWith(`${base}/hosting`),
-            icon: Building2,
+            icon: Server,
           },
         ]
       : []),
@@ -117,7 +119,7 @@ export function NavCommercial() {
             title: t("crm:nav.reports"),
             url: `${base}/reports`,
             isActive: path.startsWith(`${base}/reports`),
-            icon: TrendingUp,
+            icon: ChartColumn,
           },
         ]
       : []),
