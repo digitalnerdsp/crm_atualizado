@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   BadgePercent,
+  ChartNoAxesCombined,
   ChevronRight,
   Landmark,
   ReceiptText,
@@ -35,6 +36,12 @@ export function NavFinance() {
     return null;
   const base = `/dashboard/workspace/${workspace.id}`;
   const items = [
+    {
+      title: "Dashboard geral — BI",
+      url: `${base}/bi`,
+      isActive: pathname.endsWith("/bi"),
+      icon: ChartNoAxesCombined,
+    },
     {
       title: "Resumo e lançamentos",
       url: `${base}/finance`,

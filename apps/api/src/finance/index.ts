@@ -4,6 +4,7 @@ import { describeRoute, validator } from "hono-openapi";
 import * as v from "valibot";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
+import bi from "./bi";
 import * as ctl from "./controllers/finance";
 import { excel, pdf } from "./export";
 import { dashboard, remaining, status } from "./model";
@@ -41,6 +42,7 @@ const finance = new Hono<{
     workspaceAccess.fromParam("workspaceId"),
     requireWorkspacePermission({ finance: ["read"] }),
   )
+  .route("/:workspaceId/bi", bi)
   .route("/:workspaceId/recurrence", recurrence)
   .route("/:workspaceId/performance", performance)
   .route("/:workspaceId/taxes", taxes)
