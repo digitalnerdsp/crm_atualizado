@@ -686,7 +686,8 @@
 				"member": "Can create and manage tasks and projects.",
 				"admin": "Has full access to the workspace.",
 				"sales": "Works their own pipeline: creates and moves the deals they own.",
-				"sales_manager": "Sees and redistributes the team's pipeline, and configures funnels and fields."
+				"sales_manager": "Sees and redistributes the team's pipeline, and configures funnels and fields.",
+				"finance_legal": "Commercial and financial access, without production, administration or final approval."
 			},
 			"resources": {
 				"project": "Projects",
@@ -1942,7 +1943,8 @@
 			"member": "Member",
 			"viewer": "Viewer",
 			"sales": "Sales rep",
-			"sales_manager": "Sales manager"
+			"sales_manager": "Sales manager",
+			"finance_legal": "Finance / Legal"
 		},
 		"members": {
 			"pageTitle": "Members",
@@ -1993,7 +1995,8 @@
 			"sales_manager": "Sales manager. Sees and reassigns the whole team's pipeline, configures funnels, stages, lists and the catalog, and opens every report.",
 			"sales": "Salesperson. Works their own pipeline: sees and edits only the deals, contacts and companies they own. Read-only on projects.",
 			"member": "Delivery team. Creates and works on projects and tasks; read-only in the CRM.",
-			"viewer": "Read-only. Sees projects and tasks, changes nothing."
+			"viewer": "Read-only. Sees projects and tasks, changes nothing.",
+			"finance_legal": "Commercial and financial access, without production, administration or final approval."
 		},
 		"roleLabel": "Role",
 		"customRole": "Custom role"

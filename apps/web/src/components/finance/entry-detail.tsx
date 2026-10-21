@@ -11,6 +11,7 @@ import {
   settleEntry,
 } from "@/fetchers/finance";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
 import {
   cents,
@@ -34,6 +35,7 @@ export function EntryDetail({
   canUpdate: boolean;
   onClose: () => void;
 }) {
+  const permissions = useWorkspacePermission();
   const [requestId] = useState(() => crypto.randomUUID());
   const [action, setAction] = useState<{ settlementId?: string } | null>(null);
   const [reason, setReason] = useState("");
@@ -192,25 +194,28 @@ export function EntryDetail({
                       : s.notes || "Sem ajustes"}
                   </p>
                 </div>
-                {canSettle && !s.reversedAt && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={pay.isPending || change.isPending}
-                    onClick={() => {
-                      setAction({ settlementId: s.id });
-                      setReason("");
-                    }}
-                  >
-                    Estornar
-                  </Button>
-                )}
+                {canSettle &&
+                  permissions.canReverseFinance() &&
+                  !s.reversedAt && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={pay.isPending || change.isPending}
+                      onClick={() => {
+                        setAction({ settlementId: s.id });
+                        setReason("");
+                      }}
+                    >
+                      Estornar
+                    </Button>
+                  )}
               </div>
             ))
           )}
         </section>
         {canUpdate &&
+          permissions.canCancelFinance() &&
           !entry.contractId &&
           !entry.cancelledAt &&
           left === entry.amountCents && (

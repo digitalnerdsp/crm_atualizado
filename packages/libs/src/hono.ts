@@ -1,6 +1,6 @@
 /// <reference types="vite/types/importMeta.d.ts" />
 
-import type { AppType } from "@kaneo/api";
+import type { AppType, PortfolioAppType, SiteWorkAppType } from "@kaneo/api";
 import { hc } from "hono/client";
 import { resolveApiBaseUrl } from "./api-url";
 
@@ -9,7 +9,7 @@ const apiUrl = resolveApiBaseUrl(import.meta.env.VITE_API_URL);
 // Generate once per tab load
 export const windowId = Math.random().toString(36).substring(2, 11);
 
-export const client = hc<AppType>(apiUrl, {
+const options = {
   fetch: (input: RequestInfo | URL, init?: RequestInit) => {
     return fetch(input, {
       ...init,
@@ -28,4 +28,8 @@ export const client = hc<AppType>(apiUrl, {
       throw error;
     });
   },
-});
+};
+
+export const client = hc<AppType>(apiUrl, options);
+export const portfolioClient = hc<PortfolioAppType>(apiUrl, options);
+export const siteWorkClient = hc<SiteWorkAppType>(apiUrl, options);

@@ -25,10 +25,15 @@ export const BACKFILL_SETTING_KEY = "workspace_roles.applied_backfills";
  * new default role or permission resource; never remove an entry, or it would
  * be re-applied on top of later admin edits.
  */
-export const BACKFILL_ROLE_NAMES = ["sales", "sales_manager"] as const;
+export const BACKFILL_ROLE_NAMES = [
+  "sales",
+  "sales_manager",
+  "finance_legal",
+] as const;
 
 export const BACKFILL_RESOURCES = [
   "finance",
+  "portfolio",
   "crmDeal",
   "crmContact",
   "crmCompany",

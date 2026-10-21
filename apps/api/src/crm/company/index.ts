@@ -9,7 +9,10 @@ import {
   crmPaymentTermSchema,
   crmPersonTypeSchema,
 } from "../../schemas";
-import { requireWorkspacePermission } from "../../utils/require-workspace-permission";
+import {
+  hasWorkspacePermission,
+  requireWorkspacePermission,
+} from "../../utils/require-workspace-permission";
 import { workspaceAccess } from "../../utils/workspace-access-middleware";
 import { BRAZIL_STATES } from "../shared/client-profile";
 import { resolveVisibility } from "../shared/resolve-visibility";
@@ -245,11 +248,15 @@ const company = new Hono<{
     requireWorkspacePermission({ crmCompany: ["read"] }),
     async (c) => {
       const { companyId } = c.req.valid("param");
+      const result = await getCompanyCtrl({
+        workspaceId: c.get("workspaceId"),
+        companyId,
+      });
+      const canProduction = await hasWorkspacePermission(c, { task: ["read"] });
       return c.json(
-        await getCompanyCtrl({
-          workspaceId: c.get("workspaceId"),
-          companyId,
-        }),
+        canProduction
+          ? result
+          : { ...result, tasksByProject: [], openTaskCount: 0 },
       );
     },
   )

@@ -9,6 +9,7 @@ import * as ctl from "./controllers/finance";
 import { excel, pdf } from "./export";
 import { dashboard, remaining, status } from "./model";
 import performance from "./performance";
+import portfolio from "./portfolio";
 import recurrence from "./recurrence";
 import taxes from "./taxes";
 import {
@@ -194,7 +195,7 @@ const finance = new Hono<{
   .post(
     "/:workspaceId/entries/:id/cancel",
     doc("financeCancelEntry", "Cancelar com justificativa"),
-    grant("update"),
+    grant("cancel"),
     validator("param", params),
     validator("json", reasonSchema),
     async (c) =>
@@ -229,7 +230,7 @@ const finance = new Hono<{
   .post(
     "/:workspaceId/entries/:id/settlements/:settlementId/reverse",
     doc("financeReverseSettlement", "Estornar baixa mantendo histórico"),
-    grant("settle"),
+    grant("reverse"),
     validator(
       "param",
       v.object({
@@ -295,4 +296,5 @@ const finance = new Hono<{
       return c.body(bytes);
     },
   );
+finance.route("/:workspaceId/portfolio", portfolio);
 export default finance;

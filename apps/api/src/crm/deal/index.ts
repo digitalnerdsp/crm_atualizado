@@ -228,8 +228,15 @@ const deal = new Hono<{
     requireWorkspacePermission({ crmDeal: ["read"] }),
     async (c) => {
       const { dealId } = c.req.valid("param");
+      const result = await getDealCtrl({
+        workspaceId: c.get("workspaceId"),
+        dealId,
+      });
+      const canProduction = await hasWorkspacePermission(c, { task: ["read"] });
       return c.json(
-        await getDealCtrl({ workspaceId: c.get("workspaceId"), dealId }),
+        canProduction
+          ? result
+          : { ...result, deliveryTasks: [], completedTaskCount: 0 },
       );
     },
   )

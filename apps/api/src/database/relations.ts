@@ -39,9 +39,14 @@ import {
   financeCommissionPayoutTable,
   financeCommissionRuleTable,
   financeEntryTable,
+  financeLaborRateTable,
   financePartyTable,
   financeResultSettingsTable,
   financeSettlementTable,
+  financeSiteEntryTable,
+  financeSiteTable,
+  financeSiteTaskTable,
+  financeSiteWorkerTable,
   financeTaxProfileRevisionTable,
   financeTaxProfileTable,
   financeTaxSimulationTable,
@@ -50,6 +55,10 @@ import {
   invitationTable,
   labelTable,
   notificationTable,
+  portfolioCaseTable,
+  portfolioDraftTable,
+  portfolioEventTable,
+  portfolioNoticeTable,
   projectTable,
   sessionTable,
   systemSettingTable,
@@ -1177,6 +1186,165 @@ export const crmCompanyServiceFlagRelations = relations(
     service: one(crmServiceTable, {
       fields: [crmCompanyServiceFlagTable.serviceId],
       references: [crmServiceTable.id],
+    }),
+  }),
+);
+
+export const financeSiteRelations = relations(
+  financeSiteTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [financeSiteTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    company: one(crmCompanyTable, {
+      fields: [financeSiteTable.companyId],
+      references: [crmCompanyTable.id],
+    }),
+    contract: one(crmContractTable, {
+      fields: [financeSiteTable.contractId],
+      references: [crmContractTable.id],
+    }),
+    taskPlans: many(financeSiteTaskTable),
+    workers: many(financeSiteWorkerTable),
+    entryLinks: many(financeSiteEntryTable),
+  }),
+);
+
+export const financeSiteTaskRelations = relations(
+  financeSiteTaskTable,
+  ({ one }) => ({
+    task: one(taskTable, {
+      fields: [financeSiteTaskTable.taskId],
+      references: [taskTable.id],
+    }),
+    site: one(financeSiteTable, {
+      fields: [financeSiteTaskTable.siteId],
+      references: [financeSiteTable.id],
+    }),
+  }),
+);
+
+export const financeSiteWorkerRelations = relations(
+  financeSiteWorkerTable,
+  ({ one }) => ({
+    site: one(financeSiteTable, {
+      fields: [financeSiteWorkerTable.siteId],
+      references: [financeSiteTable.id],
+    }),
+    user: one(userTable, {
+      fields: [financeSiteWorkerTable.userId],
+      references: [userTable.id],
+    }),
+    sourceEntry: one(financeEntryTable, {
+      fields: [financeSiteWorkerTable.sourceEntryId],
+      references: [financeEntryTable.id],
+    }),
+  }),
+);
+
+export const financeSiteEntryRelations = relations(
+  financeSiteEntryTable,
+  ({ one }) => ({
+    entry: one(financeEntryTable, {
+      fields: [financeSiteEntryTable.entryId],
+      references: [financeEntryTable.id],
+    }),
+    site: one(financeSiteTable, {
+      fields: [financeSiteEntryTable.siteId],
+      references: [financeSiteTable.id],
+    }),
+  }),
+);
+
+export const financeLaborRateRelations = relations(
+  financeLaborRateTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [financeLaborRateTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    user: one(userTable, {
+      fields: [financeLaborRateTable.userId],
+      references: [userTable.id],
+    }),
+  }),
+);
+
+export const portfolioCaseRelations = relations(
+  portfolioCaseTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [portfolioCaseTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    company: one(crmCompanyTable, {
+      fields: [portfolioCaseTable.companyId],
+      references: [crmCompanyTable.id],
+    }),
+    owner: one(userTable, {
+      fields: [portfolioCaseTable.ownerUserId],
+      references: [userTable.id],
+    }),
+    events: many(portfolioEventTable),
+    notices: many(portfolioNoticeTable),
+  }),
+);
+
+export const portfolioEventRelations = relations(
+  portfolioEventTable,
+  ({ one }) => ({
+    case: one(portfolioCaseTable, {
+      fields: [portfolioEventTable.caseId],
+      references: [portfolioCaseTable.id],
+    }),
+    actor: one(userTable, {
+      fields: [portfolioEventTable.actorUserId],
+      references: [userTable.id],
+    }),
+  }),
+);
+
+export const portfolioNoticeRelations = relations(
+  portfolioNoticeTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [portfolioNoticeTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    case: one(portfolioCaseTable, {
+      fields: [portfolioNoticeTable.caseId],
+      references: [portfolioCaseTable.id],
+    }),
+    actor: one(userTable, {
+      fields: [portfolioNoticeTable.actorUserId],
+      references: [userTable.id],
+    }),
+    confirmer: one(userTable, {
+      fields: [portfolioNoticeTable.confirmedBy],
+      references: [userTable.id],
+    }),
+  }),
+);
+
+export const portfolioDraftRelations = relations(
+  portfolioDraftTable,
+  ({ one }) => ({
+    workspace: one(workspaceTable, {
+      fields: [portfolioDraftTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    company: one(crmCompanyTable, {
+      fields: [portfolioDraftTable.companyId],
+      references: [crmCompanyTable.id],
+    }),
+    contract: one(crmContractTable, {
+      fields: [portfolioDraftTable.contractId],
+      references: [crmContractTable.id],
+    }),
+    approver: one(userTable, {
+      fields: [portfolioDraftTable.approvedBy],
+      references: [userTable.id],
     }),
   }),
 );

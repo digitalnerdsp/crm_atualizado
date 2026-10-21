@@ -65,6 +65,7 @@ import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRouteImport 
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/search'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes'
@@ -412,6 +413,12 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute =
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRouteImport.update({
+    id: '/portfolio',
+    path: '/portfolio',
+    getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+  } as any)
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRouteImport.update({
     id: '/recurrence',
@@ -661,6 +668,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
+  '/dashboard/workspace/$workspaceId/portfolio': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
   '/dashboard/workspace/$workspaceId/recurrence': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   '/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
   '/dashboard/workspace/$workspaceId/taxes': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
@@ -737,6 +745,7 @@ export interface FileRoutesByTo {
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
+  '/dashboard/workspace/$workspaceId/portfolio': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
   '/dashboard/workspace/$workspaceId/recurrence': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   '/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
   '/dashboard/workspace/$workspaceId/taxes': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
@@ -820,6 +829,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/search': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
@@ -902,6 +912,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/finance'
     | '/dashboard/workspace/$workspaceId/members'
     | '/dashboard/workspace/$workspaceId/performance'
+    | '/dashboard/workspace/$workspaceId/portfolio'
     | '/dashboard/workspace/$workspaceId/recurrence'
     | '/dashboard/workspace/$workspaceId/search'
     | '/dashboard/workspace/$workspaceId/taxes'
@@ -978,6 +989,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/finance'
     | '/dashboard/workspace/$workspaceId/members'
     | '/dashboard/workspace/$workspaceId/performance'
+    | '/dashboard/workspace/$workspaceId/portfolio'
     | '/dashboard/workspace/$workspaceId/recurrence'
     | '/dashboard/workspace/$workspaceId/search'
     | '/dashboard/workspace/$workspaceId/taxes'
@@ -1060,6 +1072,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/search'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/taxes'
@@ -1493,6 +1506,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio'
+      path: '/portfolio'
+      fullPath: '/dashboard/workspace/$workspaceId/portfolio'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/recurrence'
       path: '/recurrence'
@@ -1805,6 +1825,7 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
@@ -1838,6 +1859,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRecurrenceRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdSearchRoute:

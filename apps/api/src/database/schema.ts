@@ -3527,3 +3527,355 @@ export const workspaceThemeTable = pgTable(
       .where(sql`${t.isActive}`),
   ],
 );
+
+export const portfolioCaseTable = pgTable(
+  "portfolio_case",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    sourceKind: text("source_kind")
+      .$type<"receivable" | "contract" | "hosting">()
+      .notNull(),
+    sourceId: text("source_id").notNull(),
+    sourceDate: date("source_date").notNull(),
+    companyId: text("company_id").references(() => crmCompanyTable.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+    status: text("status")
+      .$type<
+        "open" | "waiting" | "promised" | "negotiating" | "done" | "snoozed"
+      >()
+      .default("open")
+      .notNull(),
+    ownerUserId: text("owner_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    nextOn: date("next_on"),
+    nextAction: text("next_action").default("").notNull(),
+    promiseOn: date("promise_on"),
+    promiseCents: bigint("promise_cents", { mode: "number" }),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("portfolio_case_source_unique").on(
+      t.workspaceId,
+      t.sourceKind,
+      t.sourceId,
+      t.sourceDate,
+    ),
+    index("portfolio_case_workspace_idx").on(t.workspaceId),
+  ],
+);
+
+export const portfolioEventTable = pgTable(
+  "portfolio_event",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    caseId: text("case_id")
+      .notNull()
+      .references(() => portfolioCaseTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    actorUserId: text("actor_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    note: text("note").notNull(),
+    snapshot: jsonb("snapshot").$type<Record<string, unknown>>().notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [index("portfolio_event_case_idx").on(t.caseId)],
+);
+
+export const portfolioNoticeTable = pgTable(
+  "portfolio_notice",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    caseId: text("case_id")
+      .notNull()
+      .references(() => portfolioCaseTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    requestId: text("request_id").notNull(),
+    signature: text("signature").notNull(),
+    channel: text("channel").$type<"email" | "whatsapp">().notNull(),
+    status: text("status")
+      .$type<
+        | "sending"
+        | "accepted"
+        | "failed"
+        | "uncertain"
+        | "prepared"
+        | "confirmed"
+      >()
+      .notNull(),
+    recipient: text("recipient").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    error: text("error"),
+    actorUserId: text("actor_user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    confirmedBy: text("confirmed_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("portfolio_notice_request_unique").on(
+      t.workspaceId,
+      t.requestId,
+    ),
+    index("portfolio_notice_case_idx").on(t.caseId),
+  ],
+);
+
+export const financeSiteTable = pgTable(
+  "finance_site",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => crmCompanyTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    contractId: text("contract_id").references(() => crmContractTable.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+    name: text("name").notNull(),
+    status: text("status")
+      .$type<"active" | "completed">()
+      .default("active")
+      .notNull(),
+    includeScenario: boolean("include_scenario").default(false).notNull(),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("finance_site_workspace_idx").on(t.workspaceId),
+    index("finance_site_company_idx").on(t.companyId),
+  ],
+);
+
+export const financeSiteTaskTable = pgTable(
+  "finance_site_task",
+  {
+    taskId: text("task_id")
+      .primaryKey()
+      .references(() => taskTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => financeSiteTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    estimateMinutes: integer("estimate_minutes").default(0).notNull(),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("finance_site_task_site_idx").on(t.siteId),
+    check("finance_site_task_estimate_check", sql`${t.estimateMinutes} >= 0`),
+  ],
+);
+
+export const financeLaborRateTable = pgTable(
+  "finance_labor_rate",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    effectiveOn: date("effective_on").notNull(),
+    hourlyCents: bigint("hourly_cents", { mode: "number" }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("finance_labor_rate_date_unique").on(
+      t.workspaceId,
+      t.userId,
+      t.effectiveOn,
+    ),
+    check("finance_labor_rate_positive", sql`${t.hourlyCents} >= 0`),
+  ],
+);
+
+export const financeSiteWorkerTable = pgTable(
+  "finance_site_worker",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => financeSiteTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => userTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    mode: text("mode")
+      .$type<"internal" | "hourly" | "fixed" | "ledger">()
+      .notNull(),
+    fixedCents: bigint("fixed_cents", { mode: "number" }).default(0).notNull(),
+    chargedOn: date("charged_on").notNull(),
+    sourceEntryId: text("source_entry_id").references(
+      () => financeEntryTable.id,
+      { onDelete: "restrict", onUpdate: "cascade" },
+    ),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("finance_site_worker_unique").on(t.siteId, t.userId),
+    uniqueIndex("finance_site_worker_source_unique").on(t.sourceEntryId),
+  ],
+);
+
+export const financeSiteEntryTable = pgTable(
+  "finance_site_entry",
+  {
+    entryId: text("entry_id")
+      .primaryKey()
+      .references(() => financeEntryTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    siteId: text("site_id")
+      .notNull()
+      .references(() => financeSiteTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [index("finance_site_entry_site_idx").on(t.siteId)],
+);
+
+export const portfolioDraftTable = pgTable(
+  "portfolio_draft",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    companyId: text("company_id")
+      .notNull()
+      .references(() => crmCompanyTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    contractId: text("contract_id").references(() => crmContractTable.id, {
+      onDelete: "restrict",
+      onUpdate: "cascade",
+    }),
+    title: text("title").notNull(),
+    body: text("body").notNull(),
+    proposedCents: bigint("proposed_cents", { mode: "number" }).notNull(),
+    status: text("status")
+      .$type<"draft" | "submitted" | "approved" | "rejected">()
+      .default("draft")
+      .notNull(),
+    decision: text("decision").default("").notNull(),
+    approvedBy: text("approved_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    version: integer("version").default(1).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [index("portfolio_draft_workspace_idx").on(t.workspaceId)],
+);

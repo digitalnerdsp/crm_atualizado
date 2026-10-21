@@ -686,7 +686,8 @@
 				"member": "Pode criar e gerenciar tarefas e projetos.",
 				"admin": "Tem acesso total ao workspace.",
 				"sales": "Trabalha o próprio funil: cria e move os negócios de que é dono.",
-				"sales_manager": "Enxerga e redistribui o funil do time, e configura funis e campos."
+				"sales_manager": "Enxerga e redistribui o funil do time, e configura funis e campos.",
+				"finance_legal": "Comercial e financeiro, sem produção, administração ou aprovação final."
 			},
 			"resources": {
 				"project": "Projetos",
@@ -1942,7 +1943,8 @@
 			"member": "Membro",
 			"viewer": "Visualizador",
 			"sales": "Vendedor",
-			"sales_manager": "Gestor comercial"
+			"sales_manager": "Gestor comercial",
+			"finance_legal": "Financeiro/Jurídico"
 		},
 		"members": {
 			"pageTitle": "Membros",
@@ -1993,7 +1995,8 @@
 			"sales_manager": "Gestor comercial. Vê e redistribui o funil do time inteiro, configura funis, etapas, listas e catálogo, e abre todos os relatórios.",
 			"sales": "Vendedor. Trabalha o próprio funil: vê e edita só os negócios, contatos e empresas de que é dono. Nos projetos, só consulta.",
 			"member": "Equipe de entrega. Cria e toca projetos e tarefas; no CRM, só consulta.",
-			"viewer": "Somente leitura. Vê projetos e tarefas, não altera nada."
+			"viewer": "Somente leitura. Vê projetos e tarefas, não altera nada.",
+			"finance_legal": "Comercial e financeiro, sem produção, administração ou aprovação final."
 		},
 		"roleLabel": "Papel",
 		"customRole": "Papel personalizado"

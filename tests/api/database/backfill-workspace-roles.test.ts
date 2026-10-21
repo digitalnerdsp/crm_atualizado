@@ -58,6 +58,7 @@ describe("planWorkspaceRoleBackfill", () => {
     });
 
     expect(plan.inserts.map((insert) => insert.role).sort()).toEqual([
+      "finance_legal",
       "sales",
       "sales_manager",
     ]);
@@ -198,13 +199,19 @@ describe("planWorkspaceRoleBackfill", () => {
 
     expect(plan.inserts.map((insert) => insert.role)).toEqual([
       "sales_manager",
+      "finance_legal",
     ]);
   });
 
   it("covers every seeded role and CRM resource introduced by this release", () => {
-    expect([...BACKFILL_ROLE_NAMES]).toEqual(["sales", "sales_manager"]);
+    expect([...BACKFILL_ROLE_NAMES]).toEqual([
+      "sales",
+      "sales_manager",
+      "finance_legal",
+    ]);
     expect([...BACKFILL_RESOURCES]).toEqual([
       "finance",
+      "portfolio",
       "crmDeal",
       "crmContact",
       "crmCompany",

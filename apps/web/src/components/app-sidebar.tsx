@@ -17,9 +17,11 @@ import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import { shortcuts } from "@/constants/shortcuts";
 import { useRegisterShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useThemeLayout } from "@/hooks/use-theme-layout";
+import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import Search from "./search";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const permissions = useWorkspacePermission();
   const { toggleSidebar } = useSidebar();
   const qerza = useThemeLayout() === "qerza";
 
@@ -44,7 +46,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarHeader>
       )}
       <SidebarContent className="overflow-hidden gap-1 py-1">
-        {!qerza && <Search />}
+        {!qerza && permissions.canViewProjects() && <Search />}
         <NavMain />
         <NavCommercial />
         <NavFinance />

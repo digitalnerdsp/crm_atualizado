@@ -2,7 +2,10 @@ import { Hono } from "hono";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import { timeEntrySchema } from "../schemas";
-import { requireWorkspacePermission } from "../utils/require-workspace-permission";
+import {
+  hasWorkspacePermission,
+  requireWorkspacePermission,
+} from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import createTimeEntry from "./controllers/create-time-entry";
 import getTimeEntriesByTaskId from "./controllers/get-time-entries";
@@ -132,6 +135,8 @@ const timeEntry = new Hono<{
       const { startTime, endTime, description } = c.req.valid("json");
       const timeEntry = await updateTimeEntry({
         timeEntryId: id,
+        actorUserId: c.get("userId"),
+        canManage: await hasWorkspacePermission(c, { portfolio: ["costs"] }),
         startTime: new Date(startTime),
         endTime: endTime ? new Date(endTime) : undefined,
         description,

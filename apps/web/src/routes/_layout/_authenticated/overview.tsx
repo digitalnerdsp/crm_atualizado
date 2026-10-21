@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   AlertTriangle,
   BarChart3,
@@ -14,7 +14,7 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Layout from "@/components/common/layout";
 import PageTitle from "@/components/page-title";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -444,6 +444,21 @@ function DashboardSkeleton() {
 
 function OperationalDashboardPage() {
   const { data: workspace } = useActiveWorkspace();
+  const navigate = useNavigate();
+  const permissions = useWorkspacePermission();
+  useEffect(() => {
+    if (
+      workspace &&
+      !permissions.isCheckingPermissions &&
+      !permissions.canViewDashboard() &&
+      permissions.canViewFinance()
+    )
+      navigate({
+        to: "/dashboard/workspace/$workspaceId/portfolio",
+        params: { workspaceId: workspace.id },
+        replace: true,
+      });
+  }, [workspace, permissions, navigate]);
   const { canViewDashboard, isAdmin, isCheckingPermissions } =
     useWorkspacePermission();
   const [period, setPeriod] = useState<Period>("30d");

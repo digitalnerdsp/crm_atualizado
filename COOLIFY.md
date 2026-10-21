@@ -155,3 +155,8 @@ Then open:
 ```txt
 http://localhost:5173
 ```
+
+
+## Atualização da fase 7
+
+A Gestão da carteira e o papel Financeiro/Jurídico incluem a migração `0016_portfolio-sites-finance-legal`, aplicada automaticamente ao iniciar a API. Preserve banco, uploads e variáveis existentes; faça backup antes do redeploy. O novo papel é disponibilizado nos workspaces existentes e deve ser atribuído aos usuários pelo administrador. Veja [o guia da fase 7](docs/carteira-rentabilidade-fase-7.md) para configuração de sites, horas e conciliação dos custos.

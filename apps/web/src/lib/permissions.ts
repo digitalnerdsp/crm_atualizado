@@ -3,6 +3,7 @@ export {
   admin,
   type BuiltInRoleName,
   builtInRoles,
+  financeLegal,
   member,
   owner,
   sales,

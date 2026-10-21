@@ -169,6 +169,7 @@ describe("built-in role privileges", () => {
   it("groups every role under builtInRoles by the name stored on a member", () => {
     expect(Object.keys(builtInRoles).sort()).toEqual([
       "admin",
+      "finance_legal",
       "member",
       "owner",
       "sales",
@@ -192,10 +193,12 @@ describe("default-role seed payloads", () => {
       "admin",
       "sales",
       "sales_manager",
+      "finance_legal",
     ]);
     expect(DEFAULT_ROLE_NAMES).not.toContain("owner");
     expect(Object.keys(defaultRolePayloads).sort()).toEqual([
       "admin",
+      "finance_legal",
       "member",
       "sales",
       "sales_manager",

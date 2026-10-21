@@ -14,6 +14,7 @@ import { createAuthClient } from "better-auth/react";
 import {
   ac,
   admin,
+  financeLegal,
   member,
   owner,
   sales,
@@ -48,6 +49,7 @@ export const authClient = createAuthClient({
         owner,
         sales,
         sales_manager: salesManager,
+        finance_legal: financeLegal,
       },
       dynamicAccessControl: {
         enabled: true,

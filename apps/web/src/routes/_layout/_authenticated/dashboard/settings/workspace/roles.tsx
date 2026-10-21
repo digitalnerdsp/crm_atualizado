@@ -67,6 +67,7 @@ const CUSTOM_RESOURCES = (Object.keys(statement) as StatementResource[]).filter(
 
 const RESOURCE_LABELS: Record<string, string> = {
   finance: "Financeiro",
+  portfolio: "Gestão da carteira",
   project: "Projects",
   task: "Tasks",
   label: "Labels",
@@ -79,6 +80,34 @@ const PERMISSION_LABELS: Record<
   string,
   { label: string; description: string }
 > = {
+  "finance:cancel": {
+    label: "Cancelar lançamentos",
+    description: "Cancelar títulos sem baixas ativas, com justificativa.",
+  },
+  "finance:reverse": {
+    label: "Estornar baixas",
+    description: "Reverter pagamentos e recebimentos com justificativa.",
+  },
+  "portfolio:update": {
+    label: "Acompanhar carteira",
+    description: "Registrar promessas, responsáveis e próximos contatos.",
+  },
+  "portfolio:notify": {
+    label: "Preparar e enviar avisos",
+    description: "Revisar e-mails e preparar mensagens de WhatsApp.",
+  },
+  "portfolio:costs": {
+    label: "Gerenciar custos de sites",
+    description: "Cadastrar sites, vigências e acordos com colaboradores.",
+  },
+  "portfolio:draft": {
+    label: "Elaborar minutas",
+    description: "Preparar e submeter propostas para aprovação.",
+  },
+  "portfolio:approve": {
+    label: "Aprovar minutas",
+    description: "Registrar decisão final sobre minutas submetidas.",
+  },
   "finance:read": {
     label: "Consultar financeiro",
     description: "Ver lançamentos, indicadores e histórico financeiro.",
@@ -89,11 +118,11 @@ const PERMISSION_LABELS: Record<
   },
   "finance:update": {
     label: "Editar lançamentos",
-    description: "Editar e cancelar lançamentos sem baixas ativas.",
+    description: "Editar lançamentos sem baixas ativas.",
   },
   "finance:settle": {
-    label: "Dar baixa e estornar",
-    description: "Registrar pagamentos, recebimentos e estornos.",
+    label: "Dar baixa",
+    description: "Registrar pagamentos e recebimentos.",
   },
   "finance:export": {
     label: "Exportar relatórios",
@@ -204,6 +233,8 @@ const DEFAULT_ROLE_NAME_SET = new Set<string>(DEFAULT_ROLE_NAMES);
 const RESERVED_ROLE_NAMES = [...DEFAULT_ROLE_NAMES, "owner"];
 
 const DEFAULT_ROLE_DESCRIPTIONS: Record<string, string> = {
+  finance_legal:
+    "Cobranças, contratos e financeiro, sem produção ou administração.",
   viewer: "Read-only access to projects, tasks, and workspace.",
   member: "Can create and update projects and tasks.",
   admin: "Full project and task management plus workspace settings.",

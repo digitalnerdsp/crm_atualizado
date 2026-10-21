@@ -13,7 +13,17 @@ export const statement = {
   label: ["create", "read", "update", "delete"],
   calendar: ["create", "read", "update", "delete"],
   dashboard: ["read"],
-  finance: ["read", "create", "update", "settle", "export", "manage"],
+  finance: [
+    "read",
+    "create",
+    "update",
+    "settle",
+    "export",
+    "manage",
+    "reverse",
+    "cancel",
+  ],
+  portfolio: ["update", "notify", "costs", "draft", "approve"],
   template: ["read", "use", "manage"],
   workspace: ["read", "update", "delete", "manage_settings"],
   // CRM. `read` = apenas os registros de que sou dono; `read_all` = todos os do
@@ -69,7 +79,17 @@ export const admin = ac.newRole({
   label: ["create", "read", "update", "delete"],
   calendar: ["create", "read", "update", "delete"],
   dashboard: ["read"],
-  finance: ["read", "create", "update", "settle", "export", "manage"],
+  finance: [
+    "read",
+    "create",
+    "update",
+    "settle",
+    "export",
+    "manage",
+    "reverse",
+    "cancel",
+  ],
+  portfolio: ["update", "notify", "costs", "draft", "approve"],
   template: ["read", "use", "manage"],
   workspace: ["read", "update", "manage_settings"],
   crmDeal: [
@@ -95,7 +115,17 @@ export const owner = ac.newRole({
   label: ["create", "read", "update", "delete"],
   calendar: ["create", "read", "update", "delete"],
   dashboard: ["read"],
-  finance: ["read", "create", "update", "settle", "export", "manage"],
+  finance: [
+    "read",
+    "create",
+    "update",
+    "settle",
+    "export",
+    "manage",
+    "reverse",
+    "cancel",
+  ],
+  portfolio: ["update", "notify", "costs", "draft", "approve"],
   template: ["read", "use", "manage"],
   workspace: ["read", "update", "delete", "manage_settings"],
   crmDeal: [
@@ -154,6 +184,14 @@ export const salesManager = ac.newRole({
   crmReport: ["read", "read_all"],
 });
 
+export const financeLegal = ac.newRole({
+  finance: ["read", "create", "update", "settle", "export"],
+  portfolio: ["update", "notify", "costs", "draft"],
+  crmDeal: ["read", "read_all"],
+  crmPipeline: ["read"],
+  crmCompany: ["read", "read_all", "update", "notify"],
+  crmContact: ["read", "read_all", "update"],
+});
 export const builtInRoles = {
   viewer,
   member,
@@ -161,6 +199,7 @@ export const builtInRoles = {
   owner,
   sales,
   sales_manager: salesManager,
+  finance_legal: financeLegal,
 } as const;
 
 export type BuiltInRoleName = keyof typeof builtInRoles;
@@ -176,6 +215,7 @@ export const DEFAULT_ROLE_NAMES = [
   "admin",
   "sales",
   "sales_manager",
+  "finance_legal",
 ] as const;
 export type DefaultRoleName = (typeof DEFAULT_ROLE_NAMES)[number];
 
@@ -202,4 +242,5 @@ export const defaultRolePayloads: Record<
   admin: toMutablePayload(admin.statements),
   sales: toMutablePayload(sales.statements),
   sales_manager: toMutablePayload(salesManager.statements),
+  finance_legal: toMutablePayload(financeLegal.statements),
 };

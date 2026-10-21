@@ -83,6 +83,7 @@ const ADMIN_ROLE_OPTIONS = [
   { value: "owner", label: "Dono" },
   { value: "admin", label: "Admin" },
   { value: "sales_manager", label: "Gestor comercial" },
+  { value: "finance_legal", label: "Financeiro/Jurídico" },
   { value: "sales", label: "Vendedor" },
   { value: "member", label: "Membro" },
   { value: "viewer", label: "Visualizador" },

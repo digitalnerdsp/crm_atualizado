@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { LayoutGrid, Plus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import PageTitle from "@/components/page-title";
@@ -46,6 +46,15 @@ function RouteComponent() {
   const { canCreateProjects, canViewProjects, isCheckingPermissions } =
     useWorkspacePermission();
   const canView = canViewProjects();
+  const permission = useWorkspacePermission();
+  useEffect(() => {
+    if (!isCheckingPermissions && !canView && permission.canViewFinance())
+      navigate({
+        to: "/dashboard/workspace/$workspaceId/portfolio",
+        params: { workspaceId },
+        replace: true,
+      });
+  }, [isCheckingPermissions, canView, permission, navigate, workspaceId]);
   const { data: projects, isLoading } = useGetProjects({
     workspaceId: canView ? workspaceId : "",
   });

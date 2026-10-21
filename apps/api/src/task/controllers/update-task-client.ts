@@ -4,6 +4,8 @@ import db from "../../database";
 import {
   crmCompanyTable,
   crmDealTable,
+  financeSiteTable,
+  financeSiteTaskTable,
   projectTable,
   taskTable,
 } from "../../database/schema";
@@ -97,11 +99,33 @@ async function updateTaskClient({
     resolvedDealId = null;
   }
 
-  const [updated] = await db
-    .update(taskTable)
-    .set({ crmCompanyId: resolvedCompanyId, crmDealId: resolvedDealId })
-    .where(eq(taskTable.id, id))
-    .returning();
+  const updated = await db.transaction(async (tx) => {
+    await tx
+      .select({ id: taskTable.id })
+      .from(taskTable)
+      .where(eq(taskTable.id, id))
+      .for("update");
+    const [linkedSite] = await tx
+      .select({ companyId: financeSiteTable.companyId })
+      .from(financeSiteTaskTable)
+      .innerJoin(
+        financeSiteTable,
+        eq(financeSiteTable.id, financeSiteTaskTable.siteId),
+      )
+      .where(eq(financeSiteTaskTable.taskId, id));
+    if (linkedSite && linkedSite.companyId !== resolvedCompanyId)
+      throw new HTTPException(409, {
+        message:
+          "Tarefa vinculada a projeto de site: preserve o cliente e o histórico de horas. Crie outra tarefa para outro cliente.",
+      });
+    const [updated] = await tx
+      .update(taskTable)
+      .set({ crmCompanyId: resolvedCompanyId, crmDealId: resolvedDealId })
+      .where(eq(taskTable.id, id))
+      .returning();
+
+    return updated;
+  });
 
   if (!updated) {
     throw new HTTPException(500, { message: "Failed to update task client" });

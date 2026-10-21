@@ -4,6 +4,8 @@ import { HTTPException } from "hono/http-exception";
 import db from "../../database";
 import { taskTable, timeEntryTable } from "../../database/schema";
 import { publishEvent } from "../../events";
+import { audit } from "../../finance/portfolio/controller";
+import { guardSiteTime, validTimes } from "../site-guard";
 
 async function createTimeEntry({
   taskId,
@@ -11,7 +13,6 @@ async function createTimeEntry({
   description,
   startTime,
   endTime,
-  duration,
 }: {
   taskId: string;
   userId: string;
@@ -20,18 +21,41 @@ async function createTimeEntry({
   endTime?: Date;
   duration?: number;
 }) {
-  const [createdTimeEntry] = await db
-    .insert(timeEntryTable)
-    .values({
-      id: createId(),
+  validTimes(startTime, endTime);
+  const createdTimeEntry = await db.transaction(async (tx) => {
+    const workspaceId = await guardSiteTime(
+      tx,
       taskId,
       userId,
-      description: description || "",
       startTime,
-      endTime: endTime || null,
-      duration: duration || 0,
-    })
-    .returning();
+      endTime,
+    );
+    const [entry] = await tx
+      .insert(timeEntryTable)
+      .values({
+        id: createId(),
+        taskId,
+        userId,
+        description: description || "",
+        startTime,
+        endTime: endTime || null,
+        duration: endTime
+          ? Math.floor((endTime.getTime() - startTime.getTime()) / 1000)
+          : 0,
+      })
+      .returning();
+    if (entry && workspaceId)
+      await audit(
+        tx,
+        workspaceId,
+        userId,
+        entry.id,
+        "time-created",
+        null,
+        entry,
+      );
+    return entry;
+  });
 
   if (!createdTimeEntry) {
     throw new HTTPException(500, {

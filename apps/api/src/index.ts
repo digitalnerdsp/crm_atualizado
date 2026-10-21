@@ -33,6 +33,7 @@ import { waitForDatabase } from "./database/wait-for-database";
 import { eventContext } from "./events";
 import externalLink from "./external-link";
 import finance from "./finance";
+import siteWork from "./finance/portfolio/work";
 import genericWebhookIntegration from "./generic-webhook-integration";
 import githubIntegration, {
   handleGithubWebhookRoute,
@@ -567,6 +568,7 @@ export function createApp() {
   const oauthApi = api.route("/oauth", oauth);
 
   const financeApi = api.route("/finance", finance);
+  const siteWorkApi = api.route("/site-work", siteWork);
   const crmApi = api.route("/crm", crm);
   const themeApi = api.route("/theme", theme);
   const projectApi = api.route("/project", project);
@@ -825,6 +827,7 @@ export function createApp() {
     crmApi,
     themeApi,
     financeApi,
+    siteWorkApi,
   };
 }
 
@@ -984,3 +987,6 @@ export type AppType =
   | typeof financeApi;
 
 export default app;
+
+export type { PortfolioAppType } from "./finance/portfolio";
+export type { SiteWorkAppType } from "./finance/portfolio/work";

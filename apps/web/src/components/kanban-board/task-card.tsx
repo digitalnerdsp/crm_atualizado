@@ -41,6 +41,7 @@ import useBulkSelectionStore from "@/store/bulk-selection";
 import useProjectStore from "@/store/project";
 import { useUserPreferencesStore } from "@/store/user-preferences";
 import type Task from "@/types/task";
+import { SiteTimeBadge } from "../task/site-time-panel";
 import { Button } from "../ui/button";
 import { ContextMenu, ContextMenuTrigger } from "../ui/context-menu";
 import TaskCardContextMenuContent from "./task-card-context-menu/task-card-context-menu-content";
@@ -315,6 +316,7 @@ function TaskCard({ task, disableDragDrop = false }: TaskCardProps) {
             {showLabels && (
               <div className="mb-2.5">
                 <TaskCardLabels taskId={task.id} />
+                <SiteTimeBadge taskId={task.id} projectId={task.projectId} />
               </div>
             )}
 

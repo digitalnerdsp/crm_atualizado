@@ -14,6 +14,7 @@ import useGetTask from "@/hooks/queries/task/use-get-task";
 import useGetTaskRelations from "@/hooks/queries/task-relation/use-get-task-relations";
 import type { ExternalLink } from "@/types/external-link";
 import SaveTaskTemplate from "./save-task-template";
+import { SiteTimePanel } from "./site-time-panel";
 import TaskDescription from "./task-description";
 import TaskQualitySections from "./task-quality-sections";
 import TaskRecurrenceControl from "./task-recurrence-control";
@@ -90,6 +91,11 @@ export default function TaskDetailsContent({
             checklistItems={task.checklistItems ?? []}
           />
         )}
+        <SiteTimePanel
+          workspaceId={workspaceId}
+          projectId={projectId}
+          taskId={taskId}
+        />
         <SaveTaskTemplate taskId={taskId} />
       </div>
       {!isLoadingExternalLinks && externalLinks.length > 0 && (

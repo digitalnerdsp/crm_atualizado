@@ -8,6 +8,7 @@
 export const ASSIGNABLE_DEFAULT_ROLES = [
   "admin",
   "sales_manager",
+  "finance_legal",
   "sales",
   "member",
   "viewer",
