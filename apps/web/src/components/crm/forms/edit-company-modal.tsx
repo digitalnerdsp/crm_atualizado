@@ -52,6 +52,7 @@ function toFormState(company: CrmCompanyDetail): CompanyFormState {
     postalCode: company.postalCode ?? "",
     addressLine: company.addressLine ?? "",
     addressNumber: company.addressNumber ?? "",
+    addressComplement: company.addressComplement ?? "",
     district: company.district ?? "",
     billingEmail: company.billingEmail ?? "",
     paymentTerms: (company.paymentTerms ?? "") as PaymentTerm | "",
@@ -125,6 +126,7 @@ export function EditCompanyModal({
               form={form}
               onChange={patch}
               idPrefix="crm-company-edit"
+              mode="edit"
             />
 
             {/* O motivo só aparece quando há o que explicar: pedir motivo de

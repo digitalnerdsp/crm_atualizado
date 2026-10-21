@@ -1,15 +1,28 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
 } from "@testing-library/react";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { emptyCompanyForm, toCompanyPayload } from "./company-fields";
+import {
+  CompanyFields,
+  emptyCompanyForm,
+  toCompanyPayload,
+} from "./company-fields";
 import { CreateCompanyModal } from "./create-company-modal";
 
 const createCompany = vi.fn();
+const lookupCnpj = vi.fn();
+const lookupCep = vi.fn();
+
+vi.mock("@/fetchers/crm/company/lookup", () => ({
+  lookupCompanyCnpj: (...args: unknown[]) => lookupCnpj(...args),
+  lookupCompanyCep: (...args: unknown[]) => lookupCep(...args),
+}));
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
@@ -42,6 +55,8 @@ describe("CreateCompanyModal", () => {
   beforeEach(() => {
     createCompany.mockReset();
     createCompany.mockResolvedValue({ id: "c1", possibleDuplicates: [] });
+    lookupCnpj.mockReset();
+    lookupCep.mockReset();
   });
 
   it("cannot be saved without a primary contact", () => {
@@ -116,6 +131,148 @@ describe("CreateCompanyModal", () => {
     expect([...options].map((option) => option.getAttribute("value"))).toEqual([
       "São Paulo",
     ]);
+  });
+
+  it("fills only empty fields from the CNPJ and keeps the primary contact manual", async () => {
+    lookupCnpj.mockResolvedValue({
+      source: "brasilapi",
+      stale: false,
+      data: {
+        name: "Nome oficial",
+        legalName: "Razão oficial",
+        postalCode: "01311902",
+        addressLine: "Av. Paulista",
+        addressNumber: "37",
+        addressComplement: "Andar 4",
+        district: "Bela Vista",
+        city: "São Paulo",
+        state: "SP",
+      },
+    });
+    render(<CreateCompanyModal workspaceId="w1" onClose={vi.fn()} />);
+    fireEvent.change(screen.getByLabelText("crm:company.name"), {
+      target: { value: "Nome usado pela agência" },
+    });
+    fireEvent.change(screen.getByLabelText("crm:company.taxIdPj"), {
+      target: { value: "19.131.243/0001-97" },
+    });
+    fireEvent.blur(screen.getByLabelText("crm:company.taxIdPj"));
+    await waitFor(() =>
+      expect(screen.getByLabelText("crm:company.legalName")).toHaveValue(
+        "Razão oficial",
+      ),
+    );
+    expect(screen.getByLabelText("crm:company.name")).toHaveValue(
+      "Nome usado pela agência",
+    );
+    expect(screen.getByLabelText("Nº")).toHaveValue("37");
+    expect(screen.getByLabelText("Complemento")).toHaveValue("Andar 4");
+    expect(saveButton()).toBeDisabled();
+    expect(lookupCnpj).toHaveBeenCalledWith("w1", "19131243000197");
+  });
+
+  it("ignores an old lookup after the CNPJ changes", async () => {
+    let resolveOld: (value: unknown) => void = () => {};
+    lookupCnpj
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            resolveOld = resolve;
+          }),
+      )
+      .mockResolvedValueOnce({
+        source: "cnpjws",
+        stale: false,
+        data: { name: "Empresa correta", legalName: "Razão correta" },
+      });
+    render(<CreateCompanyModal workspaceId="w1" onClose={vi.fn()} />);
+    const input = screen.getByLabelText("crm:company.taxIdPj");
+    fireEvent.change(input, { target: { value: "19.131.243/0001-97" } });
+    fireEvent.blur(input);
+    fireEvent.change(input, { target: { value: "00.000.000/0001-91" } });
+    fireEvent.click(screen.getByRole("button", { name: "Consultar CNPJ" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("crm:company.legalName")).toHaveValue(
+        "Razão correta",
+      ),
+    );
+    await act(async () => {
+      resolveOld({
+        source: "brasilapi",
+        stale: false,
+        data: { name: "Antiga", legalName: "Razão antiga" },
+      });
+    });
+    expect(lookupCnpj).toHaveBeenCalledTimes(2);
+    expect(screen.getByLabelText("crm:company.legalName")).toHaveValue(
+      "Razão correta",
+    );
+  });
+});
+
+function EditFieldsHarness() {
+  const [form, setForm] = useState({
+    ...emptyCompanyForm,
+    name: "Nome da agência",
+    taxId: "19.131.243/0001-97",
+    postalCode: "01001-000",
+    addressLine: "Rua cadastrada",
+  });
+  return (
+    <CompanyFields
+      workspaceId="w1"
+      form={form}
+      mode="edit"
+      idPrefix="company-edit-test"
+      onChange={(patch) => setForm((current) => ({ ...current, ...patch }))}
+    />
+  );
+}
+
+describe("CompanyFields lookups on edit", () => {
+  afterEach(cleanup);
+  beforeEach(() => {
+    lookupCnpj.mockReset();
+    lookupCep.mockReset();
+  });
+
+  it("requires an explicit action to replace an existing address", async () => {
+    lookupCep.mockResolvedValue({
+      source: "viacep",
+      stale: false,
+      data: {
+        addressLine: "Praça da Sé",
+        city: "São Paulo",
+        district: "Sé",
+        state: "SP",
+      },
+    });
+    render(<EditFieldsHarness />);
+    fireEvent.blur(screen.getByLabelText("CEP"));
+    await waitFor(() =>
+      expect(screen.getByText(/Endereço encontrado/)).toBeInTheDocument(),
+    );
+    expect(screen.getByLabelText("Logradouro")).toHaveValue("Rua cadastrada");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Preencher campos vazios" }),
+    );
+    expect(screen.getByLabelText("Logradouro")).toHaveValue("Rua cadastrada");
+    expect(screen.getByLabelText("crm:company.city")).toHaveValue("São Paulo");
+    fireEvent.click(screen.getByRole("button", { name: "Consultar CEP" }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole("button", {
+          name: "Substituir pelos dados consultados",
+        }),
+      ).toBeInTheDocument(),
+    );
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Substituir pelos dados consultados",
+      }),
+    );
+    expect(screen.getByLabelText("Logradouro")).toHaveValue("Praça da Sé");
+    expect(screen.getByLabelText("Nº")).toHaveValue("");
   });
 });
 

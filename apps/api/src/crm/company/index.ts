@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { HTTPException } from "hono/http-exception";
 import { describeRoute, resolver, validator } from "hono-openapi";
 import * as v from "valibot";
 import {
@@ -24,6 +25,7 @@ import {
   deleteCompany,
   updateCompany,
 } from "./controllers/upsert-company";
+import { companyLookup, LookupNotFoundError } from "./lookup";
 
 const nullableString = v.optional(v.nullable(v.string()));
 
@@ -226,6 +228,64 @@ const company = new Hono<{
       return c.json(
         await getCitiesCtrl({ workspaceId: c.get("workspaceId"), state }),
       );
+    },
+  )
+  .get(
+    "/lookup/cnpj",
+    describeRoute({
+      operationId: "lookupCrmCompanyCnpj",
+      tags: ["CRM"],
+      description: "Suggest public company data for a valid CNPJ",
+    }),
+    validator("query", v.object({ workspaceId: v.string(), cnpj: v.string() })),
+    workspaceAccess.fromQuery(),
+    requireWorkspacePermission({ crmCompany: ["read"] }),
+    async (c) => {
+      try {
+        const result = await companyLookup.cnpj(c.req.valid("query").cnpj);
+        if (!result)
+          throw new HTTPException(503, {
+            message:
+              "Consulta de CNPJ indisponível. Preencha os dados manualmente.",
+          });
+        return c.json(result);
+      } catch (error) {
+        if (error instanceof HTTPException) throw error;
+        if (error instanceof LookupNotFoundError)
+          throw new HTTPException(404, {
+            message: "CNPJ não encontrado. Preencha os dados manualmente.",
+          });
+        throw new HTTPException(400, { message: "CNPJ inválido" });
+      }
+    },
+  )
+  .get(
+    "/lookup/cep",
+    describeRoute({
+      operationId: "lookupCrmCompanyCep",
+      tags: ["CRM"],
+      description: "Suggest an address for a valid Brazilian postal code",
+    }),
+    validator("query", v.object({ workspaceId: v.string(), cep: v.string() })),
+    workspaceAccess.fromQuery(),
+    requireWorkspacePermission({ crmCompany: ["read"] }),
+    async (c) => {
+      try {
+        const result = await companyLookup.cep(c.req.valid("query").cep);
+        if (!result)
+          throw new HTTPException(503, {
+            message:
+              "Consulta de CEP indisponível. Preencha o endereço manualmente.",
+          });
+        return c.json(result);
+      } catch (error) {
+        if (error instanceof HTTPException) throw error;
+        if (error instanceof LookupNotFoundError)
+          throw new HTTPException(404, {
+            message: "CEP não encontrado. Preencha o endereço manualmente.",
+          });
+        throw new HTTPException(400, { message: "CEP inválido" });
+      }
     },
   )
   .get(

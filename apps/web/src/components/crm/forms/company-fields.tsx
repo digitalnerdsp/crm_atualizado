@@ -1,4 +1,6 @@
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -8,6 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  lookupCompanyCep,
+  lookupCompanyCnpj,
+} from "@/fetchers/crm/company/lookup";
 import {
   useCrmCompanyCities,
   useCrmSegments,
@@ -111,6 +117,7 @@ export type CompanyFormState = {
   postalCode: string;
   addressLine: string;
   addressNumber: string;
+  addressComplement: string;
   district: string;
   billingEmail: string;
   paymentTerms: PaymentTerm | "";
@@ -137,6 +144,7 @@ export const emptyCompanyForm: CompanyFormState = {
   postalCode: "",
   addressLine: "",
   addressNumber: "",
+  addressComplement: "",
   district: "",
   billingEmail: "",
   paymentTerms: "",
@@ -147,6 +155,24 @@ export const emptyCompanyForm: CompanyFormState = {
 /** O "não informado" das listas: o Select do coss não aceita valor vazio, e
  * um item explícito é o que permite limpar a classificação depois. */
 const NONE = "__none__";
+const SUGGESTION_LABELS: Partial<Record<keyof CompanyFormState, string>> = {
+  name: "Nome",
+  legalName: "Razão social",
+  phone: "Telefone",
+  postalCode: "CEP",
+  addressLine: "Logradouro",
+  addressNumber: "Número",
+  addressComplement: "Complemento",
+  district: "Bairro",
+  city: "Cidade",
+  state: "UF",
+};
+const LOOKUP_SOURCE_LABELS = {
+  brasilapi: "BrasilAPI",
+  cnpjws: "CNPJ.ws",
+  viacep: "ViaCEP",
+  "brasilapi-cep": "BrasilAPI",
+} as const;
 
 function toValue(value: string) {
   return value === NONE ? "" : value;
@@ -169,11 +195,13 @@ export function CompanyFields({
   form,
   onChange,
   idPrefix,
+  mode = "create",
 }: {
   workspaceId: string;
   form: CompanyFormState;
   onChange: (patch: Partial<CompanyFormState>) => void;
   idPrefix: string;
+  mode?: "create" | "edit";
 }) {
   const { t } = useTranslation();
   const { data: sources = [] } = useCrmSources(workspaceId);
@@ -184,6 +212,184 @@ export function CompanyFields({
   );
 
   const isIndividual = form.personType === "pf";
+  const currentForm = useRef(form);
+  currentForm.current = form;
+  const cnpjRequest = useRef(0);
+  const cepRequest = useRef(0);
+  const [cnpjBusy, setCnpjBusy] = useState(false);
+  const [cepBusy, setCepBusy] = useState(false);
+  const [cnpjMessage, setCnpjMessage] = useState("");
+  const [cepMessage, setCepMessage] = useState("");
+  const [cnpjSuggestion, setCnpjSuggestion] =
+    useState<Partial<CompanyFormState> | null>(null);
+  const [cepSuggestion, setCepSuggestion] =
+    useState<Partial<CompanyFormState> | null>(null);
+
+  useEffect(
+    () => () => {
+      cnpjRequest.current += 1;
+      cepRequest.current += 1;
+    },
+    [],
+  );
+
+  function apply(values: Partial<CompanyFormState>, overwrite: boolean) {
+    const patch: Partial<CompanyFormState> = {};
+    for (const [field, value] of Object.entries(values) as Array<
+      [keyof CompanyFormState, string]
+    >) {
+      if (value && (overwrite || !currentForm.current[field])) {
+        // Each returned field is normalized before it reaches this component.
+        Object.assign(patch, { [field]: value });
+      }
+    }
+    if (Object.keys(patch).length) onChange(patch);
+  }
+
+  function suggestionPanel(
+    suggestion: Partial<CompanyFormState>,
+    clear: (next: null) => void,
+  ) {
+    const changes = Object.entries(suggestion).filter(
+      ([field, value]) =>
+        value && value !== form[field as keyof CompanyFormState],
+    );
+    return (
+      <div className="space-y-2 rounded-md border p-3 text-xs">
+        <p className="font-medium">Dados sugeridos para este cadastro</p>
+        {changes.length ? (
+          <ul className="space-y-1">
+            {changes.map(([field, value]) => (
+              <li key={field} className="break-words">
+                <span className="font-medium">
+                  {SUGGESTION_LABELS[field as keyof CompanyFormState] ?? field}:
+                </span>{" "}
+                {form[field as keyof CompanyFormState] || "(vazio)"} → {value}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-muted-foreground">Nenhuma diferença encontrada.</p>
+        )}
+        {changes.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => {
+                apply(suggestion, false);
+                clear(null);
+              }}
+            >
+              Preencher campos vazios
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                apply(suggestion, true);
+                clear(null);
+              }}
+            >
+              Substituir pelos dados consultados
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  async function consultCnpj() {
+    if (currentForm.current.personType !== "pj") return;
+    const number = currentForm.current.taxId.replace(/\D/g, "");
+    if (number.length !== 14 || cnpjBusy) return;
+    const request = ++cnpjRequest.current;
+    setCnpjBusy(true);
+    setCnpjMessage("");
+    setCnpjSuggestion(null);
+    try {
+      const result = await lookupCompanyCnpj(workspaceId, number);
+      if (
+        request !== cnpjRequest.current ||
+        currentForm.current.personType !== "pj" ||
+        currentForm.current.taxId.replace(/\D/g, "") !== number
+      )
+        return;
+      const data = result.data;
+      const fields: Partial<CompanyFormState> = {
+        name: data.name,
+        legalName: data.legalName,
+        ...(data.phone ? { phone: data.phone } : {}),
+        ...(data.postalCode ? { postalCode: data.postalCode } : {}),
+        ...(data.addressLine ? { addressLine: data.addressLine } : {}),
+        ...(data.addressNumber ? { addressNumber: data.addressNumber } : {}),
+        ...(data.addressComplement
+          ? { addressComplement: data.addressComplement }
+          : {}),
+        ...(data.district ? { district: data.district } : {}),
+        ...(data.city ? { city: data.city } : {}),
+        ...(data.state && BRAZIL_STATES.includes(data.state as BrazilState)
+          ? { state: data.state as BrazilState }
+          : {}),
+      };
+      if (mode === "create") apply(fields, false);
+      else setCnpjSuggestion(fields);
+      setCnpjMessage(
+        `Dados encontrados (${LOOKUP_SOURCE_LABELS[result.source]}${result.stale ? ", consulta anterior" : ""}). ${mode === "edit" ? "Revise antes de aplicar." : "Revise antes de salvar."}`,
+      );
+    } catch (error) {
+      if (request === cnpjRequest.current)
+        setCnpjMessage(
+          error instanceof Error
+            ? error.message
+            : "Consulta indisponível. Preencha manualmente.",
+        );
+    } finally {
+      if (request === cnpjRequest.current) setCnpjBusy(false);
+    }
+  }
+
+  async function consultCep() {
+    const number = currentForm.current.postalCode.replace(/\D/g, "");
+    if (number.length !== 8 || cepBusy) return;
+    const request = ++cepRequest.current;
+    setCepBusy(true);
+    setCepMessage("");
+    setCepSuggestion(null);
+    try {
+      const result = await lookupCompanyCep(workspaceId, number);
+      if (
+        request !== cepRequest.current ||
+        currentForm.current.postalCode.replace(/\D/g, "") !== number
+      )
+        return;
+      const data = result.data;
+      const fields: Partial<CompanyFormState> = {
+        ...(data.addressLine ? { addressLine: data.addressLine } : {}),
+        ...(data.district ? { district: data.district } : {}),
+        ...(data.city ? { city: data.city } : {}),
+        ...(data.state && BRAZIL_STATES.includes(data.state as BrazilState)
+          ? { state: data.state as BrazilState }
+          : {}),
+      };
+      if (mode === "create") apply(fields, false);
+      else setCepSuggestion(fields);
+      setCepMessage(
+        `Endereço encontrado (${LOOKUP_SOURCE_LABELS[result.source]}${result.stale ? ", consulta anterior" : ""}). ${mode === "edit" ? "Revise antes de aplicar." : "Informe o número e revise antes de salvar."}`,
+      );
+    } catch (error) {
+      if (request === cepRequest.current)
+        setCepMessage(
+          error instanceof Error
+            ? error.message
+            : "Consulta indisponível. Preencha manualmente.",
+        );
+    } finally {
+      if (request === cepRequest.current) setCepBusy(false);
+    }
+  }
   const id = (suffix: string) => `${idPrefix}-${suffix}`;
   const cityListId = id("city-list");
 
@@ -216,6 +422,10 @@ export function CompanyFields({
               value={form.personType}
               onValueChange={(value) => {
                 if (value === "pj" || value === "pf") {
+                  cnpjRequest.current += 1;
+                  setCnpjBusy(false);
+                  setCnpjMessage("");
+                  setCnpjSuggestion(null);
                   onChange({ personType: value });
                 }
               }}
@@ -247,12 +457,40 @@ export function CompanyFields({
             <Input
               id={id("tax-id")}
               value={form.taxId}
-              onChange={(event) => onChange({ taxId: event.target.value })}
+              onChange={(event) => {
+                cnpjRequest.current += 1;
+                setCnpjBusy(false);
+                setCnpjSuggestion(null);
+                setCnpjMessage("");
+                onChange({ taxId: event.target.value });
+              }}
+              onBlur={() => void consultCnpj()}
               inputMode="numeric"
               placeholder={
                 isIndividual ? "000.000.000-00" : "00.000.000/0000-00"
               }
             />
+            {!isIndividual && (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={
+                  cnpjBusy || form.taxId.replace(/\D/g, "").length !== 14
+                }
+                onClick={() => void consultCnpj()}
+              >
+                {cnpjBusy ? "Consultando CNPJ…" : "Consultar CNPJ"}
+              </Button>
+            )}
+            {cnpjMessage && !isIndividual && (
+              <p role="status" className="text-xs text-muted-foreground">
+                {cnpjMessage}
+              </p>
+            )}
+            {cnpjSuggestion &&
+              !isIndividual &&
+              suggestionPanel(cnpjSuggestion, setCnpjSuggestion)}
           </div>
         </div>
 
@@ -505,9 +743,33 @@ export function CompanyFields({
             <Input
               id={id("postal-code")}
               value={form.postalCode}
-              onChange={(event) => onChange({ postalCode: event.target.value })}
+              onChange={(event) => {
+                cepRequest.current += 1;
+                setCepBusy(false);
+                setCepSuggestion(null);
+                setCepMessage("");
+                onChange({ postalCode: event.target.value });
+              }}
+              onBlur={() => void consultCep()}
               inputMode="numeric"
             />
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              disabled={
+                cepBusy || form.postalCode.replace(/\D/g, "").length !== 8
+              }
+              onClick={() => void consultCep()}
+            >
+              {cepBusy ? "Consultando CEP…" : "Consultar CEP"}
+            </Button>
+            {cepMessage && (
+              <p role="status" className="text-xs text-muted-foreground">
+                {cepMessage}
+              </p>
+            )}
+            {cepSuggestion && suggestionPanel(cepSuggestion, setCepSuggestion)}
           </div>
         </div>
 
@@ -540,6 +802,17 @@ export function CompanyFields({
               onChange={(event) => onChange({ district: event.target.value })}
             />
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor={id("address-complement")}>Complemento</Label>
+          <Input
+            id={id("address-complement")}
+            value={form.addressComplement}
+            onChange={(event) =>
+              onChange({ addressComplement: event.target.value })
+            }
+          />
         </div>
       </section>
 
@@ -669,6 +942,7 @@ export function toCompanyPayload(form: CompanyFormState) {
     postalCode: text(form.postalCode),
     addressLine: text(form.addressLine),
     addressNumber: text(form.addressNumber),
+    addressComplement: text(form.addressComplement),
     district: text(form.district),
     billingEmail: text(form.billingEmail),
     paymentTerms: form.paymentTerms || null,
