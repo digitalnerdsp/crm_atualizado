@@ -2,6 +2,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
   Building2,
   ChartColumn,
+  ChartNoAxesCombined,
   ChevronRight,
   Contact,
   FileSignature,
@@ -55,6 +56,16 @@ export function NavCommercial() {
   const path = window.location.pathname;
 
   const items = [
+    ...(canViewCrmReports()
+      ? [
+          {
+            title: "Dashboard geral",
+            url: `${base}/dashboard`,
+            isActive: path.startsWith(`${base}/dashboard`),
+            icon: ChartNoAxesCombined,
+          },
+        ]
+      : []),
     ...(canViewCrm()
       ? [
           {

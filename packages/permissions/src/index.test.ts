@@ -5,6 +5,7 @@ import {
   builtInRoles,
   DEFAULT_ROLE_NAMES,
   defaultRolePayloads,
+  financeLegal,
   member,
   owner,
   sales,
@@ -65,6 +66,11 @@ describe("@kaneo/permissions statement surface", () => {
 });
 
 describe("built-in role privileges", () => {
+  it("lets Financeiro/Jurídico view commercial BI without production access", () => {
+    expect(financeLegal.statements.crmReport).toEqual(["read", "read_all"]);
+    expect("task" in financeLegal.statements).toBe(false);
+    expect("project" in financeLegal.statements).toBe(false);
+  });
   it("viewer can read but cannot create or modify", () => {
     expect(viewer.statements.project).toEqual(["read"]);
     expect(viewer.statements.task).toEqual(["read"]);

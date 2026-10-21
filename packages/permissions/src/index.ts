@@ -191,6 +191,7 @@ export const financeLegal = ac.newRole({
   crmPipeline: ["read"],
   crmCompany: ["read", "read_all", "update", "notify"],
   crmContact: ["read", "read_all", "update"],
+  crmReport: ["read", "read_all"],
 });
 export const builtInRoles = {
   viewer,

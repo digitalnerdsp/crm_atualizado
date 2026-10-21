@@ -75,6 +75,7 @@ import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilit
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/index'
@@ -484,6 +485,15 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute =
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRouteImport.update(
+    {
+      id: '/crm/dashboard',
+      path: '/crm/dashboard',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport.update({
     id: '/crm/hosting',
@@ -678,6 +688,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  '/dashboard/workspace/$workspaceId/crm/dashboard': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
   '/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/dashboard/workspace/$workspaceId/crm/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
@@ -755,6 +766,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  '/dashboard/workspace/$workspaceId/crm/dashboard': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
   '/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/dashboard/workspace/$workspaceId/crm': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
@@ -839,6 +851,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdVisibilityRoute
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
@@ -922,6 +935,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/projects/$projectId/visibility'
     | '/dashboard/settings/projects/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/crm/activities'
+    | '/dashboard/workspace/$workspaceId/crm/dashboard'
     | '/dashboard/workspace/$workspaceId/crm/hosting'
     | '/dashboard/workspace/$workspaceId/crm/reports'
     | '/dashboard/workspace/$workspaceId/crm/'
@@ -999,6 +1013,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/projects/$projectId/visibility'
     | '/dashboard/settings/projects/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/crm/activities'
+    | '/dashboard/workspace/$workspaceId/crm/dashboard'
     | '/dashboard/workspace/$workspaceId/crm/hosting'
     | '/dashboard/workspace/$workspaceId/crm/reports'
     | '/dashboard/workspace/$workspaceId/crm'
@@ -1082,6 +1097,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/visibility'
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/'
@@ -1576,6 +1592,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard'
+      path: '/crm/dashboard'
+      fullPath: '/dashboard/workspace/$workspaceId/crm/dashboard'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
       path: '/crm/hosting'
@@ -1831,6 +1854,7 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdTaxesRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
@@ -1871,6 +1895,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute:

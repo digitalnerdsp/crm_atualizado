@@ -37,16 +37,16 @@ export function NavFinance() {
   const base = `/dashboard/workspace/${workspace.id}`;
   const items = [
     {
-      title: "Gestão da carteira",
-      url: `${base}/portfolio`,
-      isActive: pathname.endsWith("/portfolio"),
-      icon: Landmark,
-    },
-    {
       title: "Dashboard geral — BI",
       url: `${base}/bi`,
       isActive: pathname.endsWith("/bi"),
       icon: ChartNoAxesCombined,
+    },
+    {
+      title: "Gestão da carteira",
+      url: `${base}/portfolio`,
+      isActive: pathname.endsWith("/portfolio"),
+      icon: Landmark,
     },
     {
       title: "Resumo e lançamentos",

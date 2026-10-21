@@ -42,6 +42,8 @@ export const BACKFILL_RESOURCES = [
   "crmReport",
 ] as const;
 
+const FINANCE_LEGAL_REPORT_TOKEN = "grant:finance_legal:crmReport";
+
 export type WorkspaceRoleRow = {
   id: string;
   workspaceId: string;
@@ -67,6 +69,7 @@ export function allBackfillTokens(): string[] {
   return [
     ...BACKFILL_ROLE_NAMES.map(roleToken),
     ...BACKFILL_RESOURCES.map(resourceToken),
+    FINANCE_LEGAL_REPORT_TOKEN,
   ];
 }
 
@@ -126,6 +129,7 @@ export function planWorkspaceRoleBackfill({
   const pendingResources = BACKFILL_RESOURCES.filter(
     (resource) => !applied.has(resourceToken(resource)),
   );
+  const pendingFinanceLegalReport = !applied.has(FINANCE_LEGAL_REPORT_TOKEN);
 
   const plan: RoleBackfillPlan = {
     inserts: [],
@@ -133,10 +137,15 @@ export function planWorkspaceRoleBackfill({
     tokens: [
       ...pendingRoles.map(roleToken),
       ...pendingResources.map(resourceToken),
+      ...(pendingFinanceLegalReport ? [FINANCE_LEGAL_REPORT_TOKEN] : []),
     ],
   };
 
-  if (pendingRoles.length === 0 && pendingResources.length === 0) {
+  if (
+    pendingRoles.length === 0 &&
+    pendingResources.length === 0 &&
+    !pendingFinanceLegalReport
+  ) {
     return plan;
   }
 
@@ -164,7 +173,7 @@ export function planWorkspaceRoleBackfill({
 
   // 2. Resources absent from rows that already exist. Only whole missing keys
   //    are added — actions an admin removed from a resource stay removed.
-  if (pendingResources.length > 0) {
+  if (pendingResources.length > 0 || pendingFinanceLegalReport) {
     for (const row of existingRows) {
       if (!isDefaultRoleName(row.role)) continue;
 
@@ -175,7 +184,11 @@ export function planWorkspaceRoleBackfill({
 
       const defaults = defaultRolePayloads[row.role];
       let changed = false;
-      for (const resource of pendingResources) {
+      const resources =
+        row.role === "finance_legal" && pendingFinanceLegalReport
+          ? [...pendingResources, "crmReport"]
+          : pendingResources;
+      for (const resource of resources) {
         if (resource in stored) continue;
         const actions = defaults[resource];
         // A role the defaults do not grant this resource at all (viewer has no
