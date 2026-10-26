@@ -97,6 +97,7 @@ function RouteComponent() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("crm:company.name")}</TableHead>
+                  <TableHead>Contato principal</TableHead>
                   <TableHead>{t("crm:company.status")}</TableHead>
                   <TableHead>Hospedagem</TableHead>
                   <TableHead>{t("crm:company.taxId")}</TableHead>
@@ -118,6 +119,25 @@ function RouteComponent() {
                     }
                   >
                     <TableCell>{company.name}</TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {company.primaryContact ? (
+                        <div className="leading-tight">
+                          <div className="text-foreground">
+                            {company.primaryContact.name}
+                            {company.contactCount > 1
+                              ? ` +${company.contactCount - 1}`
+                              : ""}
+                          </div>
+                          <div className="text-xs">
+                            {company.primaryContact.phone ??
+                              company.primaryContact.email ??
+                              ""}
+                          </div>
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
                     <TableCell>
                       <CompanyStatusBadge status={company.status} />
                     </TableCell>

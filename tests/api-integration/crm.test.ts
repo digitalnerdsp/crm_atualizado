@@ -2860,4 +2860,62 @@ describe("API integration: CRM", () => {
     expect(site?.companyId).not.toBeNull();
     expect(saved.map((row) => row.number).sort()).toEqual([1, 2]);
   });
+
+  it("lists companies with their primary contact and finds them by contact", async () => {
+    const member = await seedCrmWorkspace();
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+
+    const created = await post(app, "/api/crm/company", {
+      workspaceId: member.workspace.id,
+      name: "Padaria do Ze",
+      primaryContact: {
+        firstName: "Marcia",
+        lastName: "Oliveira",
+        email: "marcia@padaria.example",
+        phone: "15999990000",
+      },
+    });
+    const company = (await created.json()) as { id: string };
+    await post(app, "/api/crm/contact", {
+      workspaceId: member.workspace.id,
+      companyId: company.id,
+      firstName: "Carlos",
+    });
+    await post(app, "/api/crm/company", {
+      workspaceId: member.workspace.id,
+      name: "Outra Empresa",
+      primaryContact: { firstName: "Paulo" },
+    });
+
+    type Listed = {
+      total: number;
+      items: {
+        id: string;
+        contactCount: number;
+        primaryContact: { name: string; phone: string | null } | null;
+      }[];
+    };
+    const list = async (search: string) =>
+      (await (
+        await app.request(
+          `/api/crm/company?workspaceId=${member.workspace.id}&search=${encodeURIComponent(search)}`,
+        )
+      ).json()) as Listed;
+
+    // Pelo nome de um contato, pelo e-mail e pelo celular.
+    for (const term of ["Marcia Oliveira", "marcia@padaria", "15999990000"]) {
+      const found = await list(term);
+      expect(found.total).toBe(1);
+      expect(found.items[0]?.id).toBe(company.id);
+    }
+
+    const found = await list("Padaria");
+    const row = found.items[0];
+    expect(row?.contactCount).toBe(2);
+    expect(row?.primaryContact?.name).toBe("Marcia Oliveira");
+    expect(row?.primaryContact?.phone).toBe("15999990000");
+
+    expect((await list("inexistente-xyz")).total).toBe(0);
+  });
 });

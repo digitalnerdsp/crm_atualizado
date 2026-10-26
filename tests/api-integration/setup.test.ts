@@ -71,6 +71,7 @@ describe("API integration: initial setup", () => {
       .where(eq(schema.workspaceRoleTable.workspaceId, payload.workspaceId));
     expect(roles.map((row) => row.role).sort()).toEqual([
       "admin",
+      "finance_legal",
       "member",
       "sales",
       "sales_manager",

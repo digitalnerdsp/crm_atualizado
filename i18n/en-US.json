@@ -2044,7 +2044,7 @@
 			"pipeline": "Pipeline",
 			"deals": "Deals",
 			"contacts": "Contacts",
-			"companies": "Companies",
+			"companies": "Companies and contacts",
 			"activities": "Activities",
 			"reports": "Reports",
 			"contracts": "Contracts"
@@ -2186,7 +2186,7 @@
 			"new": "New company",
 			"empty": "No companies found",
 			"notFound": "Company not found.",
-			"searchPlaceholder": "Search by name, tax id or domain...",
+			"searchPlaceholder": "Search by company, tax id, contact, email or phone...",
 			"name": "Name",
 			"legalName": "Legal name",
 			"taxId": "Tax ID",

@@ -2044,7 +2044,7 @@
 			"pipeline": "Funil",
 			"deals": "Negócios",
 			"contacts": "Contatos",
-			"companies": "Empresas",
+			"companies": "Empresas e contatos",
 			"activities": "Atividades",
 			"reports": "Relatórios",
 			"contracts": "Contratos"
@@ -2186,7 +2186,7 @@
 			"new": "Nova empresa",
 			"empty": "Nenhuma empresa encontrada",
 			"notFound": "Empresa não encontrada.",
-			"searchPlaceholder": "Buscar por nome, CNPJ/CPF ou domínio...",
+			"searchPlaceholder": "Buscar por empresa, CNPJ/CPF, contato, e-mail ou telefone...",
 			"name": "Nome",
 			"legalName": "Razão social",
 			"taxId": "CNPJ/CPF",

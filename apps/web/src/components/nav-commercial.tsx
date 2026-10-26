@@ -29,7 +29,6 @@ export function NavCommercial() {
   const { data: workspace } = useActiveWorkspace();
   const {
     canViewCrm,
-    canViewContacts,
     canViewCompanies,
     canViewCrmReports,
     isCheckingPermissions,
@@ -75,16 +74,6 @@ export function NavCommercial() {
             url: `${base}/contracts`,
             isActive: path.startsWith(`${base}/contracts`),
             icon: MenuIcons.contract,
-          },
-        ]
-      : []),
-    ...(canViewContacts()
-      ? [
-          {
-            title: t("crm:nav.contacts"),
-            url: `${base}/contacts`,
-            isActive: path.startsWith(`${base}/contacts`),
-            icon: MenuIcons.contactBook,
           },
         ]
       : []),

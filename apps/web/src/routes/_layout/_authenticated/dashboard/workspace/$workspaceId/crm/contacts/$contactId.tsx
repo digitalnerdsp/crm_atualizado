@@ -100,12 +100,12 @@ function RouteComponent() {
 
       <div className="mx-auto w-full max-w-4xl px-5 py-6">
         <Link
-          to="/dashboard/workspace/$workspaceId/crm/contacts"
+          to="/dashboard/workspace/$workspaceId/crm/companies"
           params={{ workspaceId }}
           className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
-          {t("crm:contact.title")}
+          {t("crm:nav.companies")}
         </Link>
 
         <header className="space-y-2">
@@ -279,7 +279,7 @@ function RouteComponent() {
                   await deleteContact({ contactId, workspaceId });
                   toast.success(t("crm:lgpd.deleted"));
                   navigate({
-                    to: "/dashboard/workspace/$workspaceId/crm/contacts",
+                    to: "/dashboard/workspace/$workspaceId/crm/companies",
                     params: { workspaceId },
                   });
                 } catch (error) {
