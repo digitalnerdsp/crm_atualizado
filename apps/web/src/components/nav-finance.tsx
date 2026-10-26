@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import {
   BadgePercent,
+  ChartColumn,
   ChartNoAxesCombined,
   ChevronRight,
   Landmark,
@@ -35,6 +36,7 @@ export function NavFinance() {
   )
     return null;
   const base = `/dashboard/workspace/${workspace.id}`;
+  const crmReports = `${base}/crm/reports`;
   const items = [
     {
       title: "Dashboard geral — BI",
@@ -72,6 +74,16 @@ export function NavFinance() {
       isActive: pathname.endsWith("/taxes"),
       icon: Landmark,
     },
+    ...(permissions.canViewCrmReports()
+      ? [
+          {
+            title: "Relatórios comerciais",
+            url: crmReports,
+            isActive: pathname.startsWith(crmReports),
+            icon: ChartColumn,
+          },
+        ]
+      : []),
   ];
   return (
     <Collapsible defaultOpen className="group/collapsible">
@@ -97,7 +109,7 @@ export function NavFinance() {
                     className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
                     onClick={() => navigate({ to: item.url })}
                   >
-                    <item.icon className="size-4" />
+                    <item.icon className="size-4 text-success" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

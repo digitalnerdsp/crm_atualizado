@@ -141,7 +141,6 @@
 }
 [data-theme-layout="qerza"] [data-slot="sidebar-menu-button"][data-active="true"] > svg {
   background: var(--card);
-  color: var(--primary);
   box-shadow: var(--q-shadow-tile);
 }
 [data-theme-layout="qerza"] [data-slot="sidebar-group-label"] {

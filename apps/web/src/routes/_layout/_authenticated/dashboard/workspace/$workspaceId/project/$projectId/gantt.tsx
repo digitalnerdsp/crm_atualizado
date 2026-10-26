@@ -1,27 +1,29 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import {
-  addDays,
+  addMonths,
   eachDayOfInterval,
+  endOfDay,
+  endOfMonth,
   endOfWeek,
   format,
   isSameMonth,
   isToday,
-  isWeekend,
+  isWithinInterval,
   parseISO,
+  startOfDay,
+  startOfMonth,
   startOfWeek,
-  subDays,
+  subMonths,
 } from "date-fns";
 import { ChevronLeft, ChevronRight, Search } from "lucide-react";
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ProjectLayout from "@/components/common/project-layout";
-import { GanttTaskBar } from "@/components/gantt/gantt-task-bar";
 import PageTitle from "@/components/page-title";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useGetTasks } from "@/hooks/queries/task/use-get-tasks";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/cn";
 import { getStatusLabel } from "@/lib/i18n/domain";
 import { useUserPreferencesStore } from "@/store/user-preferences";
@@ -39,6 +41,13 @@ export const Route = createFileRoute(
   }),
 });
 
+const MAX_CHIPS_PER_DAY = 3;
+const monthTitle = new Intl.DateTimeFormat("pt-BR", {
+  month: "long",
+  year: "numeric",
+});
+const weekdayName = new Intl.DateTimeFormat("pt-BR", { weekday: "short" });
+
 function parseTaskDate(value: string | null) {
   if (!value) return null;
   const parsed = parseISO(value);
@@ -53,24 +62,7 @@ function RouteComponent() {
   const { data: project } = useGetTasks(projectId);
   const weekStartsOn = useUserPreferencesStore((state) => state.weekStartsOn);
   const [searchQuery, setSearchQuery] = useState("");
-  const isMobile = useIsMobile();
-  const [isTaskRailOpen, setIsTaskRailOpen] = useState(false);
-
-  // Wider day columns on small screens so dragging and reading dates is easier.
-  const dayColumnWidthRem = isMobile ? 3.125 : 2.75;
-  const taskColumnWidthRem = isMobile ? 12 : 14;
-  const showTaskRail = !isMobile || isTaskRailOpen;
-  const timelineTrackRef = useRef<HTMLDivElement>(null);
-  const [pixelsPerDay, setPixelsPerDay] = useState(44);
-
-  useEffect(() => {
-    if (!isMobile) {
-      setIsTaskRailOpen(true);
-      return;
-    }
-
-    setIsTaskRailOpen(false);
-  }, [isMobile]);
+  const [month, setMonth] = useState(() => startOfMonth(new Date()));
 
   const allTasks = useMemo(
     () => [
@@ -80,93 +72,63 @@ function RouteComponent() {
     [project],
   );
 
-  const parsedTasks = useMemo(() => {
+  // Tarefas com início ou prazo; quem só tem uma das datas ocupa esse dia.
+  const scheduledTasks = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
     return allTasks
       .map((task) => {
-        const parsedStart =
+        const start =
           parseTaskDate(task.startDate) ?? parseTaskDate(task.dueDate);
-        const parsedEnd =
+        const end =
           parseTaskDate(task.dueDate) ?? parseTaskDate(task.startDate);
-
-        if (!parsedStart || !parsedEnd) return null;
-
-        const start = parsedStart <= parsedEnd ? parsedStart : parsedEnd;
-        const end = parsedEnd >= parsedStart ? parsedEnd : parsedStart;
-
+        if (!start || !end) return null;
         return {
           ...task,
-          scheduleStart: start,
-          scheduleEnd: end,
+          scheduleStart: start <= end ? start : end,
+          scheduleEnd: end >= start ? end : start,
         };
       })
       .filter((task): task is NonNullable<typeof task> => task !== null)
-      .sort(
-        (left, right) =>
-          left.scheduleStart.getTime() - right.scheduleStart.getTime(),
+      .filter(
+        (task) =>
+          !query ||
+          task.title.toLowerCase().includes(query) ||
+          `${project?.slug ?? ""}-${task.number ?? ""}`
+            .toLowerCase()
+            .includes(query) ||
+          task.status.toLowerCase().includes(query),
+      )
+      .sort((a, b) => a.scheduleStart.getTime() - b.scheduleStart.getTime());
+  }, [allTasks, project?.slug, searchQuery]);
+
+  const days = useMemo(
+    () =>
+      eachDayOfInterval({
+        start: startOfWeek(startOfMonth(month), { weekStartsOn }),
+        end: endOfWeek(endOfMonth(month), { weekStartsOn }),
+      }),
+    [month, weekStartsOn],
+  );
+
+  const tasksByDay = useMemo(() => {
+    const map = new Map<string, typeof scheduledTasks>();
+    for (const day of days) {
+      const key = format(day, "yyyy-MM-dd");
+      map.set(
+        key,
+        scheduledTasks.filter((task) =>
+          isWithinInterval(day, {
+            start: startOfDay(task.scheduleStart),
+            end: endOfDay(task.scheduleEnd),
+          }),
+        ),
       );
-  }, [allTasks]);
+    }
+    return map;
+  }, [days, scheduledTasks]);
 
-  const scheduledTasks = useMemo(() => {
-    const normalizedQuery = searchQuery.trim().toLowerCase();
-    if (!normalizedQuery) return parsedTasks;
-
-    return parsedTasks.filter((task) => {
-      return (
-        task.title.toLowerCase().includes(normalizedQuery) ||
-        `${project?.slug ?? ""}-${task.number ?? ""}`
-          .toLowerCase()
-          .includes(normalizedQuery) ||
-        task.status.toLowerCase().includes(normalizedQuery)
-      );
-    });
-  }, [parsedTasks, project?.slug, searchQuery]);
-
-  const timeline = useMemo(() => {
-    if (parsedTasks.length === 0) return null;
-
-    const earliest = parsedTasks.reduce(
-      (current, task) =>
-        task.scheduleStart < current ? task.scheduleStart : current,
-      parsedTasks[0].scheduleStart,
-    );
-    const latest = parsedTasks.reduce(
-      (current, task) =>
-        task.scheduleEnd > current ? task.scheduleEnd : current,
-      parsedTasks[0].scheduleEnd,
-    );
-
-    // Week-aligned bounds around task dates, then pad with extra days so bars can
-    // be resized or moved past the current last task without running out of grid.
-    const weekStart = startOfWeek(earliest, { weekStartsOn });
-    const weekEnd = endOfWeek(latest, { weekStartsOn });
-    const rangeStart = subDays(weekStart, 7);
-    const rangeEnd = addDays(weekEnd, 28);
-
-    const days = eachDayOfInterval({ start: rangeStart, end: rangeEnd });
-
-    return {
-      days,
-      rangeStart,
-      gridTemplateColumns: `repeat(${days.length}, minmax(${dayColumnWidthRem}rem, ${dayColumnWidthRem}rem))`,
-      timelineMinWidthRem: days.length * dayColumnWidthRem,
-    };
-  }, [parsedTasks, dayColumnWidthRem, weekStartsOn]);
-
-  useLayoutEffect(() => {
-    const element = timelineTrackRef.current;
-    if (!element || !timeline) return;
-
-    const update = () => {
-      const count = timeline.days.length;
-      if (count <= 0) return;
-      setPixelsPerDay(element.clientWidth / count);
-    };
-
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, [timeline]);
+  const openTask = (id: string) =>
+    navigate({ to: ".", search: { taskId: id }, replace: true });
 
   return (
     <ProjectLayout
@@ -181,10 +143,43 @@ function RouteComponent() {
       <div className="flex h-full min-h-0 flex-col bg-background">
         <div className="border-b border-border/80 px-3 py-3 sm:px-4">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-1">
-              <h1 className="text-sm font-semibold text-foreground">
-                {t("tasks:gantt.title")}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                variant="outline"
+                size="xs"
+                aria-label="Mês anterior"
+                onClick={() => setMonth((current) => subMonths(current, 1))}
+              >
+                <ChevronLeft className="size-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="xs"
+                aria-label="Próximo mês"
+                onClick={() => setMonth((current) => addMonths(current, 1))}
+              >
+                <ChevronRight className="size-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="xs"
+                onClick={() => setMonth(startOfMonth(new Date()))}
+              >
+                Hoje
+              </Button>
+              <h1 className="min-w-40 text-sm font-semibold capitalize text-foreground">
+                {monthTitle.format(month)}
               </h1>
+              <Input
+                type="month"
+                aria-label="Ir para o mês"
+                value={format(month, "yyyy-MM")}
+                onChange={(event) => {
+                  const next = parseISO(`${event.target.value}-01`);
+                  if (!Number.isNaN(next.getTime())) setMonth(next);
+                }}
+                className="h-8 w-40 [&_[data-slot=input]]:text-xs"
+              />
             </div>
 
             <div className="relative w-full max-w-sm">
@@ -193,218 +188,77 @@ function RouteComponent() {
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder={t("tasks:gantt.searchPlaceholder")}
-                className="h-9 min-h-11 touch-manipulation sm:h-8 sm:min-h-0 [&_[data-slot=input]]:pl-8 [&_[data-slot=input]]:text-xs"
+                className="h-9 touch-manipulation sm:h-8 [&_[data-slot=input]]:pl-8 [&_[data-slot=input]]:text-xs"
               />
             </div>
-
-            <Button
-              variant="outline"
-              size="xs"
-              className="min-h-11 touch-manipulation sm:hidden"
-              onClick={() => setIsTaskRailOpen((current) => !current)}
-            >
-              {showTaskRail ? (
-                <ChevronLeft className="size-3.5" />
-              ) : (
-                <ChevronRight className="size-3.5" />
-              )}
-              {showTaskRail
-                ? t("tasks:gantt.hideTasks")
-                : t("tasks:gantt.showTasks")}
-            </Button>
           </div>
         </div>
 
-        {!timeline || parsedTasks.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center px-6">
-            <div className="max-w-sm text-center">
-              <h2 className="text-sm font-semibold text-foreground">
-                {t("tasks:gantt.noTasks")}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t("tasks:gantt.noTasksSubtitle")}
-              </p>
-            </div>
-          </div>
-        ) : scheduledTasks.length === 0 ? (
-          <div className="flex flex-1 items-center justify-center px-6">
-            <div className="max-w-sm text-center">
-              <h2 className="text-sm font-semibold text-foreground">
-                {t("tasks:gantt.noTasksFound")}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t("tasks:gantt.noTasksMatch", { query: searchQuery })}
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="min-h-0 flex-1 overflow-auto overscroll-x-contain [-webkit-overflow-scrolling:touch]">
-            <div className="relative min-w-max touch-pan-x touch-pan-y">
-              <div className="sticky top-0 z-20 flex border-b border-border bg-background/95 backdrop-blur">
-                {showTaskRail ? (
+        <div className="min-h-0 flex-1 overflow-auto p-3 sm:p-4">
+          <div className="grid min-w-[44rem] grid-cols-7 overflow-hidden rounded-lg border border-border">
+            {days.slice(0, 7).map((day) => (
+              <div
+                key={`head-${day.getDay()}`}
+                className="border-b border-border bg-muted/30 px-2 py-1.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground"
+              >
+                {weekdayName.format(day).replace(".", "")}
+              </div>
+            ))}
+            {days.map((day) => {
+              const dayTasks = tasksByDay.get(format(day, "yyyy-MM-dd")) ?? [];
+              const extra = dayTasks.length - MAX_CHIPS_PER_DAY;
+              return (
+                <div
+                  key={day.toISOString()}
+                  className={cn(
+                    "min-h-28 border-r border-b border-border/70 p-1.5",
+                    !isSameMonth(day, month) && "bg-muted/25 opacity-60",
+                  )}
+                >
                   <div
-                    className="sticky left-0 z-30 shrink-0 border-r border-border bg-background px-2 py-2.5 sm:w-80 sm:px-4 sm:py-3"
-                    style={{
-                      width: isMobile ? `${taskColumnWidthRem}rem` : undefined,
-                    }}
+                    className={cn(
+                      "mb-1 flex size-6 items-center justify-center rounded-full text-xs font-medium",
+                      isToday(day) && "bg-primary text-primary-foreground",
+                    )}
                   >
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      {t("tasks:gantt.taskHeader")}
-                    </p>
+                    {format(day, "d")}
                   </div>
-                ) : null}
-                <div
-                  className="grid shrink-0"
-                  style={{
-                    gridTemplateColumns: timeline.gridTemplateColumns,
-                    minWidth: `${timeline.timelineMinWidthRem}rem`,
-                  }}
-                >
-                  {timeline.days.map((day, index) => {
-                    const showMonth =
-                      index === 0 ||
-                      !isSameMonth(day, timeline.days[index - 1] ?? day);
-
-                    return (
-                      <div
-                        key={day.toISOString()}
-                        className={cn(
-                          "border-r border-border/70 px-0.5 py-2 text-center sm:px-1",
-                          isWeekend(day) && "bg-muted/25",
-                        )}
-                      >
-                        <div className="h-4 text-[10px] font-medium text-muted-foreground">
-                          {showMonth ? format(day, "MMM") : ""}
-                        </div>
-                        <div
-                          className={cn(
-                            "mx-auto flex size-6 items-center justify-center rounded-full text-xs font-medium",
-                            isToday(day) &&
-                              "bg-primary text-primary-foreground",
-                          )}
-                        >
-                          {format(day, "d")}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="relative">
-                <div
-                  ref={timelineTrackRef}
-                  className="absolute inset-y-0 z-0 grid"
-                  style={{
-                    left: showTaskRail
-                      ? isMobile
-                        ? `${taskColumnWidthRem}rem`
-                        : "20rem"
-                      : "0rem",
-                    gridTemplateColumns: timeline.gridTemplateColumns,
-                    width: `${timeline.timelineMinWidthRem}rem`,
-                  }}
-                >
-                  {timeline.days.map((day) => (
-                    <div
-                      key={`bg-line-${day.toISOString()}`}
-                      className={cn(
-                        "h-full min-h-0 border-r border-border/60",
-                        isWeekend(day) && "bg-muted/25",
-                      )}
-                    />
-                  ))}
-                </div>
-
-                <div className="relative z-10 flex flex-col">
-                  {scheduledTasks.map((task) => {
-                    return (
-                      <div
+                  <div className="flex flex-col gap-1">
+                    {dayTasks.slice(0, MAX_CHIPS_PER_DAY).map((task) => (
+                      <button
                         key={task.id}
-                        className="grid items-stretch border-b border-border/70"
-                        style={{
-                          gridTemplateColumns: showTaskRail
-                            ? isMobile
-                              ? `${taskColumnWidthRem}rem max-content`
-                              : "20rem max-content"
-                            : "max-content",
-                        }}
+                        type="button"
+                        title={`${project?.slug ?? ""}-${task.number ?? ""} · ${getStatusLabel(task.status)} · ${format(task.scheduleStart, "dd/MM")} a ${format(task.scheduleEnd, "dd/MM")}`}
+                        className="w-full truncate rounded-md border border-primary/25 bg-primary/10 px-1.5 py-1 text-left text-[11px] font-medium leading-tight text-foreground transition-colors hover:bg-primary/20"
+                        onClick={() => openTask(task.id)}
                       >
-                        {showTaskRail ? (
-                          <div className="sticky left-0 z-[11] h-full border-r border-border bg-background">
-                            <button
-                              type="button"
-                              className="flex min-h-[44px] w-full min-w-0 flex-col items-start justify-center gap-0.5 px-2 py-2 text-left transition-colors hover:bg-muted sm:min-h-0 sm:px-3 sm:py-1.5"
-                              onClick={() =>
-                                navigate({
-                                  to: ".",
-                                  search: { taskId: task.id },
-                                  replace: true,
-                                })
-                              }
-                            >
-                              <div className="flex w-full items-center gap-1.5">
-                                <span className="max-w-[7rem] truncate rounded-full bg-secondary px-1.5 py-px text-[10px] font-medium uppercase tracking-wide text-secondary-foreground sm:max-w-none">
-                                  {getStatusLabel(task.status)}
-                                </span>
-                                <span className="truncate text-[10px] text-muted-foreground">
-                                  {project?.slug}-{task.number}
-                                </span>
-                              </div>
-                              <p className="w-full line-clamp-1 text-xs font-medium leading-tight text-foreground">
-                                {task.title}
-                              </p>
-                              <p className="w-full truncate text-[11px] leading-tight text-muted-foreground">
-                                {format(task.scheduleStart, "MMM d")} -{" "}
-                                {format(task.scheduleEnd, "MMM d")}
-                                {task.assigneeName
-                                  ? ` • ${task.assigneeName}`
-                                  : ""}
-                              </p>
-                            </button>
-                          </div>
-                        ) : null}
-
-                        <div
-                          className="relative min-h-11 shrink-0 select-none"
-                          style={{
-                            minWidth: `${timeline.timelineMinWidthRem}rem`,
-                          }}
-                        >
-                          <GanttTaskBar
-                            task={task}
-                            timeline={timeline}
-                            pixelsPerDay={pixelsPerDay}
-                            isMobile={isMobile}
-                            onOpenTask={() =>
-                              navigate({
-                                to: ".",
-                                search: { taskId: task.id },
-                                replace: true,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
+                        {task.title}
+                      </button>
+                    ))}
+                    {extra > 0 && (
+                      <span className="px-1 text-[11px] text-muted-foreground">
+                        +{extra} {extra === 1 ? "tarefa" : "tarefas"}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
-        )}
+          {scheduledTasks.length === 0 && (
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              {searchQuery
+                ? t("tasks:gantt.noTasksMatch", { query: searchQuery })
+                : t("tasks:gantt.noTasksSubtitle")}
+            </p>
+          )}
+        </div>
 
         <TaskDetailsSheet
           taskId={taskId}
           projectId={projectId}
           workspaceId={workspaceId}
-          onClose={() =>
-            navigate({
-              to: ".",
-              search: {},
-              replace: true,
-            })
-          }
+          onClose={() => navigate({ to: ".", search: {}, replace: true })}
         />
       </div>
     </ProjectLayout>

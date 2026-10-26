@@ -41,7 +41,6 @@ import { Route as LayoutAuthenticatedAdminSettingsRouteImport } from './routes/_
 import { Route as LayoutAuthenticatedAdminTasksRouteImport } from './routes/_layout/_authenticated/admin.tasks'
 import { Route as LayoutAuthenticatedAdminWorkspacesRouteImport } from './routes/_layout/_authenticated/admin.workspaces'
 import { Route as LayoutAuthenticatedDashboardIndexRouteImport } from './routes/_layout/_authenticated/dashboard/index'
-import { Route as LayoutAuthenticatedDashboardInvitationsRouteImport } from './routes/_layout/_authenticated/dashboard/invitations'
 import { Route as LayoutAuthenticatedDashboardSettingsRouteImport } from './routes/_layout/_authenticated/dashboard/settings'
 import { Route as LayoutAuthenticatedDashboardSettingsAccountRouteImport } from './routes/_layout/_authenticated/dashboard/settings/account'
 import { Route as LayoutAuthenticatedDashboardSettingsProjectsRouteImport } from './routes/_layout/_authenticated/dashboard/settings/projects'
@@ -265,12 +264,6 @@ const LayoutAuthenticatedDashboardIndexRoute =
   LayoutAuthenticatedDashboardIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => LayoutAuthenticatedDashboardRoute,
-  } as any)
-const LayoutAuthenticatedDashboardInvitationsRoute =
-  LayoutAuthenticatedDashboardInvitationsRouteImport.update({
-    id: '/invitations',
-    path: '/invitations',
     getParentRoute: () => LayoutAuthenticatedDashboardRoute,
   } as any)
 const LayoutAuthenticatedDashboardSettingsRoute =
@@ -653,7 +646,6 @@ export interface FileRoutesByFullPath {
   '/admin/settings': typeof LayoutAuthenticatedAdminSettingsRoute
   '/admin/tasks': typeof LayoutAuthenticatedAdminTasksRoute
   '/admin/workspaces': typeof LayoutAuthenticatedAdminWorkspacesRoute
-  '/dashboard/invitations': typeof LayoutAuthenticatedDashboardInvitationsRoute
   '/dashboard/settings': typeof LayoutAuthenticatedDashboardSettingsRouteWithChildren
   '/admin/': typeof LayoutAuthenticatedAdminIndexRoute
   '/dashboard/': typeof LayoutAuthenticatedDashboardIndexRoute
@@ -732,7 +724,6 @@ export interface FileRoutesByTo {
   '/admin/settings': typeof LayoutAuthenticatedAdminSettingsRoute
   '/admin/tasks': typeof LayoutAuthenticatedAdminTasksRoute
   '/admin/workspaces': typeof LayoutAuthenticatedAdminWorkspacesRoute
-  '/dashboard/invitations': typeof LayoutAuthenticatedDashboardInvitationsRoute
   '/dashboard/settings': typeof LayoutAuthenticatedDashboardSettingsRouteWithChildren
   '/admin': typeof LayoutAuthenticatedAdminIndexRoute
   '/dashboard': typeof LayoutAuthenticatedDashboardIndexRoute
@@ -816,7 +807,6 @@ export interface FileRoutesById {
   '/_layout/_authenticated/admin/settings': typeof LayoutAuthenticatedAdminSettingsRoute
   '/_layout/_authenticated/admin/tasks': typeof LayoutAuthenticatedAdminTasksRoute
   '/_layout/_authenticated/admin/workspaces': typeof LayoutAuthenticatedAdminWorkspacesRoute
-  '/_layout/_authenticated/dashboard/invitations': typeof LayoutAuthenticatedDashboardInvitationsRoute
   '/_layout/_authenticated/dashboard/settings': typeof LayoutAuthenticatedDashboardSettingsRouteWithChildren
   '/_layout/_authenticated/admin/': typeof LayoutAuthenticatedAdminIndexRoute
   '/_layout/_authenticated/dashboard/': typeof LayoutAuthenticatedDashboardIndexRoute
@@ -900,7 +890,6 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/tasks'
     | '/admin/workspaces'
-    | '/dashboard/invitations'
     | '/dashboard/settings'
     | '/admin/'
     | '/dashboard/'
@@ -979,7 +968,6 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/tasks'
     | '/admin/workspaces'
-    | '/dashboard/invitations'
     | '/dashboard/settings'
     | '/admin'
     | '/dashboard'
@@ -1062,7 +1050,6 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/admin/settings'
     | '/_layout/_authenticated/admin/tasks'
     | '/_layout/_authenticated/admin/workspaces'
-    | '/_layout/_authenticated/dashboard/invitations'
     | '/_layout/_authenticated/dashboard/settings'
     | '/_layout/_authenticated/admin/'
     | '/_layout/_authenticated/dashboard/'
@@ -1352,13 +1339,6 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof LayoutAuthenticatedDashboardIndexRouteImport
-      parentRoute: typeof LayoutAuthenticatedDashboardRoute
-    }
-    '/_layout/_authenticated/dashboard/invitations': {
-      id: '/_layout/_authenticated/dashboard/invitations'
-      path: '/invitations'
-      fullPath: '/dashboard/invitations'
-      preLoaderRoute: typeof LayoutAuthenticatedDashboardInvitationsRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardRoute
     }
     '/_layout/_authenticated/dashboard/settings': {
@@ -1937,7 +1917,6 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteWithChildren =
   )
 
 interface LayoutAuthenticatedDashboardRouteChildren {
-  LayoutAuthenticatedDashboardInvitationsRoute: typeof LayoutAuthenticatedDashboardInvitationsRoute
   LayoutAuthenticatedDashboardSettingsRoute: typeof LayoutAuthenticatedDashboardSettingsRouteWithChildren
   LayoutAuthenticatedDashboardIndexRoute: typeof LayoutAuthenticatedDashboardIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteWithChildren
@@ -1946,8 +1925,6 @@ interface LayoutAuthenticatedDashboardRouteChildren {
 
 const LayoutAuthenticatedDashboardRouteChildren: LayoutAuthenticatedDashboardRouteChildren =
   {
-    LayoutAuthenticatedDashboardInvitationsRoute:
-      LayoutAuthenticatedDashboardInvitationsRoute,
     LayoutAuthenticatedDashboardSettingsRoute:
       LayoutAuthenticatedDashboardSettingsRouteWithChildren,
     LayoutAuthenticatedDashboardIndexRoute:

@@ -4,7 +4,6 @@ import {
   ChartNoAxesCombined,
   ChevronRight,
   FolderKanban,
-  Mail,
   Shield,
   Users,
 } from "lucide-react";
@@ -23,7 +22,6 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAdminMe } from "@/hooks/queries/admin/use-admin-me";
-import { usePendingInvitations } from "@/hooks/queries/invitation/use-pending-invitations";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 
@@ -31,7 +29,6 @@ export function NavMain() {
   const { t } = useTranslation();
   const { data: workspace } = useActiveWorkspace();
   const navigate = useNavigate();
-  const { data: invitations = [] } = usePendingInvitations();
   const { data: adminMe } = useAdminMe();
   const {
     canViewCalendar,
@@ -42,8 +39,6 @@ export function NavMain() {
   } = useWorkspacePermission();
 
   if (!workspace && !adminMe) return null;
-
-  const pendingCount = invitations.length;
 
   const navItems = [
     ...(workspace
@@ -100,13 +95,6 @@ export function NavMain() {
                 },
               ]
             : []),
-          {
-            title: t("navigation:sidebar.invitations"),
-            url: "/dashboard/invitations",
-            isActive: window.location.pathname === "/dashboard/invitations",
-            badge: pendingCount > 0 ? pendingCount : null,
-            icon: Mail,
-          },
         ]
       : []),
     ...(adminMe
@@ -148,7 +136,7 @@ export function NavMain() {
                     className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
                     onClick={() => navigate({ to: item.url })}
                   >
-                    {item.icon && <item.icon className="size-4" />}
+                    {item.icon && <item.icon className="size-4 text-primary" />}
                     <span>{item.title}</span>
                     {item.badge !== null && (
                       <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-sm border border-sidebar-border/60 px-1 text-[11px] font-medium text-sidebar-foreground/80">

@@ -1,7 +1,6 @@
 import { useNavigate } from "@tanstack/react-router";
 import {
   Building2,
-  ChartColumn,
   ChartNoAxesCombined,
   ChevronRight,
   Contact,
@@ -41,7 +40,6 @@ export function NavCommercial() {
     canViewCrm,
     canViewContacts,
     canViewCompanies,
-    canViewCrmReports,
     isCheckingPermissions,
   } = useWorkspacePermission();
 
@@ -124,16 +122,6 @@ export function NavCommercial() {
           },
         ]
       : []),
-    ...(canViewCrmReports()
-      ? [
-          {
-            title: t("crm:nav.reports"),
-            url: `${base}/reports`,
-            isActive: path.startsWith(`${base}/reports`),
-            icon: ChartColumn,
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -160,7 +148,7 @@ export function NavCommercial() {
                     className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
                     onClick={() => navigate({ to: item.url })}
                   >
-                    <item.icon className="size-4" />
+                    <item.icon className="size-4 text-info" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

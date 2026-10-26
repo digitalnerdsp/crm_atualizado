@@ -113,8 +113,6 @@ const VIEW_LABELS: Record<CalendarView, string> = {
   day: "Dia",
   list: "Lista",
 };
-const PRIORITIES = ["no-priority", "low", "medium", "high", "urgent"];
-const TASK_STATUSES = ["to-do", "in-progress", "in-review", "done", "planned"];
 const EVENT_STATUSES = ["confirmed", "tentative", "cancelled"];
 const MEETING_TYPE_LABELS: Record<EventFormState["meetingType"], string> = {
   online: "Online",
@@ -939,8 +937,8 @@ function CalendarPage() {
   const [projectId, setProjectId] = useState("");
   const [personId, setPersonId] = useState("");
   const [status, setStatus] = useState("");
-  const [priority, setPriority] = useState("");
-  const [type, setType] = useState<"" | "task" | "event">("");
+  // A Agenda mostra só compromissos; tarefas ficam nos projetos.
+  const type = "event" as const;
   const [mine, setMine] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<CalendarItem | null>(null);
@@ -962,10 +960,8 @@ function CalendarPage() {
       to: range.to.toISOString(),
       workspaceId,
       ...(projectId ? { projectId } : {}),
-      ...(personId && type === "event" ? { attendeeId: personId } : {}),
-      ...(personId && type !== "event" ? { assigneeId: personId } : {}),
+      ...(personId ? { attendeeId: personId } : {}),
       ...(status ? { status } : {}),
-      ...(priority ? { priority } : {}),
       ...(type ? { type } : {}),
       ...(mine ? { mine: "true" as const } : {}),
     }),
@@ -976,7 +972,6 @@ function CalendarPage() {
       projectId,
       personId,
       status,
-      priority,
       type,
       mine,
     ],
@@ -1233,36 +1228,11 @@ function CalendarPage() {
                 ))}
               </SelectInput>
               <SelectInput
-                value={type}
-                onChange={(event) => {
-                  setType(event.target.value as "" | "task" | "event");
-                  setPriority("");
-                }}
-              >
-                <option value="">Tudo</option>
-                <option value="task">Tarefas</option>
-                <option value="event">Compromissos</option>
-              </SelectInput>
-              <SelectInput
                 value={status}
                 onChange={(event) => setStatus(event.target.value)}
               >
                 <option value="">Status</option>
-                {(type === "event" ? EVENT_STATUSES : TASK_STATUSES).map(
-                  (value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ),
-                )}
-              </SelectInput>
-              <SelectInput
-                disabled={type === "event"}
-                value={priority}
-                onChange={(event) => setPriority(event.target.value)}
-              >
-                <option value="">Prioridade</option>
-                {PRIORITIES.map((value) => (
+                {EVENT_STATUSES.map((value) => (
                   <option key={value} value={value}>
                     {value}
                   </option>
