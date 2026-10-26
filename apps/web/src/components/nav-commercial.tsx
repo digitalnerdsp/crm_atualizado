@@ -64,16 +64,10 @@ export function NavCommercial() {
             icon: MenuIcons.deal,
           },
           {
-            title: t("crm:nav.deals"),
-            url: `${base}/deals`,
-            isActive: path.startsWith(`${base}/deals`),
+            title: "Vendas",
+            url: `${base}/sales`,
+            isActive: path.startsWith(`${base}/sales`),
             icon: MenuIcons.growth,
-          },
-          {
-            title: t("crm:nav.contracts"),
-            url: `${base}/contracts`,
-            isActive: path.startsWith(`${base}/contracts`),
-            icon: MenuIcons.contract,
           },
         ]
       : []),

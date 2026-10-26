@@ -749,11 +749,20 @@ describe("API integration: CRM", () => {
       name: "Vendas",
     });
 
+    const company = (await (
+      await post(app, "/api/crm/company", {
+        workspaceId: member.workspace.id,
+        name: "Cliente sem apontamento",
+        primaryContact: { firstName: "Ana" },
+      })
+    ).json()) as { id: string };
+
     const deal = (await (
       await post(app, "/api/crm/deal", {
         workspaceId: member.workspace.id,
         title: "Sem apontamento",
         valueCents: 500_000,
+        companyId: company.id,
       })
     ).json()) as { id: string };
 
@@ -2917,5 +2926,201 @@ describe("API integration: CRM", () => {
     expect(row?.primaryContact?.phone).toBe("15999990000");
 
     expect((await list("inexistente-xyz")).total).toBe(0);
+  });
+
+  it("creates a sale directly and lists it, generating a contract only for recurring items", async () => {
+    const member = await seedCrmWorkspace();
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+    const workspaceId = member.workspace.id;
+    await post(app, "/api/crm/pipeline", { workspaceId, name: "Vendas" });
+
+    const company = (await (
+      await post(app, "/api/crm/company", {
+        workspaceId,
+        name: "Padaria do Ze",
+        primaryContact: { firstName: "Jose" },
+      })
+    ).json()) as { id: string };
+
+    // Sem empresa e sem serviço não há venda.
+    expect(
+      (
+        await post(app, "/api/crm/sale", {
+          workspaceId,
+          soldAt: "2026-10-05T12:00:00.000Z",
+          items: [
+            {
+              name: "Site",
+              billingType: "one_time",
+              quantity: 1,
+              unitPriceCents: 500_000,
+            },
+          ],
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await post(app, "/api/crm/sale", {
+          workspaceId,
+          companyId: company.id,
+          soldAt: "2026-10-05T12:00:00.000Z",
+          items: [],
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await post(app, "/api/crm/sale", {
+          workspaceId,
+          companyId: company.id,
+          soldAt: "2026-10-05T12:00:00.000Z",
+          paymentForm: "custom",
+          items: [
+            {
+              name: "Site",
+              billingType: "one_time",
+              quantity: 1,
+              unitPriceCents: 500_000,
+            },
+          ],
+        })
+      ).status,
+    ).toBe(400);
+
+    // Pagamento único: vira venda, sem contrato.
+    const oneTime = await post(app, "/api/crm/sale", {
+      workspaceId,
+      companyId: company.id,
+      soldAt: "2026-10-05T12:00:00.000Z",
+      notes: "Domínio padariadoze.com.br",
+      paymentForm: "custom",
+      paymentFormNote: "50% hoje e 50% na entrega",
+      items: [
+        {
+          name: "Site",
+          billingType: "one_time",
+          quantity: 1,
+          unitPriceCents: 500_000,
+          notes: "WordPress",
+        },
+      ],
+    });
+    expect(oneTime.status).toBe(200);
+    const oneTimeBody = (await oneTime.json()) as {
+      dealId: string;
+      contractId: string | null;
+    };
+    expect(oneTimeBody.contractId).toBeNull();
+
+    // Item recorrente: o contrato nasce na data da venda.
+    const mixed = await post(app, "/api/crm/sale", {
+      workspaceId,
+      companyId: company.id,
+      soldAt: "2026-10-20T12:00:00.000Z",
+      paymentForm: "pix",
+      items: [
+        {
+          name: "Site",
+          billingType: "one_time",
+          quantity: 1,
+          unitPriceCents: 300_000,
+        },
+        {
+          name: "Tráfego pago",
+          billingType: "monthly",
+          quantity: 1,
+          unitPriceCents: 150_000,
+        },
+      ],
+    });
+    expect(mixed.status).toBe(200);
+    const mixedBody = (await mixed.json()) as {
+      dealId: string;
+      contractId: string | null;
+    };
+    expect(mixedBody.contractId).not.toBeNull();
+
+    type Sales = {
+      total: number;
+      items: {
+        id: string;
+        kind: string | null;
+        valueCents: number;
+        notes: string | null;
+        paymentForm: string | null;
+        paymentFormNote: string | null;
+        services: string[];
+        company: { name: string } | null;
+        contract: { status: string } | null;
+        soldAt: string;
+      }[];
+    };
+    const list = (await (
+      await app.request(`/api/crm/sale?workspaceId=${workspaceId}`)
+    ).json()) as Sales;
+    expect(list.total).toBe(2);
+    // Mais recente primeiro.
+    expect(list.items[0]?.id).toBe(mixedBody.dealId);
+    expect(list.items[0]?.kind).toBe("mixed");
+    expect(list.items[0]?.contract?.status).toBe("active");
+    expect(list.items[0]?.valueCents).toBe(450_000);
+    const first = list.items[1];
+    expect(first?.kind).toBe("one_time");
+    expect(first?.contract).toBeNull();
+    expect(first?.company?.name).toBe("Padaria do Ze");
+    expect(first?.notes).toBe("Domínio padariadoze.com.br");
+    expect(first?.paymentForm).toBe("custom");
+    expect(first?.paymentFormNote).toBe("50% hoje e 50% na entrega");
+    expect(first?.services).toEqual(["Site"]);
+    expect(first?.soldAt.startsWith("2026-10-05")).toBe(true);
+
+    // Filtro de período pela data da venda.
+    const october = (await (
+      await app.request(
+        `/api/crm/sale?workspaceId=${workspaceId}&from=${encodeURIComponent("2026-10-10T00:00:00.000Z")}`,
+      )
+    ).json()) as Sales;
+    expect(october.total).toBe(1);
+
+    // Um lead em aberto não é venda.
+    await post(app, "/api/crm/deal", {
+      workspaceId,
+      title: "Lead qualquer",
+      companyId: company.id,
+    });
+    const still = (await (
+      await app.request(`/api/crm/sale?workspaceId=${workspaceId}`)
+    ).json()) as Sales;
+    expect(still.total).toBe(2);
+  });
+
+  it("does not let a deal without a company be won", async () => {
+    const member = await seedCrmWorkspace();
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+    const workspaceId = member.workspace.id;
+    await post(app, "/api/crm/pipeline", { workspaceId, name: "Vendas" });
+
+    const created = (await (
+      await post(app, "/api/crm/deal", { workspaceId, title: "Sem empresa" })
+    ).json()) as { id: string; pipelineId: string };
+    const stages = (await (
+      await app.request(`/api/crm/pipeline?workspaceId=${workspaceId}`)
+    ).json()) as {
+      id: string;
+      stages: { id: string; outcome: string }[];
+    }[];
+    const won = stages
+      .flatMap((pipeline) => pipeline.stages)
+      .find((stage) => stage.outcome === "won");
+    expect(won).toBeDefined();
+
+    const response = await patch(app, `/api/crm/deal/${created.id}/stage`, {
+      workspaceId,
+      stageId: won?.id,
+    });
+    expect(response.status).toBe(400);
   });
 });

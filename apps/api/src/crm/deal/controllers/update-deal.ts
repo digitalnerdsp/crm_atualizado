@@ -1,7 +1,11 @@
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../../database";
-import { crmDealServiceTable, crmDealTable } from "../../../database/schema";
+import {
+  type CrmPaymentForm,
+  crmDealServiceTable,
+  crmDealTable,
+} from "../../../database/schema";
 import { publishEvent } from "../../../events";
 import { sumLineTotals } from "../../shared/deal-line";
 
@@ -17,6 +21,9 @@ export type DealInput = {
   expectedCloseDate?: Date | null;
   sourceId?: string | null;
   archived?: boolean;
+  notes?: string | null;
+  paymentForm?: CrmPaymentForm | null;
+  paymentFormNote?: string | null;
 };
 
 async function updateDeal({
@@ -99,6 +106,13 @@ async function updateDeal({
         ? {}
         : { expectedCloseDate: input.expectedCloseDate }),
       ...(input.sourceId === undefined ? {} : { sourceId: input.sourceId }),
+      ...(input.notes === undefined ? {} : { notes: input.notes }),
+      ...(input.paymentForm === undefined
+        ? {}
+        : { paymentForm: input.paymentForm }),
+      ...(input.paymentFormNote === undefined
+        ? {}
+        : { paymentFormNote: input.paymentFormNote }),
       ...(input.archived === undefined
         ? {}
         : { archivedAt: input.archived ? new Date() : null }),

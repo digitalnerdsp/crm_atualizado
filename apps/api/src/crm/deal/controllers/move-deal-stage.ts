@@ -93,6 +93,12 @@ async function moveDealStage({
     }
   }
 
+  if (stage.outcome === "won" && !deal.companyId) {
+    throw new HTTPException(400, {
+      message: "Vincule uma empresa à venda antes de fechá-la.",
+    });
+  }
+
   const now = new Date();
   const status = stage.outcome === "open" ? "open" : stage.outcome;
 

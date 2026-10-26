@@ -107,6 +107,12 @@ async function createDeal({
       ),
     );
 
+  if (resolved.stage.outcome === "won" && !companyId) {
+    throw new HTTPException(400, {
+      message: "Vincule uma empresa antes de registrar a venda.",
+    });
+  }
+
   const now = new Date();
   // A deal created straight into the won or lost stage is closed on arrival.
   const status =

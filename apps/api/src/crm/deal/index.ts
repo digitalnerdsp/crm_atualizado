@@ -24,6 +24,14 @@ import setDealServicesCtrl from "./controllers/set-deal-services";
 import updateDealCtrl from "./controllers/update-deal";
 
 const nullableString = v.optional(v.nullable(v.string()));
+const paymentFormSchema = v.picklist([
+  "cash",
+  "pix",
+  "boleto",
+  "card",
+  "installments",
+  "custom",
+]);
 const isoDate = v.pipe(v.string(), v.isoTimestamp());
 
 const dealFields = {
@@ -263,6 +271,11 @@ const deal = new Hono<{
           v.pipe(v.string(), v.trim(), v.minLength(1), v.maxLength(200)),
         ),
         archived: v.optional(v.boolean()),
+        notes: v.optional(v.nullable(v.pipe(v.string(), v.maxLength(4000)))),
+        paymentForm: v.optional(v.nullable(paymentFormSchema)),
+        paymentFormNote: v.optional(
+          v.nullable(v.pipe(v.string(), v.trim(), v.maxLength(200))),
+        ),
         // Travar o valor só existe na edição: na criação o negócio ainda não
         // tem item nenhum para mandar no total.
         valueIsManual: v.optional(v.boolean()),
@@ -543,6 +556,9 @@ const deal = new Hono<{
               ),
               discountPercent: v.optional(
                 v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(100)),
+              ),
+              notes: v.optional(
+                v.nullable(v.pipe(v.string(), v.trim(), v.maxLength(1000))),
               ),
             }),
           ),

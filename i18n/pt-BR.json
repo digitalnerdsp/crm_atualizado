@@ -2041,7 +2041,7 @@
 	"crm": {
 		"nav": {
 			"group": "Comercial",
-			"pipeline": "Funil",
+			"pipeline": "Leads",
 			"deals": "Negócios",
 			"contacts": "Contatos",
 			"companies": "Empresas e contatos",
@@ -2050,7 +2050,7 @@
 			"contracts": "Contratos"
 		},
 		"board": {
-			"title": "Funil de vendas",
+			"title": "Leads",
 			"pipelineLabel": "Funil",
 			"emptyStage": "Nenhum negócio nesta etapa",
 			"dealCount_one": "{{count}} negócio",

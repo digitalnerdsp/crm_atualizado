@@ -85,6 +85,7 @@ import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsIn
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsContractIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/contracts/$contractId'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/deals/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsDealIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/deals/$dealId'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/sales/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBacklogRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/backlog'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdBoardRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/board'
@@ -571,6 +572,15 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsDealIdRoute =
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
   )
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRouteImport.update(
+    {
+      id: '/crm/sales/',
+      path: '/crm/sales/',
+      getParentRoute: () =>
+        LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+    } as any,
+  )
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRouteImport.update(
     {
@@ -695,6 +705,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/workspace/$workspaceId/crm/contacts/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContactsIndexRoute
   '/dashboard/workspace/$workspaceId/crm/contracts/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsIndexRoute
   '/dashboard/workspace/$workspaceId/crm/deals/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRoute
+  '/dashboard/workspace/$workspaceId/crm/sales/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute
 }
@@ -772,6 +783,7 @@ export interface FileRoutesByTo {
   '/dashboard/workspace/$workspaceId/crm/contacts': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContactsIndexRoute
   '/dashboard/workspace/$workspaceId/crm/contracts': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsIndexRoute
   '/dashboard/workspace/$workspaceId/crm/deals': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRoute
+  '/dashboard/workspace/$workspaceId/crm/sales': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute
   '/dashboard/workspace/$workspaceId/project/$projectId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute
   '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute
 }
@@ -856,6 +868,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/contacts/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContactsIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/contracts/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/deals/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/sales/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId_': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute
 }
@@ -939,6 +952,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/crm/contacts/'
     | '/dashboard/workspace/$workspaceId/crm/contracts/'
     | '/dashboard/workspace/$workspaceId/crm/deals/'
+    | '/dashboard/workspace/$workspaceId/crm/sales/'
     | '/dashboard/workspace/$workspaceId/project/$projectId/'
     | '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId'
   fileRoutesByTo: FileRoutesByTo
@@ -1016,6 +1030,7 @@ export interface FileRouteTypes {
     | '/dashboard/workspace/$workspaceId/crm/contacts'
     | '/dashboard/workspace/$workspaceId/crm/contracts'
     | '/dashboard/workspace/$workspaceId/crm/deals'
+    | '/dashboard/workspace/$workspaceId/crm/sales'
     | '/dashboard/workspace/$workspaceId/project/$projectId'
     | '/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId'
   id:
@@ -1099,6 +1114,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/contacts/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/contracts/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/deals/'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/sales/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/task/$taskId_'
   fileRoutesById: FileRoutesById
@@ -1649,6 +1665,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsDealIdRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/sales/': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/sales/'
+      path: '/crm/sales'
+      fullPath: '/dashboard/workspace/$workspaceId/crm/sales/'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/project/$projectId/'
       path: '/project/$projectId'
@@ -1849,6 +1872,7 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContactsIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContactsIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute
 }
@@ -1905,6 +1929,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmContractsIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDealsIndexRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmSalesIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdIndexRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdProjectProjectIdTaskTaskIdRoute:

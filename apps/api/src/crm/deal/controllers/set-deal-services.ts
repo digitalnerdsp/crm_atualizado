@@ -9,7 +9,9 @@ import {
   type ServiceLineInput,
 } from "../../shared/service-lines";
 
-export type DealServiceLineInput = ServiceLineInput;
+export type DealServiceLineInput = ServiceLineInput & {
+  notes?: string | null;
+};
 
 /**
  * Substitui a lista inteira de itens do negócio numa transação.
@@ -49,10 +51,13 @@ async function setDealServices({
     throw new HTTPException(404, { message: "Deal not found" });
   }
 
-  const rows = (await resolveServiceLines(workspaceId, lines)).map((line) => ({
-    ...line,
-    dealId,
-  }));
+  const rows = (await resolveServiceLines(workspaceId, lines)).map(
+    (line, index) => ({
+      ...line,
+      dealId,
+      notes: lines[index]?.notes?.trim() || null,
+    }),
+  );
 
   const result = await db.transaction(async (tx) => {
     const [previous] = await tx

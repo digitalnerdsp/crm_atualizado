@@ -9,6 +9,7 @@ import hosting from "./hosting";
 import importRoutes from "./import";
 import pipeline from "./pipeline";
 import report from "./report";
+import sale from "./sale";
 import service from "./service";
 import taxonomy from "./taxonomy";
 
@@ -20,6 +21,7 @@ import taxonomy from "./taxonomy";
 const crm = new Hono()
   .route("/pipeline", pipeline)
   .route("/deal", deal)
+  .route("/sale", sale)
   .route("/contact", contact)
   .route("/company", company)
   .route("/hosting", hosting)

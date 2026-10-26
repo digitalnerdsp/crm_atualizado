@@ -1820,6 +1820,14 @@ export const crmServiceTable = pgTable(
 
 export type CrmDealStatus = "open" | "won" | "lost";
 
+export type CrmPaymentForm =
+  | "cash"
+  | "pix"
+  | "boleto"
+  | "card"
+  | "installments"
+  | "custom";
+
 export const crmDealTable = pgTable(
   "crm_deal",
   {
@@ -1894,6 +1902,12 @@ export const crmDealTable = pgTable(
       onUpdate: "cascade",
     }),
     position: integer("position").default(0).notNull(),
+    // Observação da venda (dados do site, da hospedagem etc.).
+    notes: text("notes"),
+    /* Só informação de como foi pago: não gera cobrança por parcela. "custom"
+     * usa o texto livre de paymentFormNote. */
+    paymentForm: text("payment_form").$type<CrmPaymentForm>(),
+    paymentFormNote: text("payment_form_note"),
     // base do cálculo de negócio parado (rotting)
     stageEnteredAt: timestamp("stage_entered_at", { mode: "date" })
       .defaultNow()
@@ -1960,6 +1974,8 @@ export const crmDealServiceTable = pgTable(
     // gravado, não derivado na leitura: é somado em todo relatório, e
     // recalcular em cada query repetiria a regra em cada lugar que a lê
     totalCents: bigint("total_cents", { mode: "number" }).notNull(),
+    // Observação do item (ex.: domínio do site, plano de hospedagem).
+    notes: text("notes"),
     position: integer("position").default(0).notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
