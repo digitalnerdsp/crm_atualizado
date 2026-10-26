@@ -249,3 +249,19 @@
     min-width: 0;
   }
 }
+
+/* Ícones multicoloridos do menu (imagens) seguem o mesmo "bloco" dos de traço. */
+[data-theme-layout="qerza"] [data-slot="sidebar-menu-button"] > img[data-menu-icon] {
+  box-sizing: border-box;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.625rem;
+  border-radius: 0.75rem;
+}
+[data-theme-layout="qerza"] [data-slot="sidebar-menu-button"][data-active="true"] > img[data-menu-icon] {
+  background: var(--card);
+  box-shadow: var(--q-shadow-tile);
+}
+[data-theme-layout="qerza"].dark [data-slot="sidebar-menu-button"] > img[data-menu-icon] {
+  background: rgb(255 255 255 / 0.92);
+}

@@ -122,7 +122,7 @@ export function NavProjects() {
                         onClick={() => handleProjectClick(project)}
                       >
                         <ProjectIcon
-                          className="me-2 size-4 text-base text-warning"
+                          className="me-2 size-4 text-base"
                           icon={project.icon}
                         />
                         <span>{project.name}</span>

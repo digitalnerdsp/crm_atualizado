@@ -1,13 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
-import {
-  CalendarDays,
-  ChartNoAxesCombined,
-  ChevronRight,
-  FolderKanban,
-  Shield,
-  Users,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { MenuIcons } from "@/components/menu-icons";
 import {
   Collapsible,
   CollapsiblePanel,
@@ -52,7 +46,7 @@ export function NavMain() {
                   url: "/overview",
                   isActive: window.location.pathname === "/overview",
                   badge: null,
-                  icon: ChartNoAxesCombined,
+                  icon: MenuIcons.lineChart,
                 },
               ]
             : []),
@@ -65,7 +59,7 @@ export function NavMain() {
                     window.location.pathname ===
                     `/dashboard/workspace/${workspace.id}`,
                   badge: null,
-                  icon: FolderKanban,
+                  icon: MenuIcons.folderChart,
                 },
               ]
             : []),
@@ -78,7 +72,7 @@ export function NavMain() {
                     window.location.pathname ===
                     `/dashboard/workspace/${workspace.id}/members`,
                   badge: null,
-                  icon: Users,
+                  icon: MenuIcons.users,
                 },
               ]
             : []),
@@ -91,7 +85,7 @@ export function NavMain() {
                   url: "/calendar",
                   isActive: window.location.pathname === "/calendar",
                   badge: null,
-                  icon: CalendarDays,
+                  icon: MenuIcons.calendar,
                 },
               ]
             : []),
@@ -106,7 +100,7 @@ export function NavMain() {
             url: "/admin",
             isActive: window.location.pathname.startsWith("/admin"),
             badge: null,
-            icon: Shield,
+            icon: MenuIcons.admin,
           },
         ]
       : []),
@@ -136,7 +130,7 @@ export function NavMain() {
                     className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
                     onClick={() => navigate({ to: item.url })}
                   >
-                    {item.icon && <item.icon className="size-4 text-primary" />}
+                    {item.icon && <item.icon className="size-5" />}
                     <span>{item.title}</span>
                     {item.badge !== null && (
                       <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-sm border border-sidebar-border/60 px-1 text-[11px] font-medium text-sidebar-foreground/80">

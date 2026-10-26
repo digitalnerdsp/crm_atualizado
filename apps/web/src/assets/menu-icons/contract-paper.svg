@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!-- Uploaded to: SVG Repo, www.svgrepo.com, Generator: SVG Repo Mixer Tools -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+	 viewBox="0 0 508 508" xml:space="preserve">
+<circle style="fill:#90DFAA;" cx="254" cy="254" r="254"/>
+<path style="fill:#FFFFFF;" d="M318.3,84.2H130.8c-7.5,0-13.6,6.1-13.6,13.6v312.6c0,7.5,6.1,13.6,13.6,13.6h246.4
+	c7.5,0,13.6-6.1,13.6-13.6V156.6H332c-7.5,0-13.6-6.1-13.6-13.6V84.2H318.3z"/>
+<g>
+	<path style="fill:#E6E9EE;" d="M318.3,84.2V143c0,7.5,6.1,13.6,13.6,13.6h58.8L318.3,84.2z"/>
+	<rect x="149.7" y="187.9" style="fill:#E6E9EE;" width="208.6" height="9.6"/>
+	<rect x="149.7" y="225.9" style="fill:#E6E9EE;" width="208.6" height="9.6"/>
+	<rect x="149.7" y="263.9" style="fill:#E6E9EE;" width="208.6" height="9.6"/>
+	<rect x="149.7" y="301.9" style="fill:#E6E9EE;" width="208.6" height="9.6"/>
+	<rect x="149.7" y="339.8" style="fill:#E6E9EE;" width="208.6" height="9.6"/>
+	<rect x="149.7" y="377.8" style="fill:#E6E9EE;" width="208.6" height="9.6"/>
+</g>
+<rect x="324.587" y="213.873" transform="matrix(0.7071 0.7071 -0.7071 0.7071 304.0231 -153.0318)" style="fill:#84DBFF;" width="24.3" height="153.199"/>
+<g>
+	
+		<rect x="314.417" y="199.646" transform="matrix(0.7071 0.7071 -0.7071 0.7071 289.7836 -147.1084)" style="fill:#54C0EB;" width="16.1" height="153.199"/>
+	
+		<rect x="342.877" y="228.181" transform="matrix(0.7071 0.7071 -0.7071 0.7071 318.2961 -158.8746)" style="fill:#54C0EB;" width="16.1" height="153.199"/>
+</g>
+<rect x="368.343" y="222.769" transform="matrix(0.7071 0.7071 -0.7071 0.7071 279.3227 -212.8076)" style="fill:#E6E9EE;" width="56.399" height="16"/>
+<path style="fill:#324A5E;" d="M382.2,205.1l39.9,39.9l35-35c0.6-0.6,0.6-1.5,0-2.1l-37.8-37.8c-0.6-0.6-1.5-0.6-2.1,0L382.2,205.1z
+	"/>
+<polygon style="fill:#FFD05B;" points="262.6,324.7 247.4,379.8 302.5,364.6 "/>
+<polygon style="fill:#324A5E;" points="253,359.7 247.4,379.8 267.5,374.3 "/>
+</svg>

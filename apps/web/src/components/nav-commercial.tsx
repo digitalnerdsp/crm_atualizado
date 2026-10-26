@@ -1,16 +1,7 @@
 import { useNavigate } from "@tanstack/react-router";
-import {
-  Building2,
-  ChartNoAxesCombined,
-  ChevronRight,
-  Contact,
-  FileSignature,
-  Handshake,
-  PhoneCall,
-  Server,
-  TrendingUp,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { MenuIcons } from "@/components/menu-icons";
 import {
   Collapsible,
   CollapsiblePanel,
@@ -61,7 +52,7 @@ export function NavCommercial() {
             title: "Dashboard geral",
             url: `${base}/dashboard`,
             isActive: path.startsWith(`${base}/dashboard`),
-            icon: ChartNoAxesCombined,
+            icon: MenuIcons.barChart,
           },
         ]
       : []),
@@ -71,19 +62,19 @@ export function NavCommercial() {
             title: t("crm:nav.pipeline"),
             url: base,
             isActive: path === base || path === `${base}/`,
-            icon: Handshake,
+            icon: MenuIcons.deal,
           },
           {
             title: t("crm:nav.deals"),
             url: `${base}/deals`,
             isActive: path.startsWith(`${base}/deals`),
-            icon: TrendingUp,
+            icon: MenuIcons.growth,
           },
           {
             title: t("crm:nav.contracts"),
             url: `${base}/contracts`,
             isActive: path.startsWith(`${base}/contracts`),
-            icon: FileSignature,
+            icon: MenuIcons.contract,
           },
         ]
       : []),
@@ -93,7 +84,7 @@ export function NavCommercial() {
             title: t("crm:nav.contacts"),
             url: `${base}/contacts`,
             isActive: path.startsWith(`${base}/contacts`),
-            icon: Contact,
+            icon: MenuIcons.contactBook,
           },
         ]
       : []),
@@ -103,13 +94,13 @@ export function NavCommercial() {
             title: t("crm:nav.companies"),
             url: `${base}/companies`,
             isActive: path.startsWith(`${base}/companies`),
-            icon: Building2,
+            icon: MenuIcons.office,
           },
           {
             title: "Carteira e hospedagem",
             url: `${base}/hosting`,
             isActive: path.startsWith(`${base}/hosting`),
-            icon: Server,
+            icon: MenuIcons.cloudServer,
           },
         ]
       : []),
@@ -119,7 +110,7 @@ export function NavCommercial() {
             title: t("crm:nav.activities"),
             url: `${base}/activities`,
             isActive: path.startsWith(`${base}/activities`),
-            icon: PhoneCall,
+            icon: MenuIcons.phone,
           },
         ]
       : []),
@@ -149,7 +140,7 @@ export function NavCommercial() {
                     className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
                     onClick={() => navigate({ to: item.url })}
                   >
-                    <item.icon className="size-4 text-info" />
+                    <item.icon className="size-5" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

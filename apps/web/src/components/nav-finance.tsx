@@ -1,13 +1,6 @@
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import {
-  BadgePercent,
-  ChartColumn,
-  ChartNoAxesCombined,
-  ChevronRight,
-  Landmark,
-  ReceiptText,
-  Repeat,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
+import { MenuIcons } from "@/components/menu-icons";
 import {
   Collapsible,
   CollapsiblePanel,
@@ -42,37 +35,37 @@ export function NavFinance() {
       title: "Dashboard geral — BI",
       url: `${base}/bi`,
       isActive: pathname.endsWith("/bi"),
-      icon: ChartNoAxesCombined,
+      icon: MenuIcons.barChart,
     },
     {
       title: "Gestão da carteira",
       url: `${base}/portfolio`,
       isActive: pathname.endsWith("/portfolio"),
-      icon: Landmark,
+      icon: MenuIcons.folderChart,
     },
     {
       title: "Resumo e lançamentos",
       url: `${base}/finance`,
       isActive: pathname.startsWith(`${base}/finance`),
-      icon: ReceiptText,
+      icon: MenuIcons.receipt,
     },
     {
       title: "Contratos e recorrência",
       url: `${base}/recurrence`,
       isActive: pathname.endsWith("/recurrence"),
-      icon: Repeat,
+      icon: MenuIcons.exchange,
     },
     {
       title: "Comissões e resultados",
       url: `${base}/performance`,
       isActive: pathname.endsWith("/performance"),
-      icon: BadgePercent,
+      icon: MenuIcons.bank,
     },
     {
       title: "Taxas e impostos",
       url: `${base}/taxes`,
       isActive: pathname.endsWith("/taxes"),
-      icon: Landmark,
+      icon: MenuIcons.tax,
     },
     ...(permissions.canViewCrmReports()
       ? [
@@ -80,7 +73,7 @@ export function NavFinance() {
             title: "Relatórios comerciais",
             url: crmReports,
             isActive: pathname.startsWith(crmReports),
-            icon: ChartColumn,
+            icon: MenuIcons.lineChart,
           },
         ]
       : []),
@@ -109,7 +102,7 @@ export function NavFinance() {
                     className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
                     onClick={() => navigate({ to: item.url })}
                   >
-                    <item.icon className="size-4 text-success" />
+                    <item.icon className="size-5" />
                     <span>{item.title}</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
