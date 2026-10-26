@@ -40,6 +40,7 @@ export function NavCommercial() {
     canViewCrm,
     canViewContacts,
     canViewCompanies,
+    canViewCrmReports,
     isCheckingPermissions,
   } = useWorkspacePermission();
 
