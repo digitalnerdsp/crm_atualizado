@@ -28,10 +28,7 @@ function makeMenuIcon(src: string) {
         aria-hidden="true"
         data-menu-icon=""
         draggable={false}
-        className={cn(
-          "size-5 shrink-0 rounded-sm object-contain dark:bg-white/20 dark:p-px dark:ring-1 dark:ring-white/15 dark:backdrop-blur-sm",
-          className,
-        )}
+        className={cn("size-5 shrink-0 rounded-sm object-contain", className)}
       />
     );
   };
