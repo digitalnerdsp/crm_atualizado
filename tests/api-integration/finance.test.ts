@@ -297,4 +297,105 @@ describe("API financeira", () => {
       ).status,
     ).toBe(400);
   });
+  it("ordena a lista por valor e vencimento", async () => {
+    const m = await seed();
+    const app = makeApp(m.user.id);
+    for (const [amountCents, dueDate] of [
+      [3000, "2026-01-20"],
+      [1000, "2026-01-10"],
+      [2000, "2026-01-30"],
+    ] as const)
+      await send(app, `${m.base}/entries`, input({ amountCents, dueDate }));
+    const get = async (sort: string) =>
+      (
+        (await (
+          await app.request(
+            `${m.base}/entries?from=2026-01-01&to=2026-01-31&dateBasis=due&sort=${sort}`,
+          )
+        ).json()) as { items: { amountCents: number }[] }
+      ).items.map((e) => e.amountCents);
+    expect(await get("amount_asc")).toEqual([1000, 2000, 3000]);
+    expect(await get("amount_desc")).toEqual([3000, 2000, 1000]);
+    expect(await get("due_asc")).toEqual([1000, 3000, 2000]);
+    expect(await get("due_desc")).toEqual([2000, 3000, 1000]);
+  });
+  it("anexa comprovante em PDF ou imagem e recusa outros arquivos", async () => {
+    const m = await seed();
+    const app = makeApp(m.user.id);
+    const [entry] = await (
+      await send(app, `${m.base}/entries`, input())
+    ).json();
+    const upload = (file: File, extra?: Record<string, string>) => {
+      const form = new FormData();
+      form.set("file", file);
+      for (const [k, v] of Object.entries(extra ?? {})) form.set(k, v);
+      return app.request(`${m.base}/entries/${entry.id}/attachments`, {
+        method: "POST",
+        body: form,
+      });
+    };
+    const pdf = new File([Buffer.from("%PDF-1.4 teste")], "comprovante.pdf", {
+      type: "application/pdf",
+    });
+    const ok = await upload(pdf);
+    expect(ok.status).toBe(200);
+    const saved = await ok.json();
+    const png = new File(
+      [Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3])],
+      "foto.png",
+      { type: "image/png" },
+    );
+    expect((await upload(png)).status).toBe(200);
+    // Texto disfarçado de PDF, tipo não permitido e arquivo grande.
+    expect(
+      (
+        await upload(
+          new File(["não sou pdf"], "falso.pdf", { type: "application/pdf" }),
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await upload(
+          new File(["x"], "a.exe", { type: "application/x-msdownload" }),
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await upload(
+          new File([Buffer.alloc(10 * 1024 * 1024 + 1, 0x25)], "grande.pdf", {
+            type: "application/pdf",
+          }),
+        )
+      ).status,
+    ).toBe(400);
+    const list = await (
+      await app.request(`${m.base}/entries/${entry.id}/attachments`)
+    ).json();
+    expect(list).toHaveLength(2);
+    const file = await app.request(`${m.base}/attachments/${saved.id}`);
+    expect(file.status).toBe(200);
+    expect(file.headers.get("content-type")).toBe("application/pdf");
+    expect(Buffer.from(await file.arrayBuffer()).toString()).toContain("%PDF");
+    // Outro workspace não enxerga o arquivo.
+    const other = await seed();
+    expect(
+      (
+        await makeApp(other.user.id).request(
+          `${other.base}/attachments/${saved.id}`,
+        )
+      ).status,
+    ).toBe(404);
+    expect(
+      (
+        await app.request(`${m.base}/attachments/${saved.id}`, {
+          method: "DELETE",
+        })
+      ).status,
+    ).toBe(200);
+    expect(
+      (await app.request(`${m.base}/attachments/${saved.id}`)).status,
+    ).toBe(404);
+  });
 });

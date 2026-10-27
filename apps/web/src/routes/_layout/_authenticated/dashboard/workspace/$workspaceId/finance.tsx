@@ -71,24 +71,26 @@ function FinanceWorkspace({
   const [filters, setFilters] = useState<FinanceFilters>(() => ({
     ...initialFilters(),
     contractId: selectedContract,
+    direction: selectedContract ? "receivable" : undefined,
   }));
   const [page, setPage] = useState(1);
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState(selectedContract ? "receivable" : "dashboard");
   const [form, setForm] = useState<FinanceEntry | "new" | null>(null);
   const [detail, setDetail] = useState<FinanceEntry | null>(null);
   const [exporting, setExporting] = useState(false);
-  const queries = useFinance(workspaceId, filters, page, enabled);
-  const meta = queries.metadata.data;
-  const list = queries.entries.data;
-  const set = (key: keyof FinanceFilters, value: string) => {
+  const changeTab = (next: string) => {
+    setTab(next);
     setPage(1);
     setFilters((f) => ({
       ...f,
       view: undefined,
       asOf: undefined,
-      [key]: value || undefined,
+      direction: next === "receivable" || next === "payable" ? next : undefined,
     }));
   };
+  const queries = useFinance(workspaceId, filters, page, enabled);
+  const meta = queries.metadata.data;
+  const list = queries.entries.data;
   const error =
     queries.metadata.error ?? queries.entries.error ?? queries.dashboard.error;
   const exportFile = async (format: "xlsx" | "pdf") => {
@@ -130,8 +132,8 @@ function FinanceWorkspace({
         ) : (
           <>
             <form
-              key={`${filters.from}-${filters.to}-${filters.dateBasis}`}
-              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+              key={`${filters.from}-${filters.to}-${filters.status}-${filters.sort}-${filters.search}`}
+              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5"
               onSubmit={(e) => {
                 e.preventDefault();
                 const f = new FormData(e.currentTarget);
@@ -150,6 +152,12 @@ function FinanceWorkspace({
                   from,
                   to,
                   search: String(f.get("search")) || undefined,
+                  status:
+                    (String(f.get("status")) as FinanceFilters["status"]) ||
+                    undefined,
+                  sort:
+                    (String(f.get("sort")) as FinanceFilters["sort"]) ||
+                    undefined,
                 }));
               }}
             >
@@ -169,204 +177,58 @@ function FinanceWorkspace({
                   defaultValue={filters.to}
                 />
               </Field>
-              <Field label="Base de datas">
+              <Field label="Situação">
                 <select
                   className={selectClass}
-                  value={filters.dateBasis}
-                  onChange={(e) => set("dateBasis", e.target.value)}
+                  name="status"
+                  defaultValue={filters.status ?? ""}
                 >
-                  <option value="due">Vencimento</option>
-                  <option value="competence">Competência</option>
-                  <option value="settlement">Data da baixa</option>
+                  {Object.entries({
+                    "": "Todas",
+                    open: "Em aberto",
+                    partial: "Parcial",
+                    settled: "Liquidado",
+                    overdue: "Vencido",
+                    cancelled: "Cancelado",
+                  }).map(([v, l]) => (
+                    <option key={v} value={v}>
+                      {l}
+                    </option>
+                  ))}
                 </select>
               </Field>
-              <Field label="Tipo">
+              <Field label="Ordenar por">
                 <select
                   className={selectClass}
-                  value={filters.direction ?? ""}
-                  onChange={(e) => set("direction", e.target.value)}
+                  name="sort"
+                  defaultValue={filters.sort ?? ""}
                 >
-                  <option value="">Pagar e receber</option>
-                  <option value="payable">A pagar</option>
-                  <option value="receivable">A receber</option>
+                  <option value="">Vencimento (mais recente)</option>
+                  <option value="due_asc">Vencimento (mais antigo)</option>
+                  <option value="amount_desc">Maior valor</option>
+                  <option value="amount_asc">Menor valor</option>
+                  <option value="name">Descrição (A-Z)</option>
                 </select>
               </Field>
-              <details className="sm:col-span-2 lg:col-span-4">
-                <summary className="cursor-pointer text-sm font-medium">
-                  Filtros avançados e pesquisa
-                </summary>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <Field label="Situação">
-                    <select
-                      className={selectClass}
-                      value={filters.status ?? ""}
-                      onChange={(e) => set("status", e.target.value)}
-                    >
-                      {Object.entries({
-                        "": "Todas",
-                        open: "Em aberto",
-                        partial: "Parcial",
-                        settled: "Liquidado",
-                        overdue: "Vencido",
-                        cancelled: "Cancelado",
-                      }).map(([v, l]) => (
-                        <option key={v} value={v}>
-                          {l}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Categoria">
-                    <select
-                      className={selectClass}
-                      value={filters.categoryId ?? ""}
-                      onChange={(e) => {
-                        set("categoryId", e.target.value);
-                        set("subcategoryId", "");
-                      }}
-                    >
-                      <option value="">Todas</option>
-                      {meta?.categories
-                        .filter((c) => !c.parentId)
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                    </select>
-                  </Field>
-                  <Field label="Subcategoria">
-                    <select
-                      className={selectClass}
-                      value={filters.subcategoryId ?? ""}
-                      onChange={(e) => set("subcategoryId", e.target.value)}
-                    >
-                      <option value="">Todas</option>
-                      {meta?.categories
-                        .filter(
-                          (c) =>
-                            c.parentId &&
-                            (!filters.categoryId ||
-                              c.parentId === filters.categoryId),
-                        )
-                        .map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                    </select>
-                  </Field>
-                  <Field label="Vínculo do colaborador">
-                    <select
-                      className={selectClass}
-                      value={filters.laborType ?? ""}
-                      onChange={(e) => set("laborType", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      <option value="pj">PJ</option>
-                      <option value="freelance">Freelance</option>
-                      <option value="clt">CLT</option>
-                    </select>
-                  </Field>
-                  <Field label="Favorecido ou colaborador">
-                    <select
-                      className={selectClass}
-                      value={filters.partyId ?? ""}
-                      onChange={(e) => set("partyId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.parties.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Cliente">
-                    <select
-                      className={selectClass}
-                      value={filters.companyId ?? ""}
-                      onChange={(e) => set("companyId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.companies.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Serviço">
-                    <select
-                      className={selectClass}
-                      value={filters.serviceId ?? ""}
-                      onChange={(e) => set("serviceId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.services.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Vendedor">
-                    <select
-                      className={selectClass}
-                      value={filters.sellerId ?? ""}
-                      onChange={(e) => set("sellerId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.sellers.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Natureza">
-                    <select
-                      className={selectClass}
-                      value={filters.kind ?? ""}
-                      onChange={(e) => set("kind", e.target.value)}
-                    >
-                      <option value="">Todas</option>
-                      <option value="operating">Operacional</option>
-                      <option value="opening">Saldo inicial</option>
-                    </select>
-                  </Field>
-                  <Field label="Contrato">
-                    <select
-                      className={selectClass}
-                      value={filters.contractId ?? ""}
-                      onChange={(e) => set("contractId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.contracts.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Pesquisar">
-                    <Input
-                      name="search"
-                      placeholder="Descrição ou favorecido"
-                      defaultValue={filters.search}
-                      maxLength={240}
-                    />
-                  </Field>
-                </div>
-              </details>
-              <div className="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4">
-                <Button type="submit">Aplicar período e busca</Button>
+              <Field label="Pesquisar">
+                <Input
+                  name="search"
+                  placeholder="Descrição ou cliente"
+                  defaultValue={filters.search}
+                  maxLength={240}
+                />
+              </Field>
+              <div className="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-5">
+                <Button type="submit">Aplicar</Button>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
                     setPage(1);
-                    setFilters(initialFilters());
+                    setFilters({
+                      ...initialFilters(),
+                      direction: filters.direction,
+                    });
                   }}
                 >
                   Limpar filtros
@@ -415,10 +277,14 @@ function FinanceWorkspace({
                 </Button>
               </div>
             )}
-            <Tabs value={tab} onValueChange={(value) => setTab(String(value))}>
+            <Tabs
+              value={tab}
+              onValueChange={(value) => changeTab(String(value))}
+            >
               <TabsList>
                 <TabsTab value="dashboard">Resumo</TabsTab>
-                <TabsTab value="entries">Lançamentos</TabsTab>
+                <TabsTab value="receivable">Contas a receber</TabsTab>
+                <TabsTab value="payable">Contas a pagar</TabsTab>
                 {permissions.canManageFinance() && (
                   <TabsTab value="settings">Cadastros</TabsTab>
                 )}
@@ -431,197 +297,232 @@ function FinanceWorkspace({
                     <FinanceDashboardView
                       data={queries.dashboard.data}
                       onInspect={(extra) => {
-                        setFilters((f) => ({ ...f, ...extra }));
+                        const next =
+                          extra.direction === "payable"
+                            ? "payable"
+                            : "receivable";
+                        setFilters((f) => ({
+                          ...f,
+                          ...extra,
+                          direction: next,
+                        }));
                         setPage(1);
-                        setTab("entries");
+                        setTab(next);
                       }}
                     />
                   )
                 )}
               </TabsPanel>
-              <TabsPanel value="entries">
-                <section className="space-y-4 rounded-xl border bg-card p-4">
-                  {filters.view && (
-                    <p className="text-sm text-muted-foreground">
-                      Detalhamento de{" "}
-                      {filters.view === "overdue"
-                        ? "vencidos"
-                        : "saldos em aberto"}{" "}
-                      até {dateLabel(filters.to)}, considerando baixas até{" "}
-                      {dateLabel(filters.asOf ?? today())}. O início do período
-                      não limita esta posição.{" "}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setFilters((f) => ({
-                            ...f,
-                            view: undefined,
-                            asOf: undefined,
-                          }));
-                          setPage(1);
-                        }}
-                      >
-                        Voltar à consulta por período
-                      </Button>
-                    </p>
-                  )}
-                  <div className="flex flex-wrap justify-between gap-2">
-                    <h2 className="font-semibold">
-                      {list?.total ?? 0} lançamentos
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Total sem cancelados{" "}
-                      {money(list?.totals.amountCents ?? 0)} · Em aberto{" "}
-                      {money(list?.totals.remainingCents ?? 0)}
-                    </p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Recebido no período {money(list?.totals.receivedCents ?? 0)}{" "}
-                    · Pago no período {money(list?.totals.paidCents ?? 0)} ·
-                    Movimento líquido{" "}
-                    {money(
-                      (list?.totals.receivedCents ?? 0) -
-                        (list?.totals.paidCents ?? 0),
+              {(["receivable", "payable"] as const).map((side) => (
+                <TabsPanel key={side} value={side}>
+                  <section className="space-y-4 rounded-xl border bg-card p-4">
+                    {filters.view && (
+                      <p className="text-sm text-muted-foreground">
+                        Detalhamento de{" "}
+                        {filters.view === "overdue"
+                          ? "vencidos"
+                          : "saldos em aberto"}{" "}
+                        até {dateLabel(filters.to)}, considerando baixas até{" "}
+                        {dateLabel(filters.asOf ?? today())}. O início do
+                        período não limita esta posição.{" "}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFilters((f) => ({
+                              ...f,
+                              view: undefined,
+                              asOf: undefined,
+                            }));
+                            setPage(1);
+                          }}
+                        >
+                          Voltar à consulta por período
+                        </Button>
+                      </p>
                     )}
-                  </p>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {[
-                            "Descrição",
-                            "Tipo",
-                            "Favorecido",
-                            "Vencimento",
-                            "Valor",
-                            "Saldo",
-                            "Situação",
-                            "Ações",
-                          ].map((t) => (
-                            <TableHead key={t}>{t}</TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {queries.entries.isLoading ? (
+                    {filters.contractId && (
+                      <p className="text-sm text-muted-foreground">
+                        Cobranças de um contrato, mês a mês. Use “Dar baixa” em
+                        cada mês conforme o pagamento chegar.{" "}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFilters((f) => ({
+                              ...f,
+                              contractId: undefined,
+                            }));
+                            setPage(1);
+                          }}
+                        >
+                          Ver todas as contas
+                        </Button>
+                      </p>
+                    )}
+                    <div className="flex flex-wrap justify-between gap-2">
+                      <h2 className="font-semibold">
+                        {list?.total ?? 0} lançamentos
+                      </h2>
+                      <p className="text-sm text-muted-foreground">
+                        Total sem cancelados{" "}
+                        {money(list?.totals.amountCents ?? 0)} · Em aberto{" "}
+                        {money(list?.totals.remainingCents ?? 0)}
+                      </p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Recebido no período{" "}
+                      {money(list?.totals.receivedCents ?? 0)} · Pago no período{" "}
+                      {money(list?.totals.paidCents ?? 0)} · Movimento líquido{" "}
+                      {money(
+                        (list?.totals.receivedCents ?? 0) -
+                          (list?.totals.paidCents ?? 0),
+                      )}
+                    </p>
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
                           <TableRow>
-                            <TableCell colSpan={8}>
-                              Carregando lançamentos…
-                            </TableCell>
+                            {[
+                              "Descrição",
+                              "Competência",
+                              side === "receivable" ? "Cliente" : "Favorecido",
+                              "Vencimento",
+                              "Valor",
+                              "Saldo",
+                              "Situação",
+                              "Ações",
+                            ].map((t) => (
+                              <TableHead key={t}>{t}</TableHead>
+                            ))}
                           </TableRow>
-                        ) : !list?.items.length ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={8}
-                              className="py-10 text-center text-muted-foreground"
-                            >
-                              Nenhum lançamento encontrado. Ajuste os filtros ou
-                              cadastre o primeiro.
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          list.items.map((entry) => (
-                            <TableRow key={entry.id}>
-                              <TableCell className="min-w-48">
-                                <button
-                                  type="button"
-                                  className="text-left font-medium hover:underline"
-                                  onClick={() => setDetail(entry)}
-                                >
-                                  {entry.description}
-                                </button>
-                                <p className="text-xs text-muted-foreground">
-                                  {entry.categoryName ?? "Sem categoria"}
-                                  {entry.serviceName
-                                    ? ` · ${entry.serviceName}`
-                                    : ""}
-                                  {entry.installmentCount > 1
-                                    ? ` · ${entry.installment}/${entry.installmentCount}`
-                                    : ""}
-                                </p>
-                              </TableCell>
-                              <TableCell>
-                                {entry.direction === "payable"
-                                  ? "A pagar"
-                                  : "A receber"}
-                              </TableCell>
-                              <TableCell>
-                                {entry.partyName}
-                                <p className="text-xs text-muted-foreground">
-                                  {entry.laborType?.toUpperCase()}
-                                </p>
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap">
-                                {dateLabel(entry.dueDate)}
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap tabular-nums">
-                                {money(entry.amountCents)}
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap tabular-nums">
-                                {money(entry.reportBalanceCents)}
-                              </TableCell>
-                              <TableCell>
-                                <span className="whitespace-nowrap rounded-full bg-muted px-2 py-1 text-xs">
-                                  {entryStatus(entry)}
-                                </span>
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex gap-1">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => setDetail(entry)}
-                                  >
-                                    Detalhes / baixa
-                                  </Button>
-                                  {permissions.canUpdateFinance() &&
-                                    !entry.contractId &&
-                                    !entry.cancelledAt &&
-                                    remaining(entry) === entry.amountCents && (
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setForm(entry)}
-                                      >
-                                        Editar
-                                      </Button>
-                                    )}
-                                </div>
+                        </TableHeader>
+                        <TableBody>
+                          {queries.entries.isLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={8}>
+                                Carregando lançamentos…
                               </TableCell>
                             </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="flex items-center justify-end gap-3 text-sm">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page <= 1 || queries.entries.isFetching}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      Anterior
-                    </Button>
-                    <span>
-                      Página {page} de{" "}
-                      {Math.max(1, Math.ceil((list?.total ?? 0) / 50))}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={
-                        page * 50 >= (list?.total ?? 0) ||
-                        queries.entries.isFetching
-                      }
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      Próxima
-                    </Button>
-                  </div>
-                </section>
-              </TabsPanel>
+                          ) : !list?.items.length ? (
+                            <TableRow>
+                              <TableCell
+                                colSpan={8}
+                                className="py-10 text-center text-muted-foreground"
+                              >
+                                Nenhum lançamento encontrado. Ajuste os filtros
+                                ou cadastre o primeiro.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            list.items.map((entry) => (
+                              <TableRow key={entry.id}>
+                                <TableCell className="min-w-48">
+                                  <button
+                                    type="button"
+                                    className="text-left font-medium hover:underline"
+                                    onClick={() => setDetail(entry)}
+                                  >
+                                    {entry.description}
+                                  </button>
+                                  <p className="text-xs text-muted-foreground">
+                                    {entry.categoryName ?? "Sem categoria"}
+                                    {entry.serviceName
+                                      ? ` · ${entry.serviceName}`
+                                      : ""}
+                                    {entry.installmentCount > 1
+                                      ? ` · ${entry.installment}/${entry.installmentCount}`
+                                      : ""}
+                                  </p>
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  {entry.competenceDate
+                                    .slice(0, 7)
+                                    .split("-")
+                                    .reverse()
+                                    .join("/")}
+                                </TableCell>
+                                <TableCell>
+                                  {entry.partyName}
+                                  <p className="text-xs text-muted-foreground">
+                                    {entry.laborType?.toUpperCase()}
+                                  </p>
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap">
+                                  {dateLabel(entry.dueDate)}
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap tabular-nums">
+                                  {money(entry.amountCents)}
+                                </TableCell>
+                                <TableCell className="whitespace-nowrap tabular-nums">
+                                  {money(entry.reportBalanceCents)}
+                                </TableCell>
+                                <TableCell>
+                                  <span className="whitespace-nowrap rounded-full bg-muted px-2 py-1 text-xs">
+                                    {entryStatus(entry)}
+                                  </span>
+                                </TableCell>
+                                <TableCell>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => setDetail(entry)}
+                                    >
+                                      {remaining(entry) > 0 &&
+                                      !entry.cancelledAt
+                                        ? "Dar baixa"
+                                        : "Detalhes"}
+                                    </Button>
+                                    {permissions.canUpdateFinance() &&
+                                      !entry.contractId &&
+                                      !entry.cancelledAt &&
+                                      remaining(entry) ===
+                                        entry.amountCents && (
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => setForm(entry)}
+                                        >
+                                          Editar
+                                        </Button>
+                                      )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                    <div className="flex items-center justify-end gap-3 text-sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1 || queries.entries.isFetching}
+                        onClick={() => setPage((p) => p - 1)}
+                      >
+                        Anterior
+                      </Button>
+                      <span>
+                        Página {page} de{" "}
+                        {Math.max(1, Math.ceil((list?.total ?? 0) / 50))}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={
+                          page * 50 >= (list?.total ?? 0) ||
+                          queries.entries.isFetching
+                        }
+                        onClick={() => setPage((p) => p + 1)}
+                      >
+                        Próxima
+                      </Button>
+                    </div>
+                  </section>
+                </TabsPanel>
+              ))}
               {permissions.canManageFinance() && (
                 <TabsPanel value="settings">
                   {meta && (

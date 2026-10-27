@@ -4,6 +4,7 @@ import { describeRoute, validator } from "hono-openapi";
 import * as v from "valibot";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
+import attachments from "./attachment-routes";
 import bi from "./bi";
 import * as ctl from "./controllers/finance";
 import { excel, pdf } from "./export";
@@ -297,4 +298,7 @@ const finance = new Hono<{
     },
   );
 finance.route("/:workspaceId/portfolio", portfolio);
+// Comprovantes ficam fora da cadeia tipada: a cadeia já está no limite de
+// profundidade de tipos do cliente RPC (o front usa fetch para estas rotas).
+finance.route("/:workspaceId", attachments);
 export default finance;

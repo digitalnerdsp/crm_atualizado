@@ -3042,6 +3042,23 @@ describe("API integration: CRM", () => {
     };
     expect(mixedBody.contractId).not.toBeNull();
 
+    // Item pontual gera a conta a receber na data da venda; o recorrente não
+    // gera nada aqui (a cobrança nasce do contrato).
+    const receivables = await db
+      .select()
+      .from(schema.financeEntryTable)
+      .where(eq(schema.financeEntryTable.workspaceId, workspaceId));
+    const bySite = receivables
+      .filter((e) => e.description === "Venda — Site")
+      .sort((x, y) => x.amountCents - y.amountCents);
+    expect(bySite.map((e) => e.amountCents)).toEqual([300_000, 500_000]);
+    expect(bySite.every((e) => e.direction === "receivable")).toBe(true);
+    expect(bySite[0]?.dueDate).toBe("2026-10-20");
+    expect(bySite[1]?.dueDate).toBe("2026-10-05");
+    expect(receivables.some((e) => e.description.includes("Tráfego"))).toBe(
+      false,
+    );
+
     type Sales = {
       total: number;
       items: {

@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { Commissions } from "@/components/finance/performance/commissions";
-import { PerformanceDashboard } from "@/components/finance/performance/dashboard";
 import { PerformanceExpenses } from "@/components/finance/performance/expenses";
 import { PerformanceRules } from "@/components/finance/performance/rules";
 import { Field, selectClass, today } from "@/components/finance/shared";
@@ -36,7 +35,7 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
     from: `${now.slice(0, 7)}-01`,
     to: now,
   });
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState("commissions");
   const [exporting, setExporting] = useState(false);
   const q = useQuery({
     queryKey: ["finance", workspaceId, "performance", filters],
@@ -94,7 +93,6 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
                   from: String(f.get("from")),
                   to: String(f.get("to")),
                   sellerId: String(f.get("seller") ?? "") || undefined,
-                  serviceId: String(f.get("service") ?? "") || undefined,
                 });
               }}
             >
@@ -122,20 +120,6 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
                 >
                   <option value="">Todos</option>
                   {meta.data?.sellers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Serviço">
-                <select
-                  name="service"
-                  className={selectClass}
-                  defaultValue={filters.serviceId ?? ""}
-                >
-                  <option value="">Todos</option>
-                  {meta.data?.services.map((s) => (
                     <option key={s.id} value={s.id}>
                       {s.name}
                     </option>
@@ -196,19 +180,11 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
             <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
               <div className="overflow-x-auto">
                 <TabsList>
-                  <TabsTab value="dashboard">Resumo</TabsTab>
                   <TabsTab value="commissions">Comissões</TabsTab>
                   <TabsTab value="expenses">Custos e despesas</TabsTab>
                   <TabsTab value="rules">Regras</TabsTab>
                 </TabsList>
               </div>
-              <TabsPanel value="dashboard">
-                {q.isLoading ? (
-                  <p>Carregando indicadores…</p>
-                ) : (
-                  q.data && <PerformanceDashboard data={q.data} />
-                )}
-              </TabsPanel>
               <TabsPanel value="commissions">
                 {q.data && (
                   <Commissions

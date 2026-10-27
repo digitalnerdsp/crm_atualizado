@@ -134,6 +134,13 @@
       "when": 1793113387280,
       "tag": "0018_commission-limit",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1793115292756,
+      "tag": "0019_finance-attachment",
+      "breakpoints": true
     }
   ]
 }

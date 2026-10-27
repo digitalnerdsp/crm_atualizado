@@ -92,6 +92,9 @@ export const filterFields = {
     v.picklist(["open", "partial", "settled", "overdue", "cancelled"]),
   ),
   search: v.optional(v.pipe(v.string(), v.maxLength(240))),
+  sort: v.optional(
+    v.picklist(["due_asc", "due_desc", "amount_asc", "amount_desc", "name"]),
+  ),
 };
 export const filterSchema = v.pipe(
   v.object(filterFields),

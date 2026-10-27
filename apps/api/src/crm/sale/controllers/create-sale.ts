@@ -8,6 +8,7 @@ import {
   crmPipelineTable,
   crmStageTable,
 } from "../../../database/schema";
+import { createEntries } from "../../../finance/controllers/finance";
 import { createContractFromDeal } from "../../contract/controllers/contracts";
 import createDeal from "../../deal/controllers/create-deal";
 import setDealServices, {
@@ -143,6 +144,42 @@ async function createSale(input: CreateSaleInput) {
           },
         })
       : null;
+
+    // Item pontual vira conta a receber na data da venda (uma por item), com
+    // o vendedor e o serviço, para a comissão do "na venda" ser liberada
+    // quando o financeiro der baixa.
+    const paymentMethod =
+      input.paymentForm === "pix" ||
+      input.paymentForm === "boleto" ||
+      input.paymentForm === "card"
+        ? input.paymentForm
+        : input.paymentForm === "cash"
+          ? "cash"
+          : "other";
+    const day = input.soldAt.toISOString().slice(0, 10);
+    for (const item of saved.services) {
+      if (isRecurring(item.billingType) || item.totalCents <= 0) continue;
+      await createEntries(input.workspaceId, input.actorUserId, {
+        requestId: `sale:${deal.id}:${item.id}`,
+        description: `Venda — ${item.name}`.slice(0, 240),
+        direction: "receivable",
+        kind: "operating",
+        amountCents: item.totalCents,
+        competenceDate: day,
+        dueDate: day,
+        categoryId: null,
+        partyId: null,
+        partyName: company.name,
+        companyId: company.id,
+        serviceId: item.serviceId,
+        sellerId: input.ownerUserId ?? input.actorUserId,
+        paymentMethod,
+        notes: item.notes ?? "",
+        count: 1,
+        intervalMonths: 1,
+        schedule: "installments",
+      });
+    }
 
     return {
       dealId: deal.id,

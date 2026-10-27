@@ -3,7 +3,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { BillingDialog } from "@/components/finance/billing-dialog";
-import { RecurrenceDashboard } from "@/components/finance/recurrence-dashboard";
 import {
   dateLabel,
   Field,
@@ -22,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getMetadata } from "@/fetchers/finance";
 import {
   downloadRecurrence,
@@ -78,7 +76,6 @@ function RecurrenceWorkspace({
     to: now,
     contractId: selectedContract,
   });
-  const [tab, setTab] = useState("dashboard");
   const [page, setPage] = useState(1);
   const [dialog, setDialog] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -164,7 +161,7 @@ function RecurrenceWorkspace({
                   defaultValue={filters.to}
                 />
               </Field>
-              <Field label="Situação na referência">
+              <Field label="Situação">
                 <select
                   className={selectClass}
                   value={filters.status ?? ""}
@@ -178,117 +175,20 @@ function RecurrenceWorkspace({
                   ))}
                 </select>
               </Field>
-              <Field label="Término próximo">
+              <Field label="Cliente">
                 <select
                   className={selectClass}
-                  value={filters.expiresWithin ?? ""}
-                  onChange={(e) => set("expiresWithin", e.target.value)}
+                  value={filters.companyId ?? ""}
+                  onChange={(e) => set("companyId", e.target.value)}
                 >
-                  <option value="">Todos os prazos</option>
-                  <option value="30">Até 30 dias</option>
-                  <option value="60">Até 60 dias</option>
-                  <option value="90">Até 90 dias</option>
+                  <option value="">Todos</option>
+                  {meta?.companies.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
                 </select>
               </Field>
-              <details className="sm:col-span-2 lg:col-span-4">
-                <summary className="cursor-pointer text-sm font-medium">
-                  Filtros de cliente, vendedor, serviço e vigência
-                </summary>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <Field label="Cliente">
-                    <select
-                      className={selectClass}
-                      value={filters.companyId ?? ""}
-                      onChange={(e) => set("companyId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.companies.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Vendedor">
-                    <select
-                      className={selectClass}
-                      value={filters.sellerId ?? ""}
-                      onChange={(e) => set("sellerId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.sellers.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Serviço">
-                    <select
-                      className={selectClass}
-                      value={filters.serviceId ?? ""}
-                      onChange={(e) => set("serviceId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.services.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Periodicidade">
-                    <select
-                      className={selectClass}
-                      value={filters.billingType ?? ""}
-                      onChange={(e) => set("billingType", e.target.value)}
-                    >
-                      <option value="">Todas</option>
-                      {Object.entries(frequencies).map(([v, l]) => (
-                        <option value={v} key={v}>
-                          {l}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Filtrar período por">
-                    <select
-                      className={selectClass}
-                      value={filters.dateField ?? ""}
-                      onChange={(e) => set("dateField", e.target.value)}
-                    >
-                      <option value="">Movimentações financeiras</option>
-                      <option value="start">Início do contrato</option>
-                      <option value="end">Término do contrato</option>
-                    </select>
-                  </Field>
-                  <Field label="Prazo contratual">
-                    <select
-                      className={selectClass}
-                      value={filters.term ?? ""}
-                      onChange={(e) => set("term", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      <option value="fixed">Prazo determinado</option>
-                      <option value="indefinite">Prazo indeterminado</option>
-                    </select>
-                  </Field>
-                  <Field label="Contrato">
-                    <select
-                      className={selectClass}
-                      value={filters.contractId ?? ""}
-                      onChange={(e) => set("contractId", e.target.value)}
-                    >
-                      <option value="">Todos</option>
-                      {meta?.contracts.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                </div>
-              </details>
               <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
                 <Button type="submit">Aplicar período</Button>
                 <Button
@@ -340,182 +240,161 @@ function RecurrenceWorkspace({
                 </Button>
               </div>
             )}
-            <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
-              <TabsList>
-                <TabsTab value="dashboard">Resumo</TabsTab>
-                <TabsTab value="contracts">Contratos</TabsTab>
-              </TabsList>
-              <TabsPanel value="dashboard">
-                {query.isLoading ? (
-                  <p>Carregando indicadores…</p>
-                ) : (
-                  data && (
-                    <RecurrenceDashboard
-                      data={data}
-                      onList={() => setTab("contracts")}
-                    />
-                  )
-                )}
-              </TabsPanel>
-              <TabsPanel value="contracts">
-                <section className="space-y-4 rounded-xl border bg-card p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="font-semibold">
-                      {data?.total ?? 0} contratos
-                    </h2>
-                    <p className="text-sm text-muted-foreground">
-                      Receita recorrente mensal{" "}
-                      {money(data?.current.mrrCents ?? 0)}
-                    </p>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
+            <div>
+              <section className="space-y-4 rounded-xl border bg-card p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="font-semibold">
+                    {data?.total ?? 0} contratos
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    Receita recorrente mensal{" "}
+                    {money(data?.current.mrrCents ?? 0)}
+                  </p>
+                </div>
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        {[
+                          "Contrato e cliente",
+                          "Serviços e ciclos",
+                          "Vigência",
+                          "Equivalente mensal",
+                          "Cobrado / recebido",
+                          "Próxima cobrança",
+                          "Geração",
+                        ].map((h) => (
+                          <TableHead key={h}>{h}</TableHead>
+                        ))}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {!items.length ? (
                         <TableRow>
-                          {[
-                            "Contrato e cliente",
-                            "Serviços e ciclos",
-                            "Vigência",
-                            "Equivalente mensal",
-                            "Cobrado / recebido",
-                            "Próxima cobrança",
-                            "Geração",
-                          ].map((h) => (
-                            <TableHead key={h}>{h}</TableHead>
-                          ))}
+                          <TableCell
+                            colSpan={7}
+                            className="py-10 text-center text-muted-foreground"
+                          >
+                            {query.isLoading
+                              ? "Carregando contratos…"
+                              : "Nenhum contrato encontrado para estes filtros."}
+                          </TableCell>
                         </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {!items.length ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={7}
-                              className="py-10 text-center text-muted-foreground"
-                            >
-                              {query.isLoading
-                                ? "Carregando contratos…"
-                                : "Nenhum contrato encontrado para estes filtros."}
+                      ) : (
+                        items.map((c) => (
+                          <TableRow key={c.id}>
+                            <TableCell className="min-w-52">
+                              <button
+                                type="button"
+                                className="text-left font-medium hover:underline"
+                                onClick={() => setDialog(c.id)}
+                              >
+                                #{c.number} · {c.title}
+                              </button>
+                              <p className="text-xs text-muted-foreground">
+                                {c.companyName} ·{" "}
+                                {c.sellerName ?? "Sem responsável"}
+                              </p>
+                              <span className="mt-1 inline-block rounded-full bg-muted px-2 py-1 text-xs">
+                                {states[c.status] ?? c.status}
+                              </span>
+                            </TableCell>
+                            <TableCell className="min-w-48">
+                              {c.services.map((item) => (
+                                <p className="py-1 text-xs" key={item.key}>
+                                  {item.name}
+                                  <span className="block text-muted-foreground">
+                                    {frequencies[item.billingType]} ·{" "}
+                                    {money(item.amountCents)} por ciclo
+                                  </span>
+                                </p>
+                              ))}
+                            </TableCell>
+                            <TableCell className="min-w-40 text-xs">
+                              {dateLabel(c.startsOn)} a{" "}
+                              {c.endsOn ? dateLabel(c.endsOn) : "indeterminado"}
+                              <p className="mt-1 text-muted-foreground">
+                                {c.daysRemaining === null
+                                  ? "Sem data de término"
+                                  : `${c.daysRemaining} dias restantes`}
+                              </p>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap tabular-nums">
+                              {money(c.monthlyValueCents)}
+                            </TableCell>
+                            <TableCell className="min-w-40 text-xs">
+                              Cobrado {money(c.billedCents)}
+                              <p>Recebido {money(c.receivedCents)}</p>
+                              <p className="text-muted-foreground">
+                                Saldo {money(c.outstandingCents)}
+                              </p>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap text-xs">
+                              {c.nextCharge ? (
+                                <>
+                                  {dateLabel(c.nextCharge.date)}
+                                  <p>{money(c.nextCharge.amountCents)}</p>
+                                </>
+                              ) : (
+                                "Sem ciclo programado"
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => setDialog(c.id)}
+                              >
+                                {canManage ? "Configurar" : "Consultar"}
+                              </Button>
+                              <p className="mt-1 text-xs text-muted-foreground">
+                                {c.billingEnabled
+                                  ? "Automática ativada"
+                                  : "Desativada"}
+                              </p>
+                              {c.lastWarning && (
+                                <p className="mt-1 max-w-52 text-xs text-amber-600">
+                                  {c.lastWarning}
+                                </p>
+                              )}
+                              <Link
+                                className="mt-2 block text-xs underline"
+                                to="/dashboard/workspace/$workspaceId/finance"
+                                params={{ workspaceId }}
+                                search={{ contractId: c.id }}
+                              >
+                                Ver cobranças
+                              </Link>
                             </TableCell>
                           </TableRow>
-                        ) : (
-                          items.map((c) => (
-                            <TableRow key={c.id}>
-                              <TableCell className="min-w-52">
-                                <button
-                                  type="button"
-                                  className="text-left font-medium hover:underline"
-                                  onClick={() => setDialog(c.id)}
-                                >
-                                  #{c.number} · {c.title}
-                                </button>
-                                <p className="text-xs text-muted-foreground">
-                                  {c.companyName} ·{" "}
-                                  {c.sellerName ?? "Sem responsável"}
-                                </p>
-                                <span className="mt-1 inline-block rounded-full bg-muted px-2 py-1 text-xs">
-                                  {states[c.status] ?? c.status}
-                                </span>
-                              </TableCell>
-                              <TableCell className="min-w-48">
-                                {c.services.map((item) => (
-                                  <p className="py-1 text-xs" key={item.key}>
-                                    {item.name}
-                                    <span className="block text-muted-foreground">
-                                      {frequencies[item.billingType]} ·{" "}
-                                      {money(item.amountCents)} por ciclo
-                                    </span>
-                                  </p>
-                                ))}
-                              </TableCell>
-                              <TableCell className="min-w-40 text-xs">
-                                {dateLabel(c.startsOn)} a{" "}
-                                {c.endsOn
-                                  ? dateLabel(c.endsOn)
-                                  : "indeterminado"}
-                                <p className="mt-1 text-muted-foreground">
-                                  {c.daysRemaining === null
-                                    ? "Sem data de término"
-                                    : `${c.daysRemaining} dias restantes`}
-                                </p>
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap tabular-nums">
-                                {money(c.monthlyValueCents)}
-                              </TableCell>
-                              <TableCell className="min-w-40 text-xs">
-                                Cobrado {money(c.billedCents)}
-                                <p>Recebido {money(c.receivedCents)}</p>
-                                <p className="text-muted-foreground">
-                                  Saldo {money(c.outstandingCents)}
-                                </p>
-                              </TableCell>
-                              <TableCell className="whitespace-nowrap text-xs">
-                                {c.nextCharge ? (
-                                  <>
-                                    {dateLabel(c.nextCharge.date)}
-                                    <p>{money(c.nextCharge.amountCents)}</p>
-                                  </>
-                                ) : (
-                                  "Sem ciclo programado"
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => setDialog(c.id)}
-                                >
-                                  {canManage ? "Configurar" : "Consultar"}
-                                </Button>
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  {c.billingEnabled
-                                    ? "Automática ativada"
-                                    : "Desativada"}
-                                </p>
-                                {c.lastWarning && (
-                                  <p className="mt-1 max-w-52 text-xs text-amber-600">
-                                    {c.lastWarning}
-                                  </p>
-                                )}
-                                <Link
-                                  className="mt-2 block text-xs underline"
-                                  to="/dashboard/workspace/$workspaceId/finance"
-                                  params={{ workspaceId }}
-                                  search={{ contractId: c.id }}
-                                >
-                                  Ver cobranças
-                                </Link>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="flex items-center justify-end gap-2 text-sm">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page === 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      Anterior
-                    </Button>
-                    <span>
-                      {page} de{" "}
-                      {Math.max(1, Math.ceil((data?.total ?? 0) / 25))}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={page * 25 >= (data?.total ?? 0)}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      Próxima
-                    </Button>
-                  </div>
-                </section>
-              </TabsPanel>
-            </Tabs>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1}
+                    onClick={() => setPage((p) => p - 1)}
+                  >
+                    Anterior
+                  </Button>
+                  <span>
+                    {page} de {Math.max(1, Math.ceil((data?.total ?? 0) / 25))}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page * 25 >= (data?.total ?? 0)}
+                    onClick={() => setPage((p) => p + 1)}
+                  >
+                    Próxima
+                  </Button>
+                </div>
+              </section>
+            </div>
             {dialog && meta && (
               <BillingDialog
                 workspaceId={workspaceId}

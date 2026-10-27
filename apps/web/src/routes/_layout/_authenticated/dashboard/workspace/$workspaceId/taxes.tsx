@@ -12,7 +12,6 @@ import {
   today,
 } from "@/components/finance/shared";
 import { TaxCalculator } from "@/components/finance/taxes/calculator";
-import { TaxDashboard } from "@/components/finance/taxes/dashboard";
 import { TaxHistory } from "@/components/finance/taxes/history";
 import { TaxProfiles } from "@/components/finance/taxes/profiles";
 import PageTitle from "@/components/page-title";
@@ -78,7 +77,7 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
     from: `${now.slice(0, 7)}-01`,
     to: now,
   });
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState("calculator");
   const [exporting, setExporting] = useState(false);
   const [detail, setDetail] = useState<string | null>(null);
   const [ledgerPage, setLedgerPage] = useState(1);
@@ -129,7 +128,7 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
           <>
             <form
               key={JSON.stringify(filters)}
-              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5"
+              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-3"
               onSubmit={(e) => {
                 e.preventDefault();
                 const f = new FormData(e.currentTarget);
@@ -137,8 +136,6 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
                   from: String(f.get("from")),
                   to: String(f.get("to")),
                   profileId: String(f.get("profile") || "") || undefined,
-                  serviceId: String(f.get("service") || "") || undefined,
-                  sellerId: String(f.get("seller") || "") || undefined,
                 });
                 setLedgerPage(1);
               }}
@@ -173,35 +170,7 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
                   ))}
                 </select>
               </Field>
-              <Field label="Serviço">
-                <select
-                  name="service"
-                  className={selectClass}
-                  defaultValue={filters.serviceId ?? ""}
-                >
-                  <option value="">Todos</option>
-                  {meta.data?.services.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Vendedor">
-                <select
-                  name="seller"
-                  className={selectClass}
-                  defaultValue={filters.sellerId ?? ""}
-                >
-                  <option value="">Todos</option>
-                  {meta.data?.sellers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-5">
+              <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
                 <Button type="submit">Aplicar filtros</Button>
                 <Button
                   variant="outline"
@@ -261,20 +230,12 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
             <Tabs value={tab} onValueChange={(v) => setTab(String(v))}>
               <div className="overflow-x-auto">
                 <TabsList>
-                  <TabsTab value="dashboard">Resumo</TabsTab>
                   <TabsTab value="calculator">Calculadora</TabsTab>
                   <TabsTab value="profiles">Perfis</TabsTab>
                   <TabsTab value="history">Histórico</TabsTab>
                   <TabsTab value="ledger">Lançamentos reais</TabsTab>
                 </TabsList>
               </div>
-              <TabsPanel value="dashboard">
-                {report.isLoading ? (
-                  <p>Carregando indicadores…</p>
-                ) : (
-                  report.data && <TaxDashboard data={report.data} />
-                )}
-              </TabsPanel>
               <TabsPanel value="calculator">
                 {config.data && meta.data && (
                   <TaxCalculator

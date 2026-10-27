@@ -658,8 +658,20 @@ export async function loadEntries(workspaceId: string): Promise<Entry[]> {
     settlements: byEntry.get(entry.id) ?? [],
   }));
 }
+function sortEntries<T extends Entry>(items: T[], sort: Filters["sort"]) {
+  if (!sort || sort === "due_desc") return items;
+  const copy = [...items];
+  if (sort === "due_asc")
+    copy.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+  else if (sort === "amount_asc")
+    copy.sort((a, b) => a.amountCents - b.amountCents);
+  else if (sort === "amount_desc")
+    copy.sort((a, b) => b.amountCents - a.amountCents);
+  else copy.sort((a, b) => a.description.localeCompare(b.description, "pt-BR"));
+  return copy;
+}
 export function listEntries(entries: Entry[], filters: Filters, page: number) {
-  const selected = filterEntries(entries, filters);
+  const selected = sortEntries(filterEntries(entries, filters), filters.sort);
   const totals = selected.reduce(
     (t, e) => {
       if (!e.cancelledAt) {

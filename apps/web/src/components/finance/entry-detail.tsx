@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,14 @@ import {
   type SettlementPayload,
   settleEntry,
 } from "@/fetchers/finance";
+import {
+  ATTACHMENT_ACCEPT,
+  checkAttachment,
+  deleteAttachment,
+  listAttachments,
+  openAttachment,
+  uploadAttachment,
+} from "@/fetchers/finance/attachments";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
@@ -39,10 +47,50 @@ export function EntryDetail({
   const [requestId] = useState(() => crypto.randomUUID());
   const [action, setAction] = useState<{ settlementId?: string } | null>(null);
   const [reason, setReason] = useState("");
+  const [proof, setProof] = useState<File | null>(null);
+  const qc = useQueryClient();
   const pay = useFinanceMutation(
     workspaceId,
-    (json: SettlementPayload) => settleEntry(workspaceId, entry.id, json),
+    async (json: SettlementPayload) => {
+      const settlement = await settleEntry(workspaceId, entry.id, json);
+      if (proof) {
+        try {
+          await uploadAttachment(
+            workspaceId,
+            entry.id,
+            proof,
+            (settlement as { id?: string } | undefined)?.id,
+          );
+        } catch (error) {
+          // A baixa já foi registrada; o comprovante pode ser reenviado.
+          toast.error(
+            `Baixa registrada, mas o comprovante não foi enviado: ${(error as Error).message}`,
+          );
+        }
+      }
+      return settlement;
+    },
     onClose,
+  );
+  const attachments = useQuery({
+    queryKey: ["finance", workspaceId, "attachments", entry.id],
+    queryFn: () => listAttachments(workspaceId, entry.id),
+  });
+  const addProof = useFinanceMutation(
+    workspaceId,
+    async (file: File) => uploadAttachment(workspaceId, entry.id, file),
+    () =>
+      qc.invalidateQueries({
+        queryKey: ["finance", workspaceId, "attachments", entry.id],
+      }),
+  );
+  const removeProof = useFinanceMutation(
+    workspaceId,
+    async (id: string) => deleteAttachment(workspaceId, id),
+    () =>
+      qc.invalidateQueries({
+        queryKey: ["finance", workspaceId, "attachments", entry.id],
+      }),
   );
   const change = useFinanceMutation(
     workspaceId,
@@ -152,6 +200,23 @@ export function EntryDetail({
             <Field label="Justificativa dos ajustes">
               <Input name="notes" maxLength={2000} />
             </Field>
+            <Field label="Comprovante (imagem ou PDF, até 10 MB)">
+              <Input
+                type="file"
+                accept={ATTACHMENT_ACCEPT}
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  try {
+                    if (file) checkAttachment(file);
+                    setProof(file);
+                  } catch (error) {
+                    toast.error((error as Error).message);
+                    e.target.value = "";
+                    setProof(null);
+                  }
+                }}
+              />
+            </Field>
             <p className="text-xs text-muted-foreground sm:col-span-2">
               Valor efetivo = principal − desconto + juros + multa. O saldo do
               título diminui pelo principal informado.
@@ -212,6 +277,65 @@ export function EntryDetail({
                   )}
               </div>
             ))
+          )}
+        </section>
+        <section className="space-y-2">
+          <h3 className="font-semibold">Comprovantes</h3>
+          {attachments.isLoading ? (
+            <p className="text-sm">Carregando comprovantes…</p>
+          ) : !attachments.data?.length ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhum comprovante anexado.
+            </p>
+          ) : (
+            attachments.data.map((a) => (
+              <div
+                key={a.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-lg border p-3 text-sm"
+              >
+                <button
+                  type="button"
+                  className="text-left hover:underline"
+                  onClick={() =>
+                    openAttachment(workspaceId, a.id).catch((error) =>
+                      toast.error((error as Error).message),
+                    )
+                  }
+                >
+                  {a.filename} · {(a.sizeBytes / 1024).toFixed(0)} KB ·{" "}
+                  {new Date(a.createdAt).toLocaleDateString("pt-BR")}
+                </button>
+                {canSettle && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    disabled={removeProof.isPending}
+                    onClick={() => removeProof.mutate(a.id)}
+                  >
+                    Remover
+                  </Button>
+                )}
+              </div>
+            ))
+          )}
+          {canSettle && (
+            <Input
+              type="file"
+              accept={ATTACHMENT_ACCEPT}
+              disabled={addProof.isPending}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                e.target.value = "";
+                if (!file) return;
+                try {
+                  checkAttachment(file);
+                  addProof.mutate(file);
+                } catch (error) {
+                  toast.error((error as Error).message);
+                }
+              }}
+            />
           )}
         </section>
         {canUpdate &&

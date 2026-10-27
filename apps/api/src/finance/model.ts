@@ -73,6 +73,7 @@ export type Filters = {
   search?: string;
   view?: "outstanding" | "overdue";
   asOf?: string;
+  sort?: "due_asc" | "due_desc" | "amount_asc" | "amount_desc" | "name";
 };
 export const DAY = 86400000;
 export function isCivilDate(value: string) {

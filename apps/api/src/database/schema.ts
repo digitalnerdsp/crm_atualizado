@@ -2893,6 +2893,49 @@ export const financeSettlementTable = pgTable(
   ],
 );
 
+export const financeAttachmentTable = pgTable(
+  "finance_attachment",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    entryId: text("entry_id")
+      .notNull()
+      .references(() => financeEntryTable.id, {
+        onDelete: "restrict",
+        onUpdate: "cascade",
+      }),
+    // Comprovante da baixa específica; nulo quando é anexo do lançamento.
+    settlementId: text("settlement_id").references(
+      () => financeSettlementTable.id,
+      { onDelete: "set null", onUpdate: "cascade" },
+    ),
+    filename: text("filename").notNull(),
+    contentType: text("content_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    storageKey: text("storage_key").notNull(),
+    uploadedBy: text("uploaded_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (t) => [
+    index("finance_attachment_entry_idx").on(t.entryId),
+    index("finance_attachment_workspace_idx").on(t.workspaceId),
+  ],
+);
+
 export type FinanceBillingItem = {
   key: string;
   serviceId: string | null;
