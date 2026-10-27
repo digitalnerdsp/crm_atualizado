@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
+import { CommercialOverview } from "@/components/crm/commercial-overview";
 import { BiChart, Breakdown } from "@/components/finance/bi/charts";
 import { BiDetail } from "@/components/finance/bi/detail";
 import { formatMetric, labels, margins } from "@/components/finance/bi/shared";
@@ -510,6 +511,9 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                     ["recurrence", "Recorrência"],
                     ["commissions", "Comissões"],
                     ["taxes", "Tributos e simulações"],
+                    ...(permissions.canViewCrmReports()
+                      ? [["commercial", "Comercial"]]
+                      : []),
                   ].map(([key, label]) => (
                     <button
                       type="button"
@@ -522,6 +526,9 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                     </button>
                   ))}
                 </nav>
+                {tab === "commercial" && permissions.canViewCrmReports() && (
+                  <CommercialOverview workspaceId={workspaceId} />
+                )}
                 {tab === "overview" && (
                   <>
                     <div className="grid gap-4 xl:grid-cols-2">

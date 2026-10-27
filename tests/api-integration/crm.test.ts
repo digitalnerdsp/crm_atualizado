@@ -1,5 +1,5 @@
 import { defaultRolePayloads } from "@kaneo/permissions";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { beforeEach, describe, expect, it } from "vitest";
 import { seedCrmDefaults } from "../../apps/api/src/crm/shared/seed-workspace";
 import db, { schema } from "../../apps/api/src/database";
@@ -3139,5 +3139,60 @@ describe("API integration: CRM", () => {
       stageId: won?.id,
     });
     expect(response.status).toBe(400);
+  });
+
+  it("seller panel returns only the caller's own sales", async () => {
+    const member = await seedCrmWorkspace();
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+    const workspaceId = member.workspace.id;
+    await post(app, "/api/crm/pipeline", { workspaceId, name: "Vendas" });
+    const company = (await (
+      await post(app, "/api/crm/company", {
+        workspaceId,
+        name: "Cliente A",
+        primaryContact: { firstName: "Ana" },
+      })
+    ).json()) as { id: string };
+    const sell = (price: number) =>
+      post(app, "/api/crm/sale", {
+        workspaceId,
+        companyId: company.id,
+        soldAt: new Date().toISOString(),
+        items: [
+          {
+            name: "Site",
+            billingType: "one_time",
+            quantity: 1,
+            unitPriceCents: price,
+          },
+        ],
+      });
+    expect((await sell(100_000)).status).toBe(200);
+    expect((await sell(50_000)).status).toBe(200);
+    // Venda de outra pessoa do mesmo workspace não entra.
+    const other = await createWorkspaceMember();
+    await db
+      .update(schema.crmDealTable)
+      .set({ ownerUserId: other.user.id })
+      .where(
+        and(
+          eq(schema.crmDealTable.workspaceId, workspaceId),
+          eq(schema.crmDealTable.valueCents, 50_000),
+        ),
+      );
+    const res = await app.request(
+      `/api/crm/seller-panel?workspaceId=${workspaceId}`,
+    );
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as {
+      sales: { month: string; count: number; valueCents: number }[];
+      commission: { monthCents: number; forecastCents: number };
+    };
+    expect(body.sales).toHaveLength(6);
+    const current = body.sales.at(-1);
+    expect(current?.count).toBe(1);
+    expect(current?.valueCents).toBe(100_000);
+    expect(body.commission).toEqual({ monthCents: 0, forecastCents: 0 });
   });
 });

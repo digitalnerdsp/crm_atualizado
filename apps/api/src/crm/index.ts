@@ -10,6 +10,7 @@ import importRoutes from "./import";
 import pipeline from "./pipeline";
 import report from "./report";
 import sale from "./sale";
+import sellerPanel from "./seller-panel";
 import service from "./service";
 import taxonomy from "./taxonomy";
 
@@ -32,5 +33,8 @@ const crm = new Hono()
   .route("/report", report)
   .route("/service", service)
   .route("/taxonomy", taxonomy);
+
+// Fora da cadeia tipada acima (limite de profundidade de tipos do cliente RPC).
+crm.route("/seller-panel", sellerPanel);
 
 export default crm;

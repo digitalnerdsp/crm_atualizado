@@ -606,7 +606,10 @@ export async function cancelEntry(
     return row;
   });
 }
-export async function loadEntries(workspaceId: string): Promise<Entry[]> {
+export async function loadEntries(
+  workspaceId: string,
+  sellerId?: string,
+): Promise<Entry[]> {
   const {
     financeEntryTable: e,
     financeCategoryTable: c,
@@ -632,7 +635,11 @@ export async function loadEntries(workspaceId: string): Promise<Entry[]> {
     .leftJoin(co, eq(co.id, e.companyId))
     .leftJoin(sv, eq(sv.id, e.serviceId))
     .leftJoin(u, eq(u.id, e.sellerId))
-    .where(eq(e.workspaceId, workspaceId))
+    .where(
+      sellerId
+        ? and(eq(e.workspaceId, workspaceId), eq(e.sellerId, sellerId))
+        : eq(e.workspaceId, workspaceId),
+    )
     .orderBy(desc(e.dueDate), asc(e.id))
     .limit(50001);
   if (rows.length > 50000)
@@ -645,7 +652,11 @@ export async function loadEntries(workspaceId: string): Promise<Entry[]> {
     .select({ payment: schema.financeSettlementTable })
     .from(schema.financeSettlementTable)
     .innerJoin(e, eq(e.id, schema.financeSettlementTable.entryId))
-    .where(eq(e.workspaceId, workspaceId));
+    .where(
+      sellerId
+        ? and(eq(e.workspaceId, workspaceId), eq(e.sellerId, sellerId))
+        : eq(e.workspaceId, workspaceId),
+    );
   const byEntry = new Map<string, Settlement[]>();
   for (const { payment } of payments) {
     const values = byEntry.get(payment.entryId) ?? [];

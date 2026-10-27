@@ -27,12 +27,8 @@ export function NavCommercial() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { data: workspace } = useActiveWorkspace();
-  const {
-    canViewCrm,
-    canViewCompanies,
-    canViewCrmReports,
-    isCheckingPermissions,
-  } = useWorkspacePermission();
+  const { canViewCrm, canViewCompanies, isCheckingPermissions } =
+    useWorkspacePermission();
 
   if (
     !workspace ||
@@ -45,10 +41,10 @@ export function NavCommercial() {
   const path = window.location.pathname;
 
   const items = [
-    ...(canViewCrmReports()
+    ...(canViewCrm()
       ? [
           {
-            title: "Dashboard geral",
+            title: "Meu painel",
             url: `${base}/dashboard`,
             isActive: path.startsWith(`${base}/dashboard`),
             icon: MenuIcons.barChart,
