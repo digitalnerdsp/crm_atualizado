@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, like } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../../database";
 import {
@@ -7,6 +7,7 @@ import {
   crmDealTable,
   crmPipelineTable,
   crmStageTable,
+  financeEntryTable,
 } from "../../../database/schema";
 import { createEntries } from "../../../finance/controllers/finance";
 import { createContractFromDeal } from "../../contract/controllers/contracts";
@@ -187,6 +188,16 @@ async function createSale(input: CreateSaleInput) {
       contractId: contract?.id ?? null,
     };
   } catch (error) {
+    // Contas já lançadas para a venda também saem: sem negócio, ficariam órfãs.
+    await db
+      .delete(financeEntryTable)
+      .where(
+        and(
+          eq(financeEntryTable.workspaceId, input.workspaceId),
+          like(financeEntryTable.seriesId, `sale:${deal.id}:%`),
+        ),
+      )
+      .catch(() => undefined);
     await db.delete(crmDealTable).where(eq(crmDealTable.id, deal.id));
     throw error;
   }
