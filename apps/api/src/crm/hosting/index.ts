@@ -16,7 +16,8 @@ const doc = (operationId: string, description: string) =>
   });
 // O aviso interno lista a carteira inteira: só quem enxerga tudo e pode avisar.
 const digestAdmin = requireWorkspacePermission({
-  crmCompany: ["read_all", "notify"],
+  hosting: ["notify"],
+  crmCompany: ["read_all"],
 });
 const hosting = new Hono<{
   Variables: { workspaceId: string; userId: string };
@@ -24,7 +25,7 @@ const hosting = new Hono<{
   .use(
     "/:workspaceId/*",
     workspaceAccess.fromParam("workspaceId"),
-    requireWorkspacePermission({ crmCompany: ["read"] }),
+    requireWorkspacePermission({ hosting: ["read"], crmCompany: ["read"] }),
   )
   .get(
     "/:workspaceId/metadata",
@@ -73,7 +74,7 @@ const hosting = new Hono<{
   .put(
     "/:workspaceId/companies/:id",
     doc("crmHostingSave", "Atualizar hospedagem e flags de serviços"),
-    requireWorkspacePermission({ crmCompany: ["update"] }),
+    requireWorkspacePermission({ hosting: ["update"], crmCompany: ["update"] }),
     validator("param", params),
     validator("json", configSchema),
     async (c) =>

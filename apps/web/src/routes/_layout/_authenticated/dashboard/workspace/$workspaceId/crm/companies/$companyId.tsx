@@ -7,7 +7,6 @@ import CompanyStatusBadge from "@/components/crm/company-status-badge";
 import ContractStatusBadge from "@/components/crm/contract-status-badge";
 import CreateContactModal from "@/components/crm/forms/create-contact-modal";
 import EditCompanyModal from "@/components/crm/forms/edit-company-modal";
-import { CompanyHostingPanel } from "@/components/crm/hosting/company-panel";
 import CrmTimeline from "@/components/crm/timeline";
 import PageTitle from "@/components/page-title";
 import { Badge } from "@/components/ui/badge";
@@ -156,8 +155,6 @@ function RouteComponent() {
           </div>
         </header>
 
-        <Separator className="my-6" />
-        <CompanyHostingPanel workspaceId={workspaceId} companyId={companyId} />
         <Separator className="my-6" />
 
         {/* O cadastro em si: é o que responde de onde o cliente veio, há

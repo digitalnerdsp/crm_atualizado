@@ -68,6 +68,7 @@ const CUSTOM_RESOURCES = (Object.keys(statement) as StatementResource[]).filter(
 const RESOURCE_LABELS: Record<string, string> = {
   finance: "Financeiro",
   portfolio: "Gestão da carteira",
+  hosting: "Hospedagem",
   project: "Projects",
   task: "Tasks",
   label: "Labels",
@@ -107,6 +108,19 @@ const PERMISSION_LABELS: Record<
   "portfolio:approve": {
     label: "Aprovar minutas",
     description: "Registrar decisão final sobre minutas submetidas.",
+  },
+  "hosting:read": {
+    label: "Consultar hospedagens",
+    description:
+      "Ver os clientes com hospedagem de terceiros e os vencimentos.",
+  },
+  "hosting:update": {
+    label: "Editar hospedagens",
+    description: "Marcar hospedagem de terceiros, vencimento e observações.",
+  },
+  "hosting:notify": {
+    label: "Configurar aviso interno",
+    description: "Definir quem recebe o aviso e quantos dias antes.",
   },
   "finance:read": {
     label: "Consultar financeiro",

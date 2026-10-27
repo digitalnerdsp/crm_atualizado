@@ -213,7 +213,16 @@ describe("Fase 5: carteira e hospedagem", () => {
         )
       ).status,
     ).toBe(403);
-    const read = appFor(m.user.id, { permissions: { crmCompany: ["read"] } });
+    // Sem a permissão própria de hospedagem, ler a empresa não basta.
+    const onlyCompany = appFor(m.user.id, {
+      permissions: { crmCompany: ["read"] },
+    });
+    expect(
+      (await onlyCompany.request(`${m.base}/companies/${m.company.id}`)).status,
+    ).toBe(403);
+    const read = appFor(m.user.id, {
+      permissions: { crmCompany: ["read"], hosting: ["read"] },
+    });
     expect(
       (await read.request(`${m.base}/companies/${m.company.id}`)).status,
     ).toBe(200);

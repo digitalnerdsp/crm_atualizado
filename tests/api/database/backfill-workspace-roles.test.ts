@@ -218,6 +218,7 @@ describe("planWorkspaceRoleBackfill", () => {
       "crmPipeline",
       "crmField",
       "crmReport",
+      "hosting",
     ]);
   });
 });

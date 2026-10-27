@@ -62,7 +62,9 @@ function CommercialOverview({ workspaceId }: { workspaceId: string }) {
   const [period, setPeriod] = useState<Period>("90");
   const [pipelineId, setPipelineId] = useState("");
   const [ownerUserId, setOwnerUserId] = useState("");
-  const { canViewAllCrmReports, canViewCompanies } = useWorkspacePermission();
+  const { canViewAllCrmReports, canViewCompanies, canViewHosting } =
+    useWorkspacePermission();
+  const showHosting = canViewCompanies() && canViewHosting();
   const allOwners = canViewAllCrmReports();
   const { data: pipelines = [] } = useCrmPipelines(workspaceId);
   const { data: members = [] } = useWorkspaceMembers(workspaceId);
@@ -109,14 +111,14 @@ function CommercialOverview({ workspaceId }: { workspaceId: string }) {
         to: hostingTo,
         ...(allOwners && ownerUserId ? { ownerId: ownerUserId } : {}),
       }),
-    enabled: canViewCompanies(),
+    enabled: showHosting,
     staleTime: 60 * 1000,
   });
   const reports = [team, forecast, funnel, mrr, portfolio];
   const failed = reports.some((report) => report.isError) || hosting.isError;
   const loading =
     reports.some((report) => report.isLoading) ||
-    (canViewCompanies() && hosting.isLoading);
+    (showHosting && hosting.isLoading);
 
   const open = (team.data ?? []).reduce(
     (total, row) => total + row.open.deals,
@@ -155,7 +157,7 @@ function CommercialOverview({ workspaceId }: { workspaceId: string }) {
       hint: "Contratos ativos na carteira",
     },
   ];
-  if (canViewCompanies()) {
+  if (showHosting) {
     stats.push({
       label: "Hospedagem de terceiros",
       value: String(hosting.data?.current.thirdParty ?? 0),
@@ -360,7 +362,7 @@ function CommercialOverview({ workspaceId }: { workspaceId: string }) {
             }))}
           />
         </ReportCard>
-        {canViewCompanies() && (
+        {showHosting && (
           <ReportCard
             title="Hospedagem própria × terceiros"
             hint="Comparação mensal das empresas cadastradas."

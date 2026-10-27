@@ -79,12 +79,6 @@ export function NavCommercial() {
             isActive: path.startsWith(`${base}/companies`),
             icon: MenuIcons.office,
           },
-          {
-            title: "Carteira e hospedagem",
-            url: `${base}/hosting`,
-            isActive: path.startsWith(`${base}/hosting`),
-            icon: MenuIcons.cloudServer,
-          },
         ]
       : []),
     ...(canViewCrm()

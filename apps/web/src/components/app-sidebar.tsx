@@ -2,6 +2,7 @@ import type * as React from "react";
 
 import { NavCommercial } from "@/components/nav-commercial";
 import { NavFinance } from "@/components/nav-finance";
+import { NavHosting } from "@/components/nav-hosting";
 import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { ThemeToggleDropdown } from "@/components/theme-toggle-dropdown";
@@ -50,6 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain />
         <NavCommercial />
         <NavFinance />
+        <NavHosting />
         <NavProjects />
       </SidebarContent>
       <SidebarFooter>

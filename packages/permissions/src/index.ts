@@ -24,6 +24,8 @@ export const statement = {
     "cancel",
   ],
   portfolio: ["update", "notify", "costs", "draft", "approve"],
+  // Hospedagem de terceiros: `notify` configura o aviso interno de renovação.
+  hosting: ["read", "update", "notify"],
   template: ["read", "use", "manage"],
   workspace: ["read", "update", "delete", "manage_settings"],
   // CRM. `read` = apenas os registros de que sou dono; `read_all` = todos os do
@@ -90,6 +92,7 @@ export const admin = ac.newRole({
     "cancel",
   ],
   portfolio: ["update", "notify", "costs", "draft", "approve"],
+  hosting: ["read", "update", "notify"],
   template: ["read", "use", "manage"],
   workspace: ["read", "update", "manage_settings"],
   crmDeal: [
@@ -126,6 +129,7 @@ export const owner = ac.newRole({
     "cancel",
   ],
   portfolio: ["update", "notify", "costs", "draft", "approve"],
+  hosting: ["read", "update", "notify"],
   template: ["read", "use", "manage"],
   workspace: ["read", "update", "delete", "manage_settings"],
   crmDeal: [
@@ -152,6 +156,7 @@ export const sales = ac.newRole({
   task: ["read"],
   calendar: ["create", "read", "update", "delete"],
   workspace: ["read"],
+  hosting: ["read", "update"],
   crmDeal: ["create", "read", "update", "change_stage"],
   crmContact: ["create", "read", "update"],
   crmCompany: ["create", "read", "update", "notify"],
@@ -168,6 +173,7 @@ export const salesManager = ac.newRole({
   calendar: ["create", "read", "update", "delete"],
   dashboard: ["read"],
   workspace: ["read"],
+  hosting: ["read", "update", "notify"],
   crmDeal: [
     "create",
     "read",
@@ -187,6 +193,7 @@ export const salesManager = ac.newRole({
 export const financeLegal = ac.newRole({
   finance: ["read", "create", "update", "settle", "export"],
   portfolio: ["update", "notify", "costs", "draft"],
+  hosting: ["read", "update", "notify"],
   crmDeal: ["read", "read_all"],
   crmPipeline: ["read"],
   crmCompany: ["read", "read_all", "update", "notify"],

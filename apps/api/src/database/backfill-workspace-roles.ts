@@ -40,6 +40,7 @@ export const BACKFILL_RESOURCES = [
   "crmPipeline",
   "crmField",
   "crmReport",
+  "hosting",
 ] as const;
 
 const FINANCE_LEGAL_REPORT_TOKEN = "grant:finance_legal:crmReport";

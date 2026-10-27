@@ -72,19 +72,12 @@ export function HostingDigestSettings({
             e.preventDefault();
             setError(null);
             const f = new FormData(e.currentTarget);
-            const marks = String(f.get("marks") || "")
-              .split(/[\s,;]+/)
-              .filter(Boolean)
-              .map(Number);
-            if (
-              !marks.length ||
-              marks.some((m) => !Number.isInteger(m) || m < 1 || m > 365)
-            ) {
-              setError(
-                "Informe dias inteiros entre 1 e 365, separados por vírgula.",
-              );
+            const days = Number(f.get("days"));
+            if (!Number.isInteger(days) || days < 1 || days > 365) {
+              setError("Informe um número inteiro de dias entre 1 e 365.");
               return;
             }
+            const marks = [days];
             save.mutate({
               enabled: f.get("enabled") === "on",
               marks,
@@ -98,10 +91,10 @@ export function HostingDigestSettings({
             <input type="checkbox" name="enabled" defaultChecked={s.enabled} />
             Aviso interno ativado
           </label>
-          <Field label="Avisar quando faltarem (dias, separados por vírgula)">
+          <Field label="Dias de antecedência">
             <Input
-              name="marks"
-              defaultValue={s.marks.join(", ")}
+              name="days"
+              defaultValue={s.marks[0] ?? 30}
               inputMode="numeric"
               className="max-w-xs"
             />

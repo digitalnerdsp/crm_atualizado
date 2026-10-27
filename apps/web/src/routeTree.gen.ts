@@ -62,6 +62,7 @@ import { Route as LayoutAuthenticatedDashboardSettingsWorkspaceThemesRouteImport
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/bi'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
+import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/hosting'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio'
@@ -75,7 +76,6 @@ import { Route as LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowR
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard'
-import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesIndexRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/index'
 import { Route as LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRouteImport } from './routes/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -393,6 +393,12 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute =
     path: '/finance',
     getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
   } as any)
+const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute =
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRouteImport.update({
+    id: '/hosting',
+    path: '/hosting',
+    getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
+  } as any)
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRouteImport.update({
     id: '/members',
@@ -488,12 +494,6 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute =
         LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
     } as any,
   )
-const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute =
-  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport.update({
-    id: '/crm/hosting',
-    path: '/crm/hosting',
-    getParentRoute: () => LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute,
-  } as any)
 const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute =
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRouteImport.update({
     id: '/crm/reports',
@@ -678,6 +678,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/workspace/themes': typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute
   '/dashboard/workspace/$workspaceId/bi': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRoute
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
+  '/dashboard/workspace/$workspaceId/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   '/dashboard/workspace/$workspaceId/portfolio': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
@@ -691,7 +692,6 @@ export interface FileRoutesByFullPath {
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
   '/dashboard/workspace/$workspaceId/crm/dashboard': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
-  '/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/dashboard/workspace/$workspaceId/crm/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   '/dashboard/workspace/$workspaceId/crm/companies/$companyId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -756,6 +756,7 @@ export interface FileRoutesByTo {
   '/dashboard/settings/workspace/themes': typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute
   '/dashboard/workspace/$workspaceId/bi': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRoute
   '/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
+  '/dashboard/workspace/$workspaceId/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute
   '/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   '/dashboard/workspace/$workspaceId/portfolio': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
@@ -769,7 +770,6 @@ export interface FileRoutesByTo {
   '/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
   '/dashboard/workspace/$workspaceId/crm/dashboard': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
-  '/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/dashboard/workspace/$workspaceId/crm': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   '/dashboard/workspace/$workspaceId/crm/companies/$companyId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -841,6 +841,7 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/settings/workspace/themes': typeof LayoutAuthenticatedDashboardSettingsWorkspaceThemesRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/bi': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
+  '/_layout/_authenticated/dashboard/workspace/$workspaceId/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/members': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
@@ -854,7 +855,6 @@ export interface FileRoutesById {
   '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow': typeof LayoutAuthenticatedDashboardSettingsProjectsProjectIdWorkflowRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
-  '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/$companyId': typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -925,6 +925,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/workspace/themes'
     | '/dashboard/workspace/$workspaceId/bi'
     | '/dashboard/workspace/$workspaceId/finance'
+    | '/dashboard/workspace/$workspaceId/hosting'
     | '/dashboard/workspace/$workspaceId/members'
     | '/dashboard/workspace/$workspaceId/performance'
     | '/dashboard/workspace/$workspaceId/portfolio'
@@ -938,7 +939,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/projects/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/crm/activities'
     | '/dashboard/workspace/$workspaceId/crm/dashboard'
-    | '/dashboard/workspace/$workspaceId/crm/hosting'
     | '/dashboard/workspace/$workspaceId/crm/reports'
     | '/dashboard/workspace/$workspaceId/crm/'
     | '/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -1003,6 +1003,7 @@ export interface FileRouteTypes {
     | '/dashboard/settings/workspace/themes'
     | '/dashboard/workspace/$workspaceId/bi'
     | '/dashboard/workspace/$workspaceId/finance'
+    | '/dashboard/workspace/$workspaceId/hosting'
     | '/dashboard/workspace/$workspaceId/members'
     | '/dashboard/workspace/$workspaceId/performance'
     | '/dashboard/workspace/$workspaceId/portfolio'
@@ -1016,7 +1017,6 @@ export interface FileRouteTypes {
     | '/dashboard/settings/projects/$projectId/workflow'
     | '/dashboard/workspace/$workspaceId/crm/activities'
     | '/dashboard/workspace/$workspaceId/crm/dashboard'
-    | '/dashboard/workspace/$workspaceId/crm/hosting'
     | '/dashboard/workspace/$workspaceId/crm/reports'
     | '/dashboard/workspace/$workspaceId/crm'
     | '/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -1087,6 +1087,7 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/settings/workspace/themes'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/bi'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/finance'
+    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/hosting'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/performance'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/portfolio'
@@ -1100,7 +1101,6 @@ export interface FileRouteTypes {
     | '/_layout/_authenticated/dashboard/settings/projects/$projectId/workflow'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/activities'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/dashboard'
-    | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/'
     | '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/companies/$companyId'
@@ -1504,6 +1504,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
+    '/_layout/_authenticated/dashboard/workspace/$workspaceId/hosting': {
+      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/hosting'
+      path: '/hosting'
+      fullPath: '/dashboard/workspace/$workspaceId/hosting'
+      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRouteImport
+      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
+    }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/members': {
       id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/members'
       path: '/members'
@@ -1593,13 +1600,6 @@ declare module '@tanstack/react-router' {
       path: '/crm/dashboard'
       fullPath: '/dashboard/workspace/$workspaceId/crm/dashboard'
       preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRouteImport
-      parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
-    }
-    '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting': {
-      id: '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/hosting'
-      path: '/crm/hosting'
-      fullPath: '/dashboard/workspace/$workspaceId/crm/hosting'
-      preLoaderRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRouteImport
       parentRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRoute
     }
     '/_layout/_authenticated/dashboard/workspace/$workspaceId/crm/reports': {
@@ -1849,6 +1849,7 @@ const LayoutAuthenticatedDashboardSettingsRouteWithChildren =
 interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute
+  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPortfolioRoute
@@ -1858,7 +1859,6 @@ interface LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren {
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute
-  LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute
   LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute: typeof LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmCompaniesCompanyIdRoute
@@ -1883,6 +1883,8 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdBiRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdFinanceRoute,
+    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute:
+      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdHostingRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdMembersRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdPerformanceRoute:
@@ -1901,8 +1903,6 @@ const LayoutAuthenticatedDashboardWorkspaceWorkspaceIdRouteChildren: LayoutAuthe
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmActivitiesRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmDashboardRoute,
-    LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute:
-      LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmHostingRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute:
       LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmReportsRoute,
     LayoutAuthenticatedDashboardWorkspaceWorkspaceIdCrmIndexRoute:

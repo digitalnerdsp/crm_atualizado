@@ -14,6 +14,9 @@ export type PermissionLevel = "owner" | "admin" | "member";
 // into the auth client, so it would silently return false for any custom
 // role that grants the permission.
 const CAPABILITIES = {
+  viewHosting: { hosting: ["read"] },
+  updateHosting: { hosting: ["update"] },
+  notifyHosting: { hosting: ["notify"] },
   portfolioUpdate: { portfolio: ["update"] },
   portfolioNotify: { portfolio: ["notify"] },
   portfolioCosts: { portfolio: ["costs"] },
@@ -143,6 +146,9 @@ export function useWorkspacePermission() {
 
   const helpers = useMemo(() => {
     return {
+      canViewHosting: () => can.viewHosting,
+      canUpdateHosting: () => can.updateHosting,
+      canNotifyHosting: () => can.notifyHosting,
       canManagePortfolio: () => can.portfolioUpdate,
       canNotifyPortfolio: () => can.portfolioNotify,
       canManageSiteCosts: () => can.portfolioCosts,

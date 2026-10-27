@@ -1,7 +1,8 @@
 import type { HostingDigestItemSnapshot } from "../../../database/schema";
 
 const DAY = 86_400_000;
-export const DEFAULT_MARKS = [30, 15];
+// Um único aviso, 30 dias antes da renovação (editável).
+export const DEFAULT_MARKS = [30];
 export const MAX_ATTEMPTS = 3;
 // Intervalos entre tentativas depois da 1ª e da 2ª falha (em milissegundos).
 export const RETRY_DELAYS = [60 * 60_000, 6 * 60 * 60_000];
