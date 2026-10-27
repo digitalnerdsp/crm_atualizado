@@ -85,7 +85,8 @@ export async function saveRule(
     serviceId: string;
     effectiveDate: string;
     rateBps: number;
-    basis: "received" | "billed";
+    recurringRateBps: number;
+    recurringMonths: number | null;
     version: number;
   },
 ) {
@@ -125,7 +126,10 @@ export async function saveRule(
         serviceId: input.serviceId,
         effectiveDate: input.effectiveDate,
         rateBps: input.rateBps,
-        basis: input.basis,
+        recurringRateBps: input.recurringRateBps,
+        recurringMonths: input.recurringMonths,
+        // Sempre recebido: a escolha faturado/recebido saiu da tela.
+        basis: "received",
         sequence: input.version + 1,
       })
       .returning();

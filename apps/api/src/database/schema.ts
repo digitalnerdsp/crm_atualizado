@@ -2640,8 +2640,16 @@ export const financeCommissionRuleTable = pgTable(
         onUpdate: "cascade",
       }),
     effectiveDate: date("effective_date").notNull(),
+    // Percentual "na venda": incide sobre a primeira cobrança do contrato (ou
+    // sobre o valor total, na venda de pagamento único).
     rateBps: integer("rate_bps").notNull(),
+    // A base é sempre o valor recebido; a coluna fica só pelo histórico das
+    // regras antigas em "faturado".
     basis: text("basis").$type<"billed" | "received">().notNull(),
+    // Percentual das cobranças seguintes, válido por recurringMonths meses
+    // depois da primeira. recurringMonths nulo = sem limite.
+    recurringRateBps: integer("recurring_rate_bps").default(0).notNull(),
+    recurringMonths: integer("recurring_months"),
     sequence: integer("sequence").notNull(),
     actorUserId: text("actor_user_id").references(() => userTable.id, {
       onDelete: "set null",

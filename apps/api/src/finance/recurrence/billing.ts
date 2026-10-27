@@ -7,6 +7,21 @@ import db, { schema } from "../../database";
 import { addMonths, isCivilDate, today } from "../model";
 import { commissionSnapshot } from "../performance/snapshot";
 import { day, effectiveDay, planCycles, snapshotItems } from "./schedule";
+
+/** Meses entre a primeira cobrança planejada do mesmo serviço e esta. */
+function monthsSinceFirst(
+  planned: { key: string; start: string }[],
+  cycle: { key: string; start: string },
+) {
+  const first = planned
+    .filter((p) => p.key === cycle.key)
+    .reduce((min, p) => (p.start < min ? p.start : min), cycle.start);
+  return (
+    (Number(cycle.start.slice(0, 4)) - Number(first.slice(0, 4))) * 12 +
+    (Number(cycle.start.slice(5, 7)) - Number(first.slice(5, 7)))
+  );
+}
+
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Contract = typeof schema.crmContractTable.$inferSelect;
 export async function lockContract(tx: Tx, workspaceId: string, id: string) {
@@ -276,6 +291,7 @@ export async function reconcile(
           direction: "receivable",
           kind: "operating",
           competenceDate: cycle.start,
+          monthsSinceFirstCycle: monthsSinceFirst(planned, cycle),
         })),
         workspaceId: c.workspaceId,
         description: `Contrato #${c.number} · ${cycle.item.name} · ${cycle.start}`,

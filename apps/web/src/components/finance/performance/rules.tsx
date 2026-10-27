@@ -12,6 +12,13 @@ import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutati
 import { toast } from "@/lib/toast";
 import { dateLabel, Field, selectClass, today } from "../shared";
 
+function toMonths(raw: FormDataEntryValue | null) {
+  const value = String(raw ?? "").trim();
+  if (!value) return null;
+  if (!/^\d+$/.test(value) || Number(value) > 120)
+    throw new Error("Informe os meses da recorrência de 0 a 120.");
+  return Number(value);
+}
 function toBps(raw: FormDataEntryValue | null) {
   const value = String(raw ?? "")
     .replace(",", ".")
@@ -52,8 +59,9 @@ export function PerformanceRules({
         <h2 className="font-semibold">Comissão por serviço</h2>
         <p className="mt-2 text-sm text-muted-foreground">
           Cada alteração cria uma versão. Novas cobranças registram a regra
-          vigente na competência; as cobranças existentes preservam o
-          percentual. Use 0% para interromper a comissão nas novas cobranças.
+          vigente na competência; as cobranças já geradas preservam o
+          percentual. A comissão é calculada sobre o valor recebido e liberada
+          quando o financeiro dá baixa no pagamento.
         </p>
         {canManage && (
           <form
@@ -66,7 +74,8 @@ export function PerformanceRules({
                   serviceId: service,
                   effectiveDate: String(f.get("effectiveDate")),
                   rateBps: toBps(f.get("rate")),
-                  basis: String(f.get("basis")) as "received" | "billed",
+                  recurringRateBps: toBps(f.get("recurringRate")),
+                  recurringMonths: toMonths(f.get("recurringMonths")),
                   version: latest?.sequence ?? 0,
                 });
               } catch (error) {
@@ -102,33 +111,44 @@ export function PerformanceRules({
                 defaultValue={today()}
               />
             </Field>
-            <Field label="Comissão (%)">
+            <Field label="Na venda (%)">
               <Input
                 name="rate"
+                inputMode="decimal"
+                required
+                placeholder="Ex.: 10,00"
+              />
+            </Field>
+            <Field label="Na recorrência (%)">
+              <Input
+                name="recurringRate"
                 inputMode="decimal"
                 required
                 placeholder="Ex.: 5,00"
               />
             </Field>
-            <Field label="Base de cálculo">
-              <select name="basis" className={selectClass}>
-                <option value="received">
-                  Recebido, após descontos e sem encargos
-                </option>
-                <option value="billed">Faturado, pela competência</option>
-              </select>
+            <Field label="Meses da recorrência (vazio = sem limite)">
+              <Input
+                name="recurringMonths"
+                inputMode="numeric"
+                placeholder="Ex.: 2"
+              />
             </Field>
             {latest && (
               <p className="text-xs text-muted-foreground sm:col-span-2">
-                Última versão: {latest.rateBps / 100}% ·{" "}
-                {latest.basis === "received" ? "recebido" : "faturado"} · a
-                partir de {dateLabel(latest.effectiveDate)}.
+                Última versão: {latest.rateBps / 100}% na venda ·{" "}
+                {latest.recurringRateBps / 100}% na recorrência ·{" "}
+                {latest.recurringMonths === null
+                  ? "sem limite de meses"
+                  : `${latest.recurringMonths} meses`}{" "}
+                · a partir de {dateLabel(latest.effectiveDate)}.
               </p>
             )}
             <p className="text-xs text-muted-foreground sm:col-span-2">
-              O vendedor é o responsável indicado na cobrança financeira. A
-              comissão incide por cobrança/ciclo, incluindo recorrências; não é
-              limitada à primeira venda.
+              O vendedor é o responsável indicado na cobrança financeira. Na
+              primeira cobrança vale o percentual da venda; nas cobranças
+              seguintes, o da recorrência, pelos meses informados. Depois disso,
+              não há comissão.
             </p>
             <Button
               disabled={!service || save.isPending}
@@ -190,13 +210,18 @@ export function PerformanceRules({
           <table className="w-full text-left text-sm">
             <thead>
               <tr>
-                {["Serviço", "Versão", "Início", "Percentual", "Base"].map(
-                  (v) => (
-                    <th key={v} className="p-2">
-                      {v}
-                    </th>
-                  ),
-                )}
+                {[
+                  "Serviço",
+                  "Versão",
+                  "Início",
+                  "Na venda",
+                  "Na recorrência",
+                  "Meses",
+                ].map((v) => (
+                  <th key={v} className="p-2">
+                    {v}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -210,9 +235,8 @@ export function PerformanceRules({
                       {dateLabel(r.effectiveDate)}
                     </td>
                     <td className="p-2">{r.rateBps / 100}%</td>
-                    <td className="p-2">
-                      {r.basis === "received" ? "Recebido" : "Faturado"}
-                    </td>
+                    <td className="p-2">{r.recurringRateBps / 100}%</td>
+                    <td className="p-2">{r.recurringMonths ?? "Sem limite"}</td>
                   </tr>
                 ))}
             </tbody>

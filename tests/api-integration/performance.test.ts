@@ -94,15 +94,18 @@ async function seed(role: "admin" | "sales" = "admin") {
 type Seed = Awaited<ReturnType<typeof seed>>;
 async function rule(
   m: Seed,
-  basis: "received" | "billed" = "received",
+  // Legado: a base agora é sempre "recebido"; o parâmetro só mantém as chamadas.
+  _basis: "received" | "billed" = "received",
   rateBps = 1000,
   version = 0,
+  recurring: { rateBps?: number; months?: number | null } = {},
 ) {
   return saveRule(m.workspace.id, m.user.id, {
     serviceId: m.service.id,
     effectiveDate: today(),
     rateBps,
-    basis,
+    recurringRateBps: recurring.rateBps ?? rateBps,
+    recurringMonths: recurring.months ?? null,
     version,
   });
 }
@@ -192,6 +195,7 @@ describe("Fase 3: comissões e resultados integrados", () => {
     const m = await seed();
     await rule(m, "billed");
     const e = await invoice(m);
+    await payment(m, e.id, e.amountCents);
     const p = await issue(m, e.id);
     await payment(m, p.id, 1000);
     const r = await report(m.workspace.id, range());
@@ -223,6 +227,7 @@ describe("Fase 3: comissões e resultados integrados", () => {
     const m = await seed();
     await rule(m, "billed");
     const e = await invoice(m);
+    await payment(m, e.id, e.amountCents);
     const first = await issue(m, e.id);
     await cancelEntry(
       m.workspace.id,
@@ -238,6 +243,7 @@ describe("Fase 3: comissões e resultados integrados", () => {
     const m = await seed();
     await rule(m, "billed");
     const e = await invoice(m);
+    await payment(m, e.id, e.amountCents);
     const p = await issue(m, e.id);
     const { requestId, count, intervalMonths, schedule, ...fields } = m.input;
     await expect(
@@ -303,7 +309,8 @@ describe("Fase 3: comissões e resultados integrados", () => {
         serviceId: m.service.id,
         effectiveDate: "2020-01-01",
         rateBps: 2000,
-        basis: "billed",
+        recurringRateBps: 0,
+        recurringMonths: null,
         version: 1,
       }),
     ).rejects.toMatchObject({ status: 400 });
@@ -356,7 +363,8 @@ describe("Fase 3: comissões e resultados integrados", () => {
         serviceId: m.service.id,
         effectiveDate: today(),
         rateBps: 500,
-        basis: "billed",
+        recurringRateBps: 0,
+        recurringMonths: null,
         version: 0,
       }),
     ).rejects.toMatchObject({ status: 404 });
@@ -370,7 +378,8 @@ describe("Fase 3: comissões e resultados integrados", () => {
         serviceId: m.service.id,
         effectiveDate: today(),
         rateBps: 10001,
-        basis: "billed",
+        recurringRateBps: 0,
+        recurringMonths: null,
         version: 0,
       }),
     });
@@ -417,6 +426,7 @@ describe("Fase 3: comissões e resultados integrados", () => {
     );
     if (!e) throw new Error("Sem título");
     expect(e.commissionRateBps).toBe(1000);
+    await payment(m, e.id, e.amountCents);
     await issue(m, e.id);
     await transitionContract({
       workspaceId: m.workspace.id,
@@ -432,6 +442,7 @@ describe("Fase 3: comissões e resultados integrados", () => {
     const m = await seed();
     await rule(m, "billed");
     const e = await invoice(m);
+    await payment(m, e.id, e.amountCents);
     const p = await issue(m, e.id);
     const x = await m.app.request(
       `${m.base}/export/xlsx?from=${today()}&to=${today()}`,
@@ -459,5 +470,87 @@ describe("Fase 3: comissões e resultados integrados", () => {
     );
     expect(detail.status).toBe(200);
     expect((await detail.json()).amountCents).toBe(1000);
+  });
+  it("comissão da recorrência vale só pelos meses configurados", async () => {
+    const m = await seed();
+    // 10% na venda (primeira cobrança) e 5% pelos 2 meses seguintes.
+    await rule(m, "received", 1000, 0, { rateBps: 500, months: 2 });
+    const [company] = await db
+      .insert(schema.crmCompanyTable)
+      .values({
+        workspaceId: m.workspace.id,
+        name: "Cliente recorrente",
+        billingDay: 15,
+      })
+      .returning();
+    if (!company) throw new Error("Sem cliente");
+    const c = await createContract({
+      workspaceId: m.workspace.id,
+      actorUserId: m.user.id,
+      input: {
+        companyId: company.id,
+        title: "Tráfego pago",
+        ownerUserId: m.user.id,
+        startsAt: new Date(`${today()}T00:00:00Z`),
+        lines: [{ serviceId: m.service.id, quantity: 1 }],
+      },
+    });
+    await configureBilling(m.workspace.id, c.id, m.user.id, {
+      enabled: true,
+      startsOn: today(),
+      horizonMonths: 6,
+      prorateFinal: false,
+      categoryId: null,
+      version: 0,
+    });
+    const cycles = (await loadEntries(m.workspace.id))
+      .filter((e) => e.contractId === c.id)
+      .sort((a, b) => a.competenceDate.localeCompare(b.competenceDate));
+    expect(cycles.length).toBeGreaterThanOrEqual(4);
+    // 1ª cobrança: % da venda; 2ª e 3ª: % da recorrência; depois, nada.
+    expect(cycles.map((e) => e.commissionRateBps).slice(0, 4)).toEqual([
+      1000, 500, 500, 0,
+    ]);
+    expect(cycles.slice(3).every((e) => e.commissionRateBps === 0)).toBe(true);
+    expect(cycles.every((e) => e.commissionBasis === "received")).toBe(true);
+  });
+  it("sem limite de meses a recorrência vale em todo ciclo", async () => {
+    const m = await seed();
+    await rule(m, "received", 1000, 0, { rateBps: 300, months: null });
+    const [company] = await db
+      .insert(schema.crmCompanyTable)
+      .values({
+        workspaceId: m.workspace.id,
+        name: "Cliente sem limite",
+        billingDay: 15,
+      })
+      .returning();
+    if (!company) throw new Error("Sem cliente");
+    const c = await createContract({
+      workspaceId: m.workspace.id,
+      actorUserId: m.user.id,
+      input: {
+        companyId: company.id,
+        title: "SEO",
+        ownerUserId: m.user.id,
+        startsAt: new Date(`${today()}T00:00:00Z`),
+        lines: [{ serviceId: m.service.id, quantity: 1 }],
+      },
+    });
+    await configureBilling(m.workspace.id, c.id, m.user.id, {
+      enabled: true,
+      startsOn: today(),
+      horizonMonths: 4,
+      prorateFinal: false,
+      categoryId: null,
+      version: 0,
+    });
+    const rates = (await loadEntries(m.workspace.id))
+      .filter((e) => e.contractId === c.id)
+      .sort((a, b) => a.competenceDate.localeCompare(b.competenceDate))
+      .map((e) => e.commissionRateBps);
+    expect(rates[0]).toBe(1000);
+    expect(rates.slice(1).every((rate) => rate === 300)).toBe(true);
+    expect(rates.length).toBeGreaterThanOrEqual(3);
   });
 });

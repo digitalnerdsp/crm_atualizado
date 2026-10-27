@@ -127,6 +127,13 @@
       "when": 1793047011015,
       "tag": "0017_sale-fields",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793113387280,
+      "tag": "0018_commission-limit",
+      "breakpoints": true
     }
   ]
 }

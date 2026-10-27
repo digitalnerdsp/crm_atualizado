@@ -2,6 +2,30 @@ import { and, desc, eq, lte } from "drizzle-orm";
 import type db from "../../database";
 import * as schema from "../../database/schema";
 export type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+/**
+ * Percentual da cobrança, conforme o lugar dela na venda:
+ * - primeira cobrança (ou pagamento único, sem ciclo): percentual "na venda";
+ * - cobranças seguintes: percentual da recorrência, enquanto estiverem dentro
+ *   de `recurringMonths` meses depois da primeira (sem limite se nulo);
+ * - depois disso, nada.
+ */
+export function commissionRateFor(
+  rule: {
+    rateBps: number;
+    recurringRateBps: number;
+    recurringMonths: number | null;
+  },
+  monthsSinceFirstCycle: number | null | undefined,
+) {
+  if (!monthsSinceFirstCycle || monthsSinceFirstCycle <= 0) return rule.rateBps;
+  if (
+    rule.recurringMonths !== null &&
+    monthsSinceFirstCycle > rule.recurringMonths
+  )
+    return 0;
+  return rule.recurringRateBps;
+}
 /** The invoice keeps the chosen rule. Later rules never rewrite this snapshot. */
 export async function commissionSnapshot(
   tx: Tx,
@@ -12,6 +36,9 @@ export async function commissionSnapshot(
     direction: string;
     kind: string;
     competenceDate: string;
+    // Meses entre a primeira cobrança do serviço no contrato e esta; ausente
+    // em lançamento que não vem de contrato.
+    monthsSinceFirstCycle?: number | null;
   },
 ) {
   if (
@@ -55,7 +82,10 @@ export async function commissionSnapshot(
     sellerNameSnapshot: seller?.name ?? null,
     serviceNameSnapshot: service?.name ?? null,
     commissionRuleId: rule?.id ?? null,
-    commissionRateBps: rule?.rateBps ?? 0,
-    commissionBasis: rule?.basis ?? ("received" as const),
+    commissionRateBps: rule
+      ? commissionRateFor(rule, input.monthsSinceFirstCycle)
+      : 0,
+    // Sempre o valor recebido: a comissão só libera conforme o cliente paga.
+    commissionBasis: "received" as const,
   };
 }

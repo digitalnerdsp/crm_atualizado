@@ -202,7 +202,7 @@ async function compute(tx: Tx, workspaceId: string, input: CalculationInput) {
         "Sem regra de comissão vigente na data. Cadastre a regra ou escolha comissão manual.",
       );
     rateBps = rule.rateBps;
-    commissionSource = `Regra ${rule.id} · versão ${rule.sequence} · ${rateBps / 100}% · ${rule.basis === "received" ? "recebido" : "faturado"}. Projeção considera recebimento integral, sem descontos.`;
+    commissionSource = `Regra ${rule.id} · versão ${rule.sequence} · ${rateBps / 100}% na venda · base recebido. Projeção considera recebimento integral, sem descontos.`;
   }
   const normalized = {
     mode: input.mode,

@@ -66,7 +66,11 @@ const performance = new Hono<{
         serviceId: id,
         effectiveDate: civilDate,
         rateBps: bps,
-        basis: v.picklist(["billed", "received"]),
+        recurringRateBps: bps,
+        // Nulo = a recorrência vale em todo ciclo, sem limite de meses.
+        recurringMonths: v.nullable(
+          v.pipe(v.number(), v.integer(), v.minValue(0), v.maxValue(120)),
+        ),
         version,
       }),
     ),
