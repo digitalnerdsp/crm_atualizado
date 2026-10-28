@@ -34,7 +34,7 @@ export function NavHosting() {
               className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
               onClick={() => navigate({ to: url })}
             >
-              <MenuIcons.cloudServer className="size-5" />
+              <MenuIcons.cloudServer className="size-5 text-warning" />
               <span>Hospedagem</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
