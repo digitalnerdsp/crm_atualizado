@@ -23,7 +23,7 @@ export function NavHosting() {
     return null;
   const url = `/dashboard/workspace/${workspace.id}/hosting`;
   return (
-    <SidebarGroup className="gap-1 p-2">
+    <SidebarGroup className="-mt-1.5 gap-1 p-2 pt-0">
       <SidebarGroupContent>
         <SidebarMenu className="gap-0.5">
           <SidebarMenuItem>
@@ -34,7 +34,7 @@ export function NavHosting() {
               className="h-8 ps-3.5 text-sm hover:bg-transparent hover:text-sidebar-accent-foreground active:bg-transparent"
               onClick={() => navigate({ to: url })}
             >
-              <MenuIcons.cloudServer className="size-5 text-warning" />
+              <MenuIcons.cloudServer className="size-5 text-success" />
               <span>Hospedagem</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
