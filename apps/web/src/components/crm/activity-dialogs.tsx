@@ -80,6 +80,7 @@ export function ActivityFormDialog({
   const { data: members = [] } = useWorkspaceMembers(workspaceId);
   const [type, setType] = useState<CrmActivityType>(defaults?.type ?? "call");
   const [subject, setSubject] = useState(defaults?.subject ?? "");
+  const [subjectError, setSubjectError] = useState(false);
   const [body, setBody] = useState("");
   const [date, setDate] = useState(dateInput(addDays(1)));
   const [time, setTime] = useState("09:00");
@@ -91,7 +92,8 @@ export function ActivityFormDialog({
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!subject.trim()) {
-      toast.error("Informe o assunto da atividade.");
+      setSubjectError(true);
+      document.getElementById("activity-subject")?.focus();
       return;
     }
     try {
@@ -152,8 +154,17 @@ export function ActivityFormDialog({
               value={subject}
               maxLength={200}
               placeholder="Ex.: Ligar para fechar a proposta"
-              onChange={(event) => setSubject(event.target.value)}
+              aria-invalid={subjectError || undefined}
+              onChange={(event) => {
+                setSubject(event.target.value);
+                setSubjectError(false);
+              }}
             />
+            {subjectError && (
+              <p role="alert" className="text-xs text-destructive">
+                Informe o assunto da atividade.
+              </p>
+            )}
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">

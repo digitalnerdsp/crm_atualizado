@@ -819,7 +819,7 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                   <section className="rounded-xl border bg-card p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <h2 className="font-semibold">Rankings financeiros</h2>
-                      <label className="flex items-center gap-2 text-sm">
+                      <div className="flex items-center gap-2 text-sm">
                         Ordenar por
                         <NativeSelect
                           aria-label="Ordenação dos rankings"
@@ -837,7 +837,7 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                           <option value="overdue">Saldo vencido</option>
                           <option value="commission">Comissões</option>
                         </NativeSelect>
-                      </label>
+                      </div>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
                       10 maiores de cada dimensão. Todos os grupos estão no

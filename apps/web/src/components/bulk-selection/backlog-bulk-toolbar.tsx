@@ -32,6 +32,7 @@ import {
   CommandPanel,
   CommandSeparator,
 } from "@/components/ui/command";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,6 +109,7 @@ function BacklogBulkToolbar() {
   const canEdit = canManageTasks();
   const canAssign = canAssignTasks();
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [confirm, confirmDialog] = useConfirm();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const selectedCount = selectedTaskIds.size;
@@ -167,7 +169,9 @@ function BacklogBulkToolbar() {
   );
 
   const handleBulkDelete = useCallback(async () => {
-    if (!confirm(t("tasks:bulk.deleteConfirm", { count: selectedCount }))) {
+    if (
+      !(await confirm(t("tasks:bulk.deleteConfirm", { count: selectedCount })))
+    ) {
       return;
     }
 
@@ -179,7 +183,7 @@ function BacklogBulkToolbar() {
     } catch (_error) {
       toast.error(t("tasks:bulk.deleteError"));
     }
-  }, [bulkDelete, selectedTaskIds, selectedCount, clearSelection, t]);
+  }, [bulkDelete, selectedTaskIds, selectedCount, clearSelection, t, confirm]);
 
   const handleBulkArchive = useCallback(async () => {
     try {
@@ -492,6 +496,7 @@ function BacklogBulkToolbar() {
           </Command>
         </CommandDialogPopup>
       </CommandDialog>
+      {confirmDialog}
     </div>
   );
 }

@@ -36,10 +36,12 @@ export function cents(value: FormDataEntryValue | null) {
 }
 export function Field({
   label,
+  error,
   children,
 }: {
   label: string;
-  children: ReactElement<{ id?: string }>;
+  error?: string;
+  children: ReactElement<{ id?: string; "aria-invalid"?: boolean }>;
 }) {
   const id = useId();
   return (
@@ -48,7 +50,12 @@ export function Field({
       className="flex min-w-0 flex-col gap-1.5 text-sm font-medium"
     >
       {label}
-      {cloneElement(children, { id })}
+      {cloneElement(children, { id, "aria-invalid": error ? true : undefined })}
+      {error && (
+        <span role="alert" className="text-xs font-normal text-destructive">
+          {error}
+        </span>
+      )}
     </label>
   );
 }

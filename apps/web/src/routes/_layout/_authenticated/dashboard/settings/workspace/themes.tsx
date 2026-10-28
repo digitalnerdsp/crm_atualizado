@@ -4,6 +4,7 @@ import { useRef } from "react";
 import PageTitle from "@/components/page-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { qerzaTheme, themeTemplate } from "@/constants/theme-presets";
 import {
   useThemeMutations,
@@ -40,6 +41,7 @@ function RouteComponent() {
   const workspaceId = workspace?.id;
   const { canManageWorkspace } = useWorkspacePermission();
   const canManage = canManageWorkspace();
+  const [confirm, confirmDialog] = useConfirm();
   const { data, isLoading } = useWorkspaceThemes(
     canManage ? workspaceId : undefined,
   );
@@ -82,6 +84,7 @@ function RouteComponent() {
 
   return (
     <div className="space-y-6">
+      {confirmDialog}
       <PageTitle title="Temas" />
       <header className="space-y-1">
         <h1 className="flex items-center gap-2 text-base font-medium">
@@ -236,8 +239,12 @@ function RouteComponent() {
                 variant="ghost"
                 aria-label={`Remover ${t.name}`}
                 disabled={m.remove.isPending}
-                onClick={() => {
-                  if (window.confirm(`Remover o tema “${t.name}”?`))
+                onClick={async () => {
+                  if (
+                    await confirm(`Remover o tema “${t.name}”?`, {
+                      confirmLabel: "Remover",
+                    })
+                  )
                     run(() => m.remove.mutateAsync(t.id), "Tema removido.");
                 }}
               >

@@ -12,6 +12,7 @@ import CreateTaskModal from "@/components/shared/modals/create-task-modal";
 import TaskDetailsSheet from "@/components/task/task-details-sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -54,6 +55,7 @@ export const Route = createFileRoute(
 });
 
 function RouteComponent() {
+  const [confirm, confirmDialog] = useConfirm();
   const { t } = useTranslation();
   const { projectId, workspaceId } = Route.useParams();
   const { taskId } = Route.useSearch();
@@ -304,7 +306,7 @@ function RouteComponent() {
     };
   }, [filteredProject, sort]);
 
-  const handleMoveAllPlannedToTodo = () => {
+  const handleMoveAllPlannedToTodo = async () => {
     if (!project) return;
 
     const plannedTasks = project.plannedTasks || [];
@@ -315,9 +317,10 @@ function RouteComponent() {
     }
 
     if (
-      !confirm(
+      !(await confirm(
         t("tasks:backlog.moveAllConfirm", { count: plannedTasks.length }),
-      )
+        { destructive: false },
+      ))
     ) {
       return;
     }
@@ -720,6 +723,7 @@ function RouteComponent() {
           onClose={handleCloseTaskSheet}
         />
       </div>
+      {confirmDialog}
     </ProjectLayout>
   );
 }

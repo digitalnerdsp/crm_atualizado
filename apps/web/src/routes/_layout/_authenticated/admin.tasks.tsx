@@ -21,6 +21,7 @@ import {
   CardPanel,
   CardTitle,
 } from "@/components/ui/card";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   Dialog,
   DialogContent,
@@ -372,6 +373,7 @@ function AdminTasksPage() {
   const permissions = adminMe?.permissions;
   const canUpdate = hasPermission(permissions, "admin.tasks.update");
   const canDelete = hasPermission(permissions, "admin.tasks.delete");
+  const [confirm, confirmDialog] = useConfirm();
   const [filters, setFilters] = useState({
     q: "",
     workspaceId: "",
@@ -427,7 +429,12 @@ function AdminTasksPage() {
   }
 
   async function handleDelete(task: AdminTask) {
-    if (!window.confirm(`Excluir a tarefa "${task.title}"?`)) return;
+    if (
+      !(await confirm(`Excluir a tarefa "${task.title}"?`, {
+        confirmLabel: "Excluir",
+      }))
+    )
+      return;
     await deleteTask.mutateAsync(task.id);
     setSelectedIds((current) => current.filter((id) => id !== task.id));
   }
@@ -438,7 +445,9 @@ function AdminTasksPage() {
 
     if (
       bulkOperation === "delete" &&
-      !window.confirm(`Excluir ${selectedIds.length} tarefa(s)?`)
+      !(await confirm(`Excluir ${selectedIds.length} tarefa(s)?`, {
+        confirmLabel: "Excluir",
+      }))
     ) {
       return;
     }
@@ -822,6 +831,7 @@ function AdminTasksPage() {
           if (!open) setEditingTask(null);
         }}
       />
+      {confirmDialog}
     </Layout>
   );
 }

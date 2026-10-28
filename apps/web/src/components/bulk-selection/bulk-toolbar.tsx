@@ -31,6 +31,7 @@ import {
   CommandPanel,
   CommandSeparator,
 } from "@/components/ui/command";
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import {
   Popover,
   PopoverContent,
@@ -102,6 +103,7 @@ function BulkToolbar() {
   const canEdit = canManageTasks();
   const canAssign = canAssignTasks();
   const [isActionsOpen, setIsActionsOpen] = useState(false);
+  const [confirm, confirmDialog] = useConfirm();
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
   const selectedCount = selectedTaskIds.size;
@@ -155,7 +157,9 @@ function BulkToolbar() {
   }, [bulkMoveToBacklog, selectedTaskIds, selectedCount, clearSelection, t]);
 
   const handleBulkDelete = useCallback(async () => {
-    if (!confirm(t("tasks:bulk.deleteConfirm", { count: selectedCount }))) {
+    if (
+      !(await confirm(t("tasks:bulk.deleteConfirm", { count: selectedCount })))
+    ) {
       return;
     }
 
@@ -167,7 +171,7 @@ function BulkToolbar() {
     } catch (_error) {
       toast.error(t("tasks:bulk.deleteError"));
     }
-  }, [bulkDelete, selectedTaskIds, selectedCount, clearSelection, t]);
+  }, [bulkDelete, selectedTaskIds, selectedCount, clearSelection, t, confirm]);
 
   const handleBulkArchive = useCallback(async () => {
     try {
@@ -496,6 +500,7 @@ function BulkToolbar() {
           </Command>
         </CommandDialogPopup>
       </CommandDialog>
+      {confirmDialog}
     </div>
   );
 }

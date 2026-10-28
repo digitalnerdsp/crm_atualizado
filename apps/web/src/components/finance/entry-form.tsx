@@ -28,6 +28,7 @@ export function EntryForm({
   const [direction, setDirection] = useState<"payable" | "receivable">(
     entry?.direction ?? defaultDirection ?? "payable",
   );
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [partyName, setPartyName] = useState(entry?.partyName ?? "");
   const [schedule, setSchedule] = useState("installments");
   const [requestId] = useState(() => crypto.randomUUID());
@@ -59,10 +60,25 @@ export function EntryForm({
     >
       <form
         className="grid gap-4 sm:grid-cols-2"
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           try {
             const f = new FormData(event.currentTarget);
+            const found: Record<string, string> = {};
+            if (!String(f.get("description") ?? "").trim())
+              found.description = "Informe a descrição.";
+            try {
+              cents(f.get("amount"));
+            } catch {
+              found.amount =
+                "Use reais com até duas casas, sem milhar (ex.: 1500,00).";
+            }
+            if (!f.get("competenceDate"))
+              found.competenceDate = "Informe a competência.";
+            if (!f.get("dueDate")) found.dueDate = "Informe o vencimento.";
+            setErrors(found);
+            if (Object.keys(found).length) return;
             const id = (k: string) => String(f.get(k) ?? "") || null;
             mutation.mutate({
               requestId,
@@ -94,7 +110,7 @@ export function EntryForm({
           }
         }}
       >
-        <Field label="Descrição">
+        <Field label="Descrição" error={errors.description}>
           <Input
             name="description"
             required
@@ -119,6 +135,7 @@ export function EntryForm({
           </NativeSelect>
         </Field>
         <Field
+          error={errors.amount}
           label={
             entry
               ? "Valor do lançamento em R$"
@@ -137,7 +154,7 @@ export function EntryForm({
             }
           />
         </Field>
-        <Field label="Competência">
+        <Field label="Competência" error={errors.competenceDate}>
           <Input
             type="date"
             name="competenceDate"
@@ -145,7 +162,7 @@ export function EntryForm({
             defaultValue={entry?.competenceDate ?? today()}
           />
         </Field>
-        <Field label="Vencimento">
+        <Field label="Vencimento" error={errors.dueDate}>
           <Input
             type="date"
             name="dueDate"
