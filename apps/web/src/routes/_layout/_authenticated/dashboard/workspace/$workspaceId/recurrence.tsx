@@ -355,7 +355,7 @@ function RecurrenceWorkspace({
                               )}
                               <Link
                                 className="mt-2 block text-xs underline"
-                                to="/dashboard/workspace/$workspaceId/finance"
+                                to="/dashboard/workspace/$workspaceId/receivable"
                                 params={{ workspaceId }}
                                 search={{ contractId: c.id }}
                               >

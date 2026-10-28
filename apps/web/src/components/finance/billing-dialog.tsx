@@ -93,7 +93,7 @@ export function BillingDialog({
                 Abrir contrato no comercial
               </Link>
               <Link
-                to="/dashboard/workspace/$workspaceId/finance"
+                to="/dashboard/workspace/$workspaceId/receivable"
                 params={{ workspaceId }}
                 search={{ contractId }}
                 className="text-sm underline"

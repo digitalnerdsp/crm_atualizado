@@ -26,19 +26,45 @@ export async function createActivity(json: CreateActivityPayload) {
   return unwrap(await client.crm.activity.$post({ json }));
 }
 
+export type UpdateActivityPayload = {
+  activityId: string;
+  workspaceId: string;
+  body?: string | null;
+  dueAt?: string | null;
+};
+
+export async function updateActivity({
+  activityId,
+  workspaceId,
+  ...fields
+}: UpdateActivityPayload) {
+  return unwrap(
+    await client.crm.activity[":activityId"].$patch({
+      param: { activityId },
+      json: { workspaceId, ...fields },
+    }),
+  );
+}
+
 export async function completeActivity({
   activityId,
   workspaceId,
   outcome,
+  durationMinutes,
 }: {
   activityId: string;
   workspaceId: string;
   outcome?: string;
+  durationMinutes?: number;
 }) {
   return unwrap(
     await client.crm.activity[":activityId"].complete.$post({
       param: { activityId },
-      json: { workspaceId, ...(outcome ? { outcome } : {}) },
+      json: {
+        workspaceId,
+        ...(outcome ? { outcome } : {}),
+        ...(durationMinutes ? { durationMinutes } : {}),
+      },
     }),
   );
 }

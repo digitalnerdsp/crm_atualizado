@@ -4,6 +4,8 @@ import {
   completeActivity,
   createActivity,
   deleteActivity,
+  type UpdateActivityPayload,
+  updateActivity,
 } from "@/fetchers/crm/activity";
 import {
   type CreateCompanyPayload,
@@ -92,7 +94,16 @@ export function useCompleteActivity() {
       activityId: string;
       workspaceId: string;
       outcome?: string;
+      durationMinutes?: number;
     }) => completeActivity(params),
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateActivity() {
+  const invalidate = useInvalidateCrm();
+  return useMutation({
+    mutationFn: (payload: UpdateActivityPayload) => updateActivity(payload),
     onSuccess: invalidate,
   });
 }

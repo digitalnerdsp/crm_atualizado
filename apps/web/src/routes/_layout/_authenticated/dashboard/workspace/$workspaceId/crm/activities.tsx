@@ -1,9 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { endOfWeek, isAfter, isBefore, isToday, startOfDay } from "date-fns";
-import { Check, PhoneCall } from "lucide-react";
+import { CalendarClock, Check, PhoneCall, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
+import {
+  type ActivityDefaults,
+  ActivityFormDialog,
+  addDays,
+  CompleteActivityDialog,
+  dateInput,
+  rescheduledAt,
+} from "@/components/crm/activity-dialogs";
 import { ActivityIcon } from "@/components/crm/timeline/activity-icon";
 import PageTitle from "@/components/page-title";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
@@ -14,8 +22,14 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCompleteActivity } from "@/hooks/mutations/crm/use-crm-contact-mutations";
+import { useUpdateActivity } from "@/hooks/mutations/crm/use-crm-contact-mutations";
 import { useCrmActivities } from "@/hooks/queries/crm/use-crm-activities";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { formatDateMedium } from "@/lib/format";
@@ -50,7 +64,24 @@ function RouteComponent() {
   const { workspaceId } = Route.useParams();
   const { user } = useAuth();
   const { canViewAllDeals } = useWorkspacePermission();
-  const { mutateAsync: complete } = useCompleteActivity();
+  const { mutateAsync: update } = useUpdateActivity();
+  const [creating, setCreating] = useState<ActivityDefaults | null>(null);
+  const [completing, setCompleting] = useState<CrmActivity | null>(null);
+
+  async function reschedule(activity: CrmActivity, day: string) {
+    try {
+      await update({
+        activityId: activity.id,
+        workspaceId,
+        dueAt: rescheduledAt(activity, day),
+      });
+      toast.success("Atividade remarcada.");
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : t("crm:timeline.logError"),
+      );
+    }
+  }
   const [onlyMine, setOnlyMine] = useState(true);
 
   const { data, isLoading } = useCrmActivities({
@@ -72,16 +103,26 @@ function RouteComponent() {
     return buckets;
   }, [data]);
 
-  const headerActions = canViewAllDeals() ? (
-    <Button
-      size="sm"
-      variant={onlyMine ? "secondary" : "outline"}
-      className="h-8"
-      onClick={() => setOnlyMine((value) => !value)}
-    >
-      {onlyMine ? t("crm:activities.onlyMine") : t("crm:activities.everyone")}
-    </Button>
-  ) : null;
+  const headerActions = (
+    <div className="flex items-center gap-2">
+      {canViewAllDeals() ? (
+        <Button
+          size="sm"
+          variant={onlyMine ? "secondary" : "outline"}
+          className="h-8"
+          onClick={() => setOnlyMine((value) => !value)}
+        >
+          {onlyMine
+            ? t("crm:activities.onlyMine")
+            : t("crm:activities.everyone")}
+        </Button>
+      ) : null}
+      <Button size="sm" className="h-8" onClick={() => setCreating({})}>
+        <Plus className="size-4" />
+        Nova atividade
+      </Button>
+    </div>
+  );
 
   const total = data?.items.length ?? 0;
 
@@ -141,7 +182,7 @@ function RouteComponent() {
                           </p>
                           <p className="text-xs text-muted-foreground">
                             {activity.dueAt
-                              ? formatDateMedium(new Date(activity.dueAt))
+                              ? `${formatDateMedium(new Date(activity.dueAt))} ${new Date(activity.dueAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
                               : t("crm:activities.noDate")}
                             {activity.dealId ? (
                               <>
@@ -160,25 +201,56 @@ function RouteComponent() {
                             ) : null}
                           </p>
                         </div>
+                        <Popover>
+                          <PopoverTrigger
+                            render={
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 shrink-0 px-2"
+                                aria-label="Remarcar"
+                              />
+                            }
+                          >
+                            <CalendarClock className="size-3.5" />
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56 space-y-2 p-3">
+                            {(
+                              [
+                                ["Amanhã", 1],
+                                ["Daqui a 3 dias", 3],
+                                ["Próxima semana", 7],
+                              ] as const
+                            ).map(([label, days]) => (
+                              <Button
+                                key={label}
+                                variant="outline"
+                                size="sm"
+                                className="w-full justify-start"
+                                onClick={() =>
+                                  reschedule(activity, dateInput(addDays(days)))
+                                }
+                              >
+                                {label}
+                              </Button>
+                            ))}
+                            <Input
+                              type="date"
+                              aria-label="Escolher data"
+                              min={dateInput(new Date())}
+                              onChange={(event) => {
+                                if (event.target.value)
+                                  reschedule(activity, event.target.value);
+                              }}
+                            />
+                          </PopoverContent>
+                        </Popover>
                         <Button
                           size="sm"
                           variant="ghost"
                           className="h-7 shrink-0 px-2"
-                          onClick={async () => {
-                            try {
-                              await complete({
-                                activityId: activity.id,
-                                workspaceId,
-                              });
-                              toast.success(t("crm:timeline.completed"));
-                            } catch (error) {
-                              toast.error(
-                                error instanceof Error
-                                  ? error.message
-                                  : t("crm:timeline.logError"),
-                              );
-                            }
-                          }}
+                          aria-label={t("crm:timeline.complete")}
+                          onClick={() => setCompleting(activity)}
                         >
                           <Check className="size-3.5" />
                         </Button>
@@ -191,6 +263,21 @@ function RouteComponent() {
           </div>
         )}
       </div>
+      {creating ? (
+        <ActivityFormDialog
+          workspaceId={workspaceId}
+          defaults={creating}
+          onClose={() => setCreating(null)}
+        />
+      ) : null}
+      {completing ? (
+        <CompleteActivityDialog
+          workspaceId={workspaceId}
+          activity={completing}
+          onClose={() => setCompleting(null)}
+          onScheduleNext={(defaults) => setCreating(defaults)}
+        />
+      ) : null}
     </WorkspaceLayout>
   );
 }

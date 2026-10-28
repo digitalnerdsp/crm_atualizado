@@ -15,15 +15,17 @@ export function EntryForm({
   workspaceId,
   metadata,
   entry,
+  defaultDirection,
   onClose,
 }: {
   workspaceId: string;
   metadata: FinanceMetadata;
   entry?: FinanceEntry;
+  defaultDirection?: "payable" | "receivable";
   onClose: () => void;
 }) {
   const [direction, setDirection] = useState<"payable" | "receivable">(
-    entry?.direction ?? "payable",
+    entry?.direction ?? defaultDirection ?? "payable",
   );
   const [partyName, setPartyName] = useState(entry?.partyName ?? "");
   const [schedule, setSchedule] = useState("installments");
@@ -103,6 +105,7 @@ export function EntryForm({
           <select
             className={selectClass}
             value={direction}
+            disabled={Boolean(defaultDirection)}
             onChange={(e) => setDirection(e.target.value as typeof direction)}
           >
             <option value="payable">Conta a pagar</option>
