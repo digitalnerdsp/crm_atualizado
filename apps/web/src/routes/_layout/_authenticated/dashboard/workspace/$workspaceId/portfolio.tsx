@@ -2,7 +2,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
-import { BiChart } from "@/components/finance/bi/charts";
 import { EntryDetail } from "@/components/finance/entry-detail";
 import { CaseDialog } from "@/components/finance/portfolio/case-dialog";
 import { DraftEditor } from "@/components/finance/portfolio/draft-dialog";
@@ -77,7 +76,7 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
   const p = useWorkspacePermission();
   const enabled = !p.isCheckingPermissions && p.canViewFinance();
   const qc = useQueryClient();
-  const [tab, setTab] = useState("dashboard");
+  const [tab, setTab] = useState("queue");
   const [page, setPage] = useState(1);
   const [row, setRow] = useState<QueueRow | null>(null);
   const [editSite, setEditSite] = useState<Site | null | "new">(null);
@@ -290,34 +289,11 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
             {meta.isError && <p role="alert">{meta.error.message}</p>}
             {d && (
               <>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                  {metric(
-                    "Recebíveis vencidos",
-                    money(d.summary.overdueCents),
-                    `${d.summary.receivableCount} cobranças no recorte da fila`,
-                  )}
-                  {metric(
-                    "Renovações em atenção",
-                    String(d.summary.renewals),
-                    "Contratos e hospedagens de terceiros",
-                  )}
-                  {metric(
-                    "Resultado gerencial",
-                    money(d.current.netProfitCents),
-                    `Anterior ${money(d.previous.netProfitCents)}`,
-                  )}
-                  {metric(
-                    "Promessas vencidas",
-                    String(d.summary.brokenPromises),
-                    "Conferir pagamento e retomar o contato",
-                  )}
-                </div>
                 <nav
                   className="flex flex-wrap gap-1 rounded-xl border bg-muted/30 p-1"
                   aria-label="Gestão da carteira"
                 >
                   {[
-                    ["dashboard", "Resumo"],
                     ["queue", "Cobranças e renovações"],
                     ["history", "Histórico da carteira"],
                     ["clients", "Rentabilidade por cliente"],
@@ -343,69 +319,6 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                       </button>
                     ))}
                 </nav>
-                {tab === "dashboard" && (
-                  <>
-                    <BiChart
-                      title="Receita e resultado gerencial por mês"
-                      rows={d.months.map((m) => ({
-                        key: m.month,
-                        label: m.month,
-                        values: {
-                          revenue: m.revenueCents,
-                          result: m.netProfitCents,
-                        },
-                      }))}
-                      series={[
-                        {
-                          key: "revenue",
-                          label: "Receita faturada",
-                          color: "#3b82f6",
-                        },
-                        {
-                          key: "result",
-                          label: "Resultado gerencial",
-                          color: "#10b981",
-                        },
-                      ]}
-                    />
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      {metric(
-                        "Clientes com resultado negativo",
-                        String(d.summary.lowMarginClients),
-                        "Sem rateio de despesas gerais",
-                      )}
-                      {metric(
-                        "Horas sem base de custo",
-                        hours(d.summary.missingSeconds),
-                        "Cadastre modelo e vigência antes de avaliar o cenário",
-                      )}
-                      {metric(
-                        "Despesas sem cliente",
-                        money(d.unassignedExpenseCents),
-                        "Não distribuídas automaticamente entre clientes",
-                      )}
-                    </div>
-                    <section className="rounded-xl border bg-card p-5">
-                      <h2 className="font-semibold">Atenção da equipe</h2>
-                      <div className="mt-3 space-y-2">
-                        {d.alerts.slice(0, 20).map((a) => (
-                          <p
-                            key={a.key}
-                            className="flex flex-wrap justify-between gap-2 rounded-lg border p-3 text-sm"
-                          >
-                            <span>{a.label}</span>
-                            <strong>{money(a.value)}</strong>
-                          </p>
-                        ))}
-                        {!d.alerts.length && (
-                          <p className="text-sm text-muted-foreground">
-                            Sem alertas adicionais neste recorte.
-                          </p>
-                        )}
-                      </div>
-                    </section>
-                  </>
-                )}
                 {tab === "queue" && (
                   <section className="min-w-0 rounded-xl border bg-card p-4">
                     <h2 className="mb-4 font-semibold">

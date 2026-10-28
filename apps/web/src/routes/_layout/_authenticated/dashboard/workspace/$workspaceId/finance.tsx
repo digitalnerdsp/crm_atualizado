@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Download, Plus, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
-import { FinanceDashboardView } from "@/components/finance/dashboard";
 import { EntryDetail } from "@/components/finance/entry-detail";
 import { EntryForm } from "@/components/finance/entry-form";
 import { FinanceSettings } from "@/components/finance/settings";
@@ -74,7 +73,7 @@ function FinanceWorkspace({
     direction: selectedContract ? "receivable" : undefined,
   }));
   const [page, setPage] = useState(1);
-  const [tab, setTab] = useState(selectedContract ? "receivable" : "dashboard");
+  const [tab, setTab] = useState("receivable");
   const [form, setForm] = useState<FinanceEntry | "new" | null>(null);
   const [detail, setDetail] = useState<FinanceEntry | null>(null);
   const [exporting, setExporting] = useState(false);
@@ -91,8 +90,7 @@ function FinanceWorkspace({
   const queries = useFinance(workspaceId, filters, page, enabled);
   const meta = queries.metadata.data;
   const list = queries.entries.data;
-  const error =
-    queries.metadata.error ?? queries.entries.error ?? queries.dashboard.error;
+  const error = queries.metadata.error ?? queries.entries.error;
   const exportFile = async (format: "xlsx" | "pdf") => {
     setExporting(true);
     try {
@@ -268,7 +266,6 @@ function FinanceWorkspace({
                   size="sm"
                   onClick={() => {
                     queries.entries.refetch();
-                    queries.dashboard.refetch();
                     queries.metadata.refetch();
                   }}
                 >
@@ -282,37 +279,12 @@ function FinanceWorkspace({
               onValueChange={(value) => changeTab(String(value))}
             >
               <TabsList>
-                <TabsTab value="dashboard">Resumo</TabsTab>
                 <TabsTab value="receivable">Contas a receber</TabsTab>
                 <TabsTab value="payable">Contas a pagar</TabsTab>
                 {permissions.canManageFinance() && (
                   <TabsTab value="settings">Cadastros</TabsTab>
                 )}
               </TabsList>
-              <TabsPanel value="dashboard">
-                {queries.dashboard.isLoading ? (
-                  <p className="py-10 text-sm">Carregando indicadores…</p>
-                ) : (
-                  queries.dashboard.data && (
-                    <FinanceDashboardView
-                      data={queries.dashboard.data}
-                      onInspect={(extra) => {
-                        const next =
-                          extra.direction === "payable"
-                            ? "payable"
-                            : "receivable";
-                        setFilters((f) => ({
-                          ...f,
-                          ...extra,
-                          direction: next,
-                        }));
-                        setPage(1);
-                        setTab(next);
-                      }}
-                    />
-                  )
-                )}
-              </TabsPanel>
               {(["receivable", "payable"] as const).map((side) => (
                 <TabsPanel key={side} value={side}>
                   <section className="space-y-4 rounded-xl border bg-card p-4">

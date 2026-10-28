@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   type FinanceFilters,
-  getDashboard,
   getEntries,
   getMetadata,
 } from "@/fetchers/finance";
@@ -21,10 +20,5 @@ export function useFinance(
     queryFn: () => getEntries(workspaceId, filters, page),
     enabled,
   });
-  const dashboard = useQuery({
-    queryKey: ["finance", workspaceId, "dashboard", filters],
-    queryFn: () => getDashboard(workspaceId, filters),
-    enabled,
-  });
-  return { metadata, entries, dashboard };
+  return { metadata, entries };
 }

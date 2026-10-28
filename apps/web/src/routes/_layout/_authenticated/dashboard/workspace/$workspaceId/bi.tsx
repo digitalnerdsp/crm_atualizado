@@ -12,6 +12,7 @@ import WorkspaceLayout from "@/components/common/workspace-layout";
 import { CommercialOverview } from "@/components/crm/commercial-overview";
 import { BiChart, Breakdown } from "@/components/finance/bi/charts";
 import { BiDetail } from "@/components/finance/bi/detail";
+import { PortfolioSummary } from "@/components/finance/bi/portfolio-summary";
 import { formatMetric, labels, margins } from "@/components/finance/bi/shared";
 import {
   dateLabel,
@@ -509,6 +510,7 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                     ["cash", "Caixa e contas"],
                     ["results", "Resultados"],
                     ["recurrence", "Recorrência"],
+                    ["portfolio", "Carteira"],
                     ["commissions", "Comissões"],
                     ["taxes", "Tributos e simulações"],
                     ...(permissions.canViewCrmReports()
@@ -526,6 +528,13 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                     </button>
                   ))}
                 </nav>
+                {tab === "portfolio" && (
+                  <PortfolioSummary
+                    workspaceId={workspaceId}
+                    from={filters.from}
+                    to={filters.to}
+                  />
+                )}
                 {tab === "commercial" && permissions.canViewCrmReports() && (
                   <CommercialOverview workspaceId={workspaceId} />
                 )}

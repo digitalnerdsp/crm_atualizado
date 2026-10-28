@@ -246,10 +246,6 @@ function RecurrenceWorkspace({
                   <h2 className="font-semibold">
                     {data?.total ?? 0} contratos
                   </h2>
-                  <p className="text-sm text-muted-foreground">
-                    Receita recorrente mensal{" "}
-                    {money(data?.current.mrrCents ?? 0)}
-                  </p>
                 </div>
                 <div className="overflow-x-auto">
                   <Table>
