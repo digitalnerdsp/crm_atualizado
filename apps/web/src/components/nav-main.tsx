@@ -91,19 +91,6 @@ export function NavMain() {
             : []),
         ]
       : []),
-    ...(adminMe
-      ? [
-          {
-            title: t("navigation:sidebar.admin", {
-              defaultValue: "Administration",
-            }),
-            url: "/admin",
-            isActive: window.location.pathname.startsWith("/admin"),
-            badge: null,
-            icon: MenuIcons.admin,
-          },
-        ]
-      : []),
   ];
 
   return (

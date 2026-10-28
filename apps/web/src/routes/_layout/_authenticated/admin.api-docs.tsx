@@ -11,8 +11,8 @@ import {
   Search,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import Layout from "@/components/common/layout";
 import PageTitle from "@/components/page-title";
+import Layout from "@/components/settings/embedded-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

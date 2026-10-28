@@ -1,28 +1,24 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import {
   Activity,
-  Braces,
   BriefcaseBusiness,
   CheckSquare,
   Database,
-  FileClock,
   KeyRound,
   LogOut,
   Mail,
   Pencil,
   Search,
   Server,
-  Settings,
   Shield,
-  ShieldCheck,
   Trash2,
   UserPlus,
   Users,
 } from "lucide-react";
 import type { FormEvent, ReactNode, SelectHTMLAttributes } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Layout from "@/components/common/layout";
 import PageTitle from "@/components/page-title";
+import Layout from "@/components/settings/embedded-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -978,13 +974,6 @@ function AdminPage() {
   const canUpdate = hasPermission(permissions, "admin.users.update");
   const canDelete = hasPermission(permissions, "admin.users.delete");
   const canManageRoles = hasPermission(permissions, "admin.users.manage_roles");
-  const canViewWorkspaces = hasPermission(permissions, "admin.workspaces.view");
-  const canViewProjects = hasPermission(permissions, "admin.projects.view");
-  const canViewTasks = hasPermission(permissions, "admin.tasks.view");
-  const canViewSettings = hasPermission(permissions, "system.settings.view");
-  const canViewAudit = hasPermission(permissions, "system.audit.view");
-  const canViewApiDocs =
-    adminMe?.role === "admin" || adminMe?.role === "superadmin";
   const roleOptions = useMemo(
     () =>
       rolesData?.roles.map((roleDefinition) => roleDefinition.role) ?? [
@@ -1008,76 +997,6 @@ function AdminPage() {
           <h1 className="font-semibold text-sm">Administração</h1>
         </div>
         <div className="flex items-center gap-2">
-          {canViewWorkspaces && (
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link to="/admin/workspaces" />}
-            >
-              <BriefcaseBusiness />
-              Workspaces
-            </Button>
-          )}
-          {canViewProjects && (
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link to="/admin/projects" />}
-            >
-              <BriefcaseBusiness />
-              Projetos
-            </Button>
-          )}
-          {canViewTasks && (
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link to="/admin/tasks" />}
-            >
-              <CheckSquare />
-              Tarefas
-            </Button>
-          )}
-          {canManageRoles && (
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link to="/admin/roles" />}
-            >
-              <ShieldCheck />
-              Papéis
-            </Button>
-          )}
-          {canViewAudit && (
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link to="/admin/audit" />}
-            >
-              <FileClock />
-              Auditoria
-            </Button>
-          )}
-          {canViewSettings && (
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link to="/admin/settings" />}
-            >
-              <Settings />
-              Configurações
-            </Button>
-          )}
-          {canViewApiDocs && (
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link to="/admin/api-docs" />}
-            >
-              <Braces />
-              API
-            </Button>
-          )}
           {adminMe?.role && <RoleBadge role={adminMe.role as GlobalRole} />}
         </div>
       </Layout.Header>

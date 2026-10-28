@@ -20,8 +20,8 @@ import {
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import Layout from "@/components/common/layout";
 import PageTitle from "@/components/page-title";
+import Layout from "@/components/settings/embedded-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -423,11 +423,11 @@ function AdminSettingsPage() {
 
   return (
     <Layout>
-      <PageTitle title="Configurações administrativas" />
+      <PageTitle title="Parâmetros do sistema" />
       <Layout.Header className="h-12 items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Settings className="size-4 text-muted-foreground" />
-          <h1 className="font-semibold text-sm">Configurações</h1>
+          <h1 className="font-semibold text-sm">Parâmetros do sistema</h1>
         </div>
         <Button size="sm" variant="outline" render={<Link to="/admin" />}>
           <ArrowLeft />

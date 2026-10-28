@@ -9,8 +9,8 @@ import {
 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Layout from "@/components/common/layout";
 import PageTitle from "@/components/page-title";
+import Layout from "@/components/settings/embedded-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

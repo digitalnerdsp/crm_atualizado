@@ -11,9 +11,9 @@ import {
 } from "lucide-react";
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import Layout from "@/components/common/layout";
 import PageTitle from "@/components/page-title";
 import { ProjectIcon } from "@/components/project/project-icon";
+import Layout from "@/components/settings/embedded-layout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
