@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   createEntry,
   type EntryPayload,
@@ -10,7 +11,7 @@ import {
 } from "@/fetchers/finance";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
 import { toast } from "@/lib/toast";
-import { cents, Field, Modal, selectClass, today } from "./shared";
+import { cents, Field, Modal, today } from "./shared";
 export function EntryForm({
   workspaceId,
   metadata,
@@ -102,25 +103,20 @@ export function EntryForm({
           />
         </Field>
         <Field label="Tipo">
-          <select
-            className={selectClass}
+          <NativeSelect
             value={direction}
             disabled={Boolean(defaultDirection)}
             onChange={(e) => setDirection(e.target.value as typeof direction)}
           >
             <option value="payable">Conta a pagar</option>
             <option value="receivable">Conta a receber</option>
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Natureza">
-          <select
-            className={selectClass}
-            name="kind"
-            defaultValue={entry?.kind ?? "operating"}
-          >
+          <NativeSelect name="kind" defaultValue={entry?.kind ?? "operating"}>
             <option value="operating">Operacional</option>
             <option value="opening">Saldo inicial</option>
-          </select>
+          </NativeSelect>
         </Field>
         <Field
           label={
@@ -158,9 +154,8 @@ export function EntryForm({
           />
         </Field>
         <Field label="Categoria ou subcategoria">
-          <select
+          <NativeSelect
             key={direction}
-            className={selectClass}
             name="categoryId"
             defaultValue={
               entry?.direction === direction ? (entry.categoryId ?? "") : ""
@@ -177,11 +172,10 @@ export function EntryForm({
                   {c.name}
                 </option>
               ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Forma de pagamento">
-          <select
-            className={selectClass}
+          <NativeSelect
             name="paymentMethod"
             defaultValue={entry?.paymentMethod ?? "pix"}
           >
@@ -197,12 +191,11 @@ export function EntryForm({
                 {l}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Favorecido ou colaborador cadastrado">
-          <select
+          <NativeSelect
             key={`party-${direction}`}
-            className={selectClass}
             name="partyId"
             defaultValue={
               entry?.direction === direction ? (entry.partyId ?? "") : ""
@@ -223,7 +216,7 @@ export function EntryForm({
                   {p.laborType ? ` · ${p.laborType.toUpperCase()}` : ""}
                 </option>
               ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Nome do favorecido ou cliente">
           <Input
@@ -234,8 +227,7 @@ export function EntryForm({
           />
         </Field>
         <Field label="Empresa cliente">
-          <select
-            className={selectClass}
+          <NativeSelect
             name="companyId"
             defaultValue={entry?.companyId ?? ""}
             onChange={(e) => {
@@ -249,47 +241,38 @@ export function EntryForm({
                 {c.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Serviço">
-          <select
-            className={selectClass}
-            name="serviceId"
-            defaultValue={entry?.serviceId ?? ""}
-          >
+          <NativeSelect name="serviceId" defaultValue={entry?.serviceId ?? ""}>
             <option value="">Sem vínculo</option>
             {metadata.services.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Vendedor">
-          <select
-            className={selectClass}
-            name="sellerId"
-            defaultValue={entry?.sellerId ?? ""}
-          >
+          <NativeSelect name="sellerId" defaultValue={entry?.sellerId ?? ""}>
             <option value="">Sem vínculo</option>
             {metadata.sellers.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         {!entry && (
           <>
             <Field label="Geração">
-              <select
-                className={selectClass}
+              <NativeSelect
                 value={schedule}
                 onChange={(e) => setSchedule(e.target.value)}
               >
                 <option value="installments">Parcelar o valor total</option>
                 <option value="recurring">Repetir o valor por ciclo</option>
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Quantidade de parcelas ou ciclos">
               <Input
@@ -302,11 +285,11 @@ export function EntryForm({
               />
             </Field>
             <Field label="Intervalo">
-              <select className={selectClass} name="intervalMonths">
+              <NativeSelect name="intervalMonths">
                 <option value="1">Mensal</option>
                 <option value="3">Trimestral</option>
                 <option value="12">Anual</option>
-              </select>
+              </NativeSelect>
             </Field>
           </>
         )}

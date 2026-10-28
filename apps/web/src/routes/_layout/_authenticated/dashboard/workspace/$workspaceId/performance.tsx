@@ -5,10 +5,12 @@ import WorkspaceLayout from "@/components/common/workspace-layout";
 import { Commissions } from "@/components/finance/performance/commissions";
 import { PerformanceExpenses } from "@/components/finance/performance/expenses";
 import { PerformanceRules } from "@/components/finance/performance/rules";
-import { Field, selectClass, today } from "@/components/finance/shared";
+import { Field, today } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PageHeader } from "@/components/ui/page-header";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getMetadata } from "@/fetchers/finance";
 import {
@@ -68,13 +70,10 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
     <WorkspaceLayout title="Comissões e resultados">
       <PageTitle title="Comissões e resultados" />
       <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Comissões e resultados</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Regras por serviço, apuração por vendedor e visão gerencial da
-            rentabilidade.
-          </p>
-        </div>
+        <PageHeader
+          title="Comissões e resultados"
+          description="Regras por serviço, apuração por vendedor e visão gerencial da rentabilidade."
+        />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
         ) : !permissions.canViewFinance() ? (
@@ -113,9 +112,8 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
                 />
               </Field>
               <Field label="Vendedor">
-                <select
+                <NativeSelect
                   name="seller"
-                  className={selectClass}
                   defaultValue={filters.sellerId ?? ""}
                 >
                   <option value="">Todos</option>
@@ -124,7 +122,7 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
                       {s.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
                 <Button type="submit">Aplicar filtros</Button>

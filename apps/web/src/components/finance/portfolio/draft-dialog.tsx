@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type DraftInput,
   decideDraft,
@@ -9,7 +10,7 @@ import {
   saveDraft,
 } from "@/fetchers/finance/portfolio";
 import { toast } from "@/lib/toast";
-import { cents, Field, Modal, money, selectClass } from "../shared";
+import { cents, Field, Modal, money } from "../shared";
 export function DraftEditor({
   workspaceId,
   meta,
@@ -72,11 +73,10 @@ export function DraftEditor({
         }}
       >
         <Field label="Cliente">
-          <select
+          <NativeSelect
             required
             disabled={locked}
             name="company"
-            className={selectClass}
             defaultValue={draft?.companyId ?? ""}
           >
             <option value="">Selecione</option>
@@ -85,13 +85,12 @@ export function DraftEditor({
                 {c.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Contrato de referência">
-          <select
+          <NativeSelect
             disabled={locked}
             name="contract"
-            className={selectClass}
             defaultValue={draft?.contractId ?? ""}
           >
             <option value="">Sem contrato</option>
@@ -100,7 +99,7 @@ export function DraftEditor({
                 {c.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Título">
           <Input
@@ -134,10 +133,10 @@ export function DraftEditor({
         {approve ? (
           <>
             <Field label="Decisão">
-              <select name="decisionStatus" className={selectClass}>
+              <NativeSelect name="decisionStatus">
                 <option value="approved">Aprovar</option>
                 <option value="rejected">Rejeitar</option>
-              </select>
+              </NativeSelect>
             </Field>
             <label className="block text-sm">
               Justificativa
@@ -160,16 +159,15 @@ export function DraftEditor({
         ) : (
           <>
             <Field label="Situação">
-              <select
+              <NativeSelect
                 name="status"
-                className={selectClass}
                 defaultValue={
                   draft?.status === "submitted" ? "submitted" : "draft"
                 }
               >
                 <option value="draft">Rascunho</option>
                 <option value="submitted">Submeter para aprovação</option>
-              </select>
+              </NativeSelect>
             </Field>
             <Button type="submit" disabled={busy}>
               Salvar minuta

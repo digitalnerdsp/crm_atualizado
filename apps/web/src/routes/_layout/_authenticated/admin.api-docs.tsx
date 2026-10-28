@@ -192,7 +192,7 @@ function EndpointDetails({
                       <td className="px-3 py-2 font-mono">
                         {parameter.name}
                         {parameter.required && (
-                          <span className="ml-1 text-red-500">*</span>
+                          <span className="ml-1 text-destructive">*</span>
                         )}
                       </td>
                       <td className="px-3 py-2">{parameter.in}</td>

@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { FinanceMetadata } from "@/fetchers/finance";
 import {
   type BillingPayload,
@@ -11,15 +12,7 @@ import {
   renewBillingContract,
 } from "@/fetchers/finance/recurrence";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
-import {
-  dateLabel,
-  Field,
-  Modal,
-  money,
-  remaining,
-  selectClass,
-  today,
-} from "./shared";
+import { dateLabel, Field, Modal, money, remaining, today } from "./shared";
 export function BillingDialog({
   workspaceId,
   contractId,
@@ -104,7 +97,7 @@ export function BillingDialog({
             {data.config?.lastWarning && (
               <p
                 role="alert"
-                className="rounded-lg border border-amber-500/50 p-3 text-sm"
+                className="rounded-lg border border-warning/50 p-3 text-sm"
               >
                 {data.config.lastWarning}
               </p>
@@ -149,8 +142,7 @@ export function BillingDialog({
                 />
               </Field>
               <Field label="Horizonte de geração">
-                <select
-                  className={selectClass}
+                <NativeSelect
                   name="horizon"
                   defaultValue={String(data.config?.horizonMonths ?? 3)}
                   disabled={!canManage}
@@ -160,11 +152,10 @@ export function BillingDialog({
                       {n} {n === 1 ? "mês" : "meses"}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Categoria de receita">
-                <select
-                  className={selectClass}
+                <NativeSelect
                   name="category"
                   defaultValue={data.config?.categoryId ?? ""}
                   disabled={!canManage}
@@ -177,7 +168,7 @@ export function BillingDialog({
                         {c.name}
                       </option>
                     ))}
-                </select>
+                </NativeSelect>
               </Field>
               <div className="space-y-3 text-sm">
                 <label className="flex items-center gap-2">

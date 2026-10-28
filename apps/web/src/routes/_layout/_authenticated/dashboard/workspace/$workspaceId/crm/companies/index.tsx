@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -142,9 +143,9 @@ function RouteComponent() {
                       <CompanyStatusBadge status={company.status} />
                     </TableCell>
                     <TableCell>
-                      <span className="rounded-full bg-muted px-2 py-1 text-xs">
+                      <StatusBadge>
                         {hostingModes[company.hostingMode]}
-                      </span>
+                      </StatusBadge>
                     </TableCell>
                     <TableCell className="tabular-nums text-muted-foreground">
                       {formatTaxId(company.taxId) ?? "—"}

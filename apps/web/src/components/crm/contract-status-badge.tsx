@@ -1,29 +1,26 @@
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 
-/** Situação do contrato em forma, não só em texto: ativo e cancelado têm de
- * se distinguir de relance numa lista de trinta. */
-const STATUS_VARIANT = {
+const STATUS_TONE: Record<string, StatusTone> = {
   active: "success",
   paused: "warning",
-  cancelled: "error",
-  finished: "outline",
-} as const;
+  cancelled: "danger",
+  finished: "neutral",
+};
 
-export type ContractStatus = keyof typeof STATUS_VARIANT;
+export type ContractStatus = "active" | "paused" | "cancelled" | "finished";
 
 export function ContractStatusBadge({
   status,
-  size,
 }: {
   status: ContractStatus;
   size?: "sm" | "default" | "lg";
 }) {
   const { t } = useTranslation();
   return (
-    <Badge variant={STATUS_VARIANT[status]} size={size ?? "sm"}>
+    <StatusBadge tone={STATUS_TONE[status] ?? "neutral"}>
       {t(`crm:contracts.${status}`)}
-    </Badge>
+    </StatusBadge>
   );
 }
 

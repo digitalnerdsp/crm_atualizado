@@ -1,10 +1,11 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { hours } from "@/components/finance/portfolio/shared";
-import { Field, selectClass } from "@/components/finance/shared";
+import { Field } from "@/components/finance/shared";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   getSiteOptions,
   getSiteSummary,
@@ -118,10 +119,9 @@ export function SiteTimePanel({
           }}
         >
           <Field label="Site do cliente">
-            <select
+            <NativeSelect
               name="site"
               required
-              className={selectClass}
               defaultValue={link?.siteId ?? ""}
               disabled={Boolean(link)}
             >
@@ -136,7 +136,7 @@ export function SiteTimePanel({
                   {s.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
           <Field label="Horas previstas no card">
             <Input

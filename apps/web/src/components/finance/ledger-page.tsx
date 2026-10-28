@@ -10,12 +10,14 @@ import {
   Field,
   money,
   remaining,
-  selectClass,
   today,
 } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PageHeader } from "@/components/ui/page-header";
+import { entryTone, StatusBadge } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -91,16 +93,14 @@ export function LedgerPage({
         title={side === "receivable" ? "Contas a receber" : "Contas a pagar"}
       />
       <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
-        <div>
-          <h1 className="text-2xl font-semibold">
-            {side === "receivable" ? "Contas a receber" : "Contas a pagar"}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {side === "receivable"
+        <PageHeader
+          title={side === "receivable" ? "Contas a receber" : "Contas a pagar"}
+          description={
+            side === "receivable"
               ? "Cobranças, recebimentos e baixas dos clientes."
-              : "Despesas, pagamentos e cadastros de fornecedores."}
-          </p>
-        </div>
+              : "Despesas, pagamentos e cadastros de fornecedores."
+          }
+        />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
         ) : !enabled ? (
@@ -156,11 +156,7 @@ export function LedgerPage({
                 />
               </Field>
               <Field label="Situação">
-                <select
-                  className={selectClass}
-                  name="status"
-                  defaultValue={filters.status ?? ""}
-                >
+                <NativeSelect name="status" defaultValue={filters.status ?? ""}>
                   {Object.entries({
                     "": "Todas",
                     open: "Em aberto",
@@ -173,20 +169,16 @@ export function LedgerPage({
                       {l}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Ordenar por">
-                <select
-                  className={selectClass}
-                  name="sort"
-                  defaultValue={filters.sort ?? ""}
-                >
+                <NativeSelect name="sort" defaultValue={filters.sort ?? ""}>
                   <option value="">Vencimento (mais recente)</option>
                   <option value="due_asc">Vencimento (mais antigo)</option>
                   <option value="amount_desc">Maior valor</option>
                   <option value="amount_asc">Menor valor</option>
                   <option value="name">Descrição (A-Z)</option>
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Pesquisar">
                 <Input
@@ -409,9 +401,11 @@ export function LedgerPage({
                                   {money(entry.reportBalanceCents)}
                                 </TableCell>
                                 <TableCell>
-                                  <span className="whitespace-nowrap rounded-full bg-muted px-2 py-1 text-xs">
+                                  <StatusBadge
+                                    tone={entryTone(entryStatus(entry))}
+                                  >
                                     {entryStatus(entry)}
-                                  </span>
+                                  </StatusBadge>
                                 </TableCell>
                                 <TableCell>
                                   <div className="flex gap-1">
@@ -627,9 +621,9 @@ export function LedgerPage({
                               {money(entry.reportBalanceCents)}
                             </TableCell>
                             <TableCell>
-                              <span className="whitespace-nowrap rounded-full bg-muted px-2 py-1 text-xs">
+                              <StatusBadge tone={entryTone(entryStatus(entry))}>
                                 {entryStatus(entry)}
-                              </span>
+                              </StatusBadge>
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-1">

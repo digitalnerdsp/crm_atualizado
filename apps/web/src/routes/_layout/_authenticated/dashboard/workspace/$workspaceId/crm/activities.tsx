@@ -29,6 +29,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { useUpdateActivity } from "@/hooks/mutations/crm/use-crm-contact-mutations";
 import { useCrmActivities } from "@/hooks/queries/crm/use-crm-activities";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -201,6 +202,11 @@ function RouteComponent() {
                             ) : null}
                           </p>
                         </div>
+                        {bucket === "overdue" ? (
+                          <StatusBadge tone="danger">Atrasada</StatusBadge>
+                        ) : bucket === "today" ? (
+                          <StatusBadge tone="warning">Hoje</StatusBadge>
+                        ) : null}
                         <Popover>
                           <PopoverTrigger
                             render={

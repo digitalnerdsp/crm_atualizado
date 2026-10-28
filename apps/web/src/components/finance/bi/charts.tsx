@@ -175,7 +175,8 @@ export function Breakdown({
                 className="h-2 rounded-full"
                 style={{
                   width: `${(Math.abs(r.value) / max) * 100}%`,
-                  background: r.value < 0 ? "#e65c6f" : "#3b82f6",
+                  background:
+                    r.value < 0 ? "var(--destructive)" : "var(--info)",
                 }}
                 title={money(r.value)}
               />

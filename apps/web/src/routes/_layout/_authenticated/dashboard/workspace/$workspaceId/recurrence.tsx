@@ -3,16 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { BillingDialog } from "@/components/finance/billing-dialog";
-import {
-  dateLabel,
-  Field,
-  money,
-  selectClass,
-  today,
-} from "@/components/finance/shared";
+import { dateLabel, Field, money, today } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
   Table,
   TableBody,
@@ -114,12 +111,10 @@ function RecurrenceWorkspace({
     <WorkspaceLayout title="Contratos e recorrência">
       <PageTitle title="Contratos e recorrência" />
       <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Contratos e recorrência</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Vigências, receita recorrente e cobranças integradas ao financeiro.
-          </p>
-        </div>
+        <PageHeader
+          title="Contratos e recorrência"
+          description="Vigências, receita recorrente e cobranças integradas ao financeiro."
+        />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
         ) : !enabled ? (
@@ -162,8 +157,7 @@ function RecurrenceWorkspace({
                 />
               </Field>
               <Field label="Situação">
-                <select
-                  className={selectClass}
+                <NativeSelect
                   value={filters.status ?? ""}
                   onChange={(e) => set("status", e.target.value)}
                 >
@@ -173,11 +167,10 @@ function RecurrenceWorkspace({
                       {l}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Cliente">
-                <select
-                  className={selectClass}
+                <NativeSelect
                   value={filters.companyId ?? ""}
                   onChange={(e) => set("companyId", e.target.value)}
                 >
@@ -187,7 +180,7 @@ function RecurrenceWorkspace({
                       {c.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
                 <Button type="submit">Aplicar período</Button>
@@ -291,9 +284,21 @@ function RecurrenceWorkspace({
                                 {c.companyName} ·{" "}
                                 {c.sellerName ?? "Sem responsável"}
                               </p>
-                              <span className="mt-1 inline-block rounded-full bg-muted px-2 py-1 text-xs">
-                                {states[c.status] ?? c.status}
-                              </span>
+                              <div className="mt-1">
+                                <StatusBadge
+                                  tone={
+                                    c.status === "active"
+                                      ? "success"
+                                      : c.status === "paused"
+                                        ? "warning"
+                                        : c.status === "cancelled"
+                                          ? "danger"
+                                          : "neutral"
+                                  }
+                                >
+                                  {states[c.status] ?? c.status}
+                                </StatusBadge>
+                              </div>
                             </TableCell>
                             <TableCell className="min-w-48">
                               {c.services.map((item) => (
@@ -349,7 +354,7 @@ function RecurrenceWorkspace({
                                   : "Desativada"}
                               </p>
                               {c.lastWarning && (
-                                <p className="mt-1 max-w-52 text-xs text-amber-600">
+                                <p className="mt-1 max-w-52 text-xs text-warning-foreground">
                                   {c.lastWarning}
                                 </p>
                               )}

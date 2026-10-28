@@ -177,7 +177,7 @@ export function HostingDigestSettings({
           </p>
         )}
         {preview.data && !preview.data.enabled && (
-          <p className="text-xs text-amber-600">
+          <p className="text-xs text-warning-foreground">
             O aviso está desativado: esta lista é só uma prévia e nada será
             enviado.
           </p>

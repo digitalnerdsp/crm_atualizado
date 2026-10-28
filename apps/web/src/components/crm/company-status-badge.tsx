@@ -1,30 +1,23 @@
 import { useTranslation } from "react-i18next";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 
-/** Situação lida em forma, não só em texto: numa lista de cinquenta clientes
- * o que precisa de atenção tem de saltar sem ser lido. */
-const STATUS_STYLE = {
-  prospect: { variant: "info", key: "statusProspect" },
-  active: { variant: "success", key: "statusActive" },
-  inactive: { variant: "outline", key: "statusInactive" },
-  churned: { variant: "error", key: "statusChurned" },
-} as const;
+const STATUS_STYLE: Record<string, { tone: StatusTone; key: string }> = {
+  prospect: { tone: "info", key: "statusProspect" },
+  active: { tone: "success", key: "statusActive" },
+  inactive: { tone: "neutral", key: "statusInactive" },
+  churned: { tone: "danger", key: "statusChurned" },
+};
 
 export function CompanyStatusBadge({
   status,
-  size,
 }: {
   status: string;
   size?: "sm" | "default" | "lg";
 }) {
   const { t } = useTranslation();
-  const style =
-    STATUS_STYLE[status as keyof typeof STATUS_STYLE] ?? STATUS_STYLE.prospect;
-
+  const style = STATUS_STYLE[status] ?? STATUS_STYLE.prospect;
   return (
-    <Badge variant={style.variant} size={size ?? "sm"}>
-      {t(`crm:company.${style.key}`)}
-    </Badge>
+    <StatusBadge tone={style.tone}>{t(`crm:company.${style.key}`)}</StatusBadge>
   );
 }
 

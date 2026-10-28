@@ -1,12 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  Activity,
-  ArrowDownToLine,
-  ArrowUpRight,
-  ChartNoAxesCombined,
-  RefreshCw,
-} from "lucide-react";
+import { Activity, ArrowDownToLine, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { CommercialOverview } from "@/components/crm/commercial-overview";
@@ -14,16 +8,14 @@ import { BiChart, Breakdown } from "@/components/finance/bi/charts";
 import { BiDetail } from "@/components/finance/bi/detail";
 import { PortfolioSummary } from "@/components/finance/bi/portfolio-summary";
 import { formatMetric, labels, margins } from "@/components/finance/bi/shared";
-import {
-  dateLabel,
-  Field,
-  money,
-  selectClass,
-  today,
-} from "@/components/finance/shared";
+import { dateLabel, Field, money, today } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
+import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { getMetadata } from "@/fetchers/finance";
 import {
   type BiFilters,
@@ -133,34 +125,25 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
       v !== null && p !== null && p !== 0
         ? ((v - p) / Math.abs(p)) * 100
         : null;
+    const trend =
+      margins.has(key) && v !== null && p !== null
+        ? `${(v - p).toFixed(2)} p.p.`
+        : delta === null
+          ? "Variação não aplicável"
+          : `${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`;
     return (
-      <button
-        type="button"
+      <StatCard
         key={key}
+        label={labels[key]}
+        value={formatMetric(key, v)}
+        trend={trend}
+        detail={`anterior ${formatMetric(key, p)}`}
+        negative={v !== null && v < 0}
         onClick={() => {
           setDetailDays(90);
           setMetric(key);
         }}
-        className="min-w-0 rounded-xl border bg-card p-4 text-left transition hover:border-primary/50 hover:bg-muted/30 focus-visible:outline-2 focus-visible:outline-ring"
-      >
-        <span className="flex items-start justify-between gap-2 text-sm text-muted-foreground">
-          {labels[key]}
-          <ArrowUpRight className="size-4 shrink-0" />
-        </span>
-        <span
-          className={`mt-3 block break-words text-2xl font-semibold tracking-tight tabular-nums ${v !== null && v < 0 ? "text-destructive" : ""}`}
-        >
-          {formatMetric(key, v)}
-        </span>
-        <span className="mt-2 block text-xs text-muted-foreground">
-          {margins.has(key) && v !== null && p !== null
-            ? `${(v - p).toFixed(2)} p.p.`
-            : delta === null
-              ? "Variação não aplicável"
-              : `${delta > 0 ? "+" : ""}${delta.toFixed(1)}%`}{" "}
-          · anterior {formatMetric(key, p)}
-        </span>
-      </button>
+      />
     );
   };
   const cards = (keys: BiMetric[]) => (
@@ -206,52 +189,44 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
     <WorkspaceLayout title="BI financeiro">
       <PageTitle title="BI financeiro" />
       <div className="mx-auto w-full max-w-[1600px] space-y-5 p-4 md:p-6">
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-primary">
-              <ChartNoAxesCombined className="size-4" />
-              Inteligência financeira
-            </div>
-            <h1 className="text-2xl font-semibold md:text-3xl">
-              Dashboard geral
-            </h1>
-            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-              Uma visão da operação, dos resultados e dos compromissos futuros.
-              Clique nos indicadores para entender sua composição.
-            </p>
-          </div>
-          {enabled && (
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant="outline"
-                disabled={report.isFetching}
-                onClick={() => report.refetch()}
-                aria-label="Atualizar BI"
-              >
-                <RefreshCw className="size-4" />
-              </Button>
-              {permissions.canExportFinance() && (
-                <>
-                  <Button
-                    variant="outline"
-                    disabled={exporting || !d}
-                    onClick={() => download("xlsx")}
-                  >
-                    <ArrowDownToLine className="size-4" />
-                    Excel
-                  </Button>
-                  <Button
-                    variant="outline"
-                    disabled={exporting || !d}
-                    onClick={() => download("pdf")}
-                  >
-                    PDF executivo
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-        </header>
+        <PageHeader
+          eyebrow="Inteligência financeira"
+          title="Dashboard geral"
+          description="Uma visão da operação, dos resultados e dos compromissos futuros. Clique nos indicadores para entender sua composição."
+          actions={
+            enabled ? (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  disabled={report.isFetching}
+                  onClick={() => report.refetch()}
+                  aria-label="Atualizar BI"
+                >
+                  <RefreshCw className="size-4" />
+                </Button>
+                {permissions.canExportFinance() && (
+                  <>
+                    <Button
+                      variant="outline"
+                      disabled={exporting || !d}
+                      onClick={() => download("xlsx")}
+                    >
+                      <ArrowDownToLine className="size-4" />
+                      Excel
+                    </Button>
+                    <Button
+                      variant="outline"
+                      disabled={exporting || !d}
+                      onClick={() => download("pdf")}
+                    >
+                      PDF executivo
+                    </Button>
+                  </>
+                )}
+              </div>
+            ) : null
+          }
+        />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
         ) : !enabled ? (
@@ -313,24 +288,19 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                   />
                 </Field>
                 <Field label="Comparar com">
-                  <select
+                  <NativeSelect
                     name="comparison"
-                    className={selectClass}
                     defaultValue={filters.comparison}
                   >
                     <option value="previous">Período anterior</option>
                     <option value="year">Mesmo período / ano anterior</option>
-                  </select>
+                  </NativeSelect>
                 </Field>
                 <Field label="Agrupamento">
-                  <select
-                    name="grouping"
-                    className={selectClass}
-                    defaultValue={filters.grouping}
-                  >
+                  <NativeSelect name="grouping" defaultValue={filters.grouping}>
                     <option value="month">Mensal</option>
                     <option value="day">Diário (até 93 dias)</option>
-                  </select>
+                  </NativeSelect>
                 </Field>
                 {(
                   [
@@ -340,18 +310,14 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                   ] as const
                 ).map(([key, label, rows]) => (
                   <Field label={label} key={key}>
-                    <select
-                      name={key}
-                      className={selectClass}
-                      defaultValue={filters[key] ?? ""}
-                    >
+                    <NativeSelect name={key} defaultValue={filters[key] ?? ""}>
                       <option value="">Todos</option>
                       {rows?.map((r) => (
                         <option key={r.id} value={r.id}>
                           {r.name}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </Field>
                 ))}
               </div>
@@ -386,9 +352,8 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                     ] as const
                   ).map(([key, label, rows]) => (
                     <Field key={key} label={label}>
-                      <select
+                      <NativeSelect
                         name={key}
-                        className={selectClass}
                         defaultValue={filters[key] ?? ""}
                       >
                         <option value="">Todos</option>
@@ -397,25 +362,23 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                             {r.name}
                           </option>
                         ))}
-                      </select>
+                      </NativeSelect>
                     </Field>
                   ))}
                   <Field label="Vínculo">
-                    <select
+                    <NativeSelect
                       name="laborType"
-                      className={selectClass}
                       defaultValue={filters.laborType ?? ""}
                     >
                       <option value="">Todos</option>
                       <option value="pj">PJ</option>
                       <option value="freelance">Freelance</option>
                       <option value="clt">CLT</option>
-                    </select>
+                    </NativeSelect>
                   </Field>
                   <Field label="Classificação">
-                    <select
+                    <NativeSelect
                       name="resultClass"
-                      className={selectClass}
                       defaultValue={filters.resultClass ?? ""}
                     >
                       <option value="">Todas</option>
@@ -431,12 +394,11 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                           {label}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </Field>
                   <Field label="Situação contratual">
-                    <select
+                    <NativeSelect
                       name="contractStatus"
-                      className={selectClass}
                       defaultValue={filters.contractStatus ?? ""}
                     >
                       <option value="">Todas</option>
@@ -451,7 +413,7 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                           {label}
                         </option>
                       ))}
-                    </select>
+                    </NativeSelect>
                   </Field>
                 </div>
               </details>
@@ -501,33 +463,33 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                   </span>
                 </div>
                 {cards(["revenue", "received", "net", "movement"])}
-                <nav
-                  aria-label="Blocos do BI"
-                  className="flex flex-wrap gap-1 rounded-xl border bg-muted/30 p-1"
-                >
-                  {[
-                    ["overview", "Visão geral"],
-                    ["cash", "Caixa e contas"],
-                    ["results", "Resultados"],
-                    ["recurrence", "Recorrência"],
-                    ["portfolio", "Carteira"],
-                    ["commissions", "Comissões"],
-                    ["taxes", "Tributos e simulações"],
-                    ...(permissions.canViewCrmReports()
-                      ? [["commercial", "Comercial"]]
-                      : []),
-                  ].map(([key, label]) => (
-                    <button
-                      type="button"
-                      key={key}
-                      aria-pressed={tab === key}
-                      onClick={() => setTab(key)}
-                      className={`rounded-lg px-3 py-2 text-sm ${tab === key ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </nav>
+                <div className="overflow-x-auto">
+                  <Tabs
+                    value={tab}
+                    onValueChange={(value) => {
+                      setTab(String(value));
+                    }}
+                  >
+                    <TabsList>
+                      {[
+                        ["overview", "Visão geral"],
+                        ["cash", "Caixa e contas"],
+                        ["results", "Resultados"],
+                        ["recurrence", "Recorrência"],
+                        ["portfolio", "Carteira"],
+                        ["commissions", "Comissões"],
+                        ["taxes", "Tributos e simulações"],
+                        ...(permissions.canViewCrmReports()
+                          ? [["commercial", "Comercial"]]
+                          : []),
+                      ].map(([key, label]) => (
+                        <TabsTab key={key} value={key}>
+                          {label}
+                        </TabsTab>
+                      ))}
+                    </TabsList>
+                  </Tabs>
+                </div>
                 {tab === "portfolio" && (
                   <PortfolioSummary
                     workspaceId={workspaceId}
@@ -542,25 +504,33 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                   <>
                     <div className="grid gap-4 xl:grid-cols-2">
                       {line("Receita × despesas dos títulos × lucro", [
-                        { key: "revenue", label: "Receita", color: "#3b82f6" },
+                        {
+                          key: "revenue",
+                          label: "Receita",
+                          color: "var(--info)",
+                        },
                         {
                           key: "expenses",
                           label: "Despesas",
-                          color: "#e65c6f",
+                          color: "var(--destructive)",
                         },
                         {
                           key: "net",
                           label: "Lucro líquido",
-                          color: "#10b981",
+                          color: "var(--success)",
                         },
                       ])}
                       {line("Recebimentos × pagamentos", [
                         {
                           key: "received",
                           label: "Recebido",
-                          color: "#10b981",
+                          color: "var(--success)",
                         },
-                        { key: "paid", label: "Pago", color: "#e65c6f" },
+                        {
+                          key: "paid",
+                          label: "Pago",
+                          color: "var(--destructive)",
+                        },
                       ])}
                     </div>
                     <section className="rounded-xl border bg-card p-5">
@@ -610,24 +580,24 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                         {
                           key: "expectedIncome",
                           label: "Títulos por vencimento",
-                          color: "#94a3b8",
+                          color: "var(--muted-foreground)",
                         },
                         {
                           key: "received",
                           label: "Baixas recebidas",
-                          color: "#10b981",
+                          color: "var(--success)",
                         },
                       ])}
                       {line("Saídas previstas × pagas", [
                         {
                           key: "expectedExpense",
                           label: "Títulos por vencimento",
-                          color: "#94a3b8",
+                          color: "var(--muted-foreground)",
                         },
                         {
                           key: "paid",
                           label: "Baixas pagas",
-                          color: "#e65c6f",
+                          color: "var(--destructive)",
                         },
                       ])}
                       <Breakdown
@@ -730,7 +700,7 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                     {cards(["mrr", "contracts", "expiry", "disabledBilling"])}
                     {line(
                       "Evolução do MRR — receita contratada equivalente mensal",
-                      [{ key: "mrr", label: "MRR", color: "#8b5cf6" }],
+                      [{ key: "mrr", label: "MRR", color: "var(--primary)" }],
                     )}
                     <div className="rounded-xl border bg-card p-5">
                       <p className="text-sm text-muted-foreground">
@@ -851,9 +821,8 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                       <h2 className="font-semibold">Rankings financeiros</h2>
                       <label className="flex items-center gap-2 text-sm">
                         Ordenar por
-                        <select
+                        <NativeSelect
                           aria-label="Ordenação dos rankings"
-                          className={selectClass}
                           value={filters.ranking ?? "revenue"}
                           onChange={(event) =>
                             apply({
@@ -867,7 +836,7 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                           <option value="result">Resultado vinculado</option>
                           <option value="overdue">Saldo vencido</option>
                           <option value="commission">Comissões</option>
-                        </select>
+                        </NativeSelect>
                       </label>
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">

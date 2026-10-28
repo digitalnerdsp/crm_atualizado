@@ -47,9 +47,7 @@ export function ActivityRow({
           {isPendingActivity && activity.dueAt ? (
             <span
               className={`inline-flex items-center gap-1 text-xs ${
-                isOverdue
-                  ? "text-destructive"
-                  : "text-amber-700 dark:text-amber-400"
+                isOverdue ? "text-destructive" : "text-warning-foreground"
               }`}
             >
               <Clock className="size-3" />

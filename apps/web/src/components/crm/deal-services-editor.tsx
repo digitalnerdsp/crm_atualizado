@@ -11,6 +11,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useUpdateDeal } from "@/hooks/mutations/crm/use-crm-mutations";
 import { useSetCrmDealServices } from "@/hooks/mutations/crm/use-crm-service-mutations";
 import { useCrmServices } from "@/hooks/queries/crm/use-crm-services";
@@ -253,38 +262,38 @@ export function DealServicesEditor({
       {isEditing ? (
         <div className="space-y-2">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-sm">
-              <thead>
-                <tr className="text-left text-xs text-muted-foreground">
-                  <th className="pb-1.5 font-normal">
+            <Table className="w-full min-w-[640px] text-sm">
+              <TableHeader>
+                <TableRow className="text-left text-xs text-muted-foreground">
+                  <TableHead className="pb-1.5 font-normal">
                     {t("crm:services.service")}
-                  </th>
-                  <th className="pb-1.5 font-normal">
+                  </TableHead>
+                  <TableHead className="pb-1.5 font-normal">
                     {t("crm:services.name")}
-                  </th>
-                  <th className="w-16 pb-1.5 font-normal">
+                  </TableHead>
+                  <TableHead className="w-16 pb-1.5 font-normal">
                     {t("crm:services.quantity")}
-                  </th>
-                  <th className="w-28 pb-1.5 font-normal">
+                  </TableHead>
+                  <TableHead className="w-28 pb-1.5 font-normal">
                     {t("crm:services.unitPrice")}
-                  </th>
-                  <th className="w-16 pb-1.5 font-normal">
+                  </TableHead>
+                  <TableHead className="w-16 pb-1.5 font-normal">
                     {t("crm:services.discount")}
-                  </th>
-                  <th className="w-28 pb-1.5 text-right font-normal">
+                  </TableHead>
+                  <TableHead className="w-28 pb-1.5 text-right font-normal">
                     {t("crm:services.total")}
-                  </th>
-                  <th className="w-8" />
-                </tr>
-              </thead>
-              <tbody>
+                  </TableHead>
+                  <TableHead className="w-8" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {drafts.map((line) => {
                   const picked = catalog.find(
                     (service) => service.id === line.serviceId,
                   );
                   return (
-                    <tr key={line.key} className="align-top">
-                      <td className="py-1 pr-2">
+                    <TableRow key={line.key} className="align-top">
+                      <TableCell className="py-1 pr-2">
                         <Select
                           value={line.serviceId ?? FREE}
                           onValueChange={(value) => {
@@ -316,8 +325,8 @@ export function DealServicesEditor({
                             ))}
                           </SelectContent>
                         </Select>
-                      </td>
-                      <td className="py-1 pr-2">
+                      </TableCell>
+                      <TableCell className="py-1 pr-2">
                         <Input
                           size="sm"
                           value={line.name}
@@ -326,8 +335,8 @@ export function DealServicesEditor({
                             patchDraft(line.key, { name: event.target.value })
                           }
                         />
-                      </td>
-                      <td className="py-1 pr-2">
+                      </TableCell>
+                      <TableCell className="py-1 pr-2">
                         <Input
                           size="sm"
                           inputMode="numeric"
@@ -339,8 +348,8 @@ export function DealServicesEditor({
                             })
                           }
                         />
-                      </td>
-                      <td className="py-1 pr-2">
+                      </TableCell>
+                      <TableCell className="py-1 pr-2">
                         <Input
                           size="sm"
                           inputMode="decimal"
@@ -353,8 +362,8 @@ export function DealServicesEditor({
                             })
                           }
                         />
-                      </td>
-                      <td className="py-1 pr-2">
+                      </TableCell>
+                      <TableCell className="py-1 pr-2">
                         <Input
                           size="sm"
                           inputMode="numeric"
@@ -366,11 +375,11 @@ export function DealServicesEditor({
                             })
                           }
                         />
-                      </td>
-                      <td className="py-2 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="py-2 text-right tabular-nums">
                         {formatMoney(previewLineTotal(line), currency)}
-                      </td>
-                      <td className="py-1 pl-1">
+                      </TableCell>
+                      <TableCell className="py-1 pl-1">
                         <Button
                           size="icon-sm"
                           variant="ghost"
@@ -385,12 +394,12 @@ export function DealServicesEditor({
                         >
                           <Trash2 className="size-3.5" />
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -438,43 +447,46 @@ export function DealServicesEditor({
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-border">
-          <table className="w-full min-w-[520px] text-sm">
-            <tbody>
+          <Table className="w-full min-w-[520px] text-sm">
+            <TableBody>
               {lines.map((line) => (
-                <tr
+                <TableRow
                   key={line.id}
                   className="border-b border-border/60 last:border-b-0"
                 >
-                  <td className="px-3 py-2">
+                  <TableCell className="px-3 py-2">
                     <span>{line.name}</span>
                     <Badge variant="outline" size="sm" className="ml-2">
                       {t(`crm:services.${BILLING_LABEL_KEY[line.billingType]}`)}
                     </Badge>
-                  </td>
-                  <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground">
                     {line.quantity} ×{" "}
                     {formatMoney(line.unitPriceCents, currency)}
                     {line.discountPercent > 0
                       ? ` −${line.discountPercent}%`
                       : ""}
-                  </td>
-                  <td className="w-32 px-3 py-2 text-right tabular-nums">
+                  </TableCell>
+                  <TableCell className="w-32 px-3 py-2 text-right tabular-nums">
                     {formatMoney(line.totalCents, currency)}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-            <tfoot>
-              <tr className="bg-muted/40 text-xs">
-                <td className="px-3 py-2 text-muted-foreground" colSpan={2}>
+            </TableBody>
+            <TableFooter>
+              <TableRow className="bg-muted/40 text-xs">
+                <TableCell
+                  className="px-3 py-2 text-muted-foreground"
+                  colSpan={2}
+                >
                   {t("crm:services.itemsSum")}
-                </td>
-                <td className="px-3 py-2 text-right text-sm font-medium tabular-nums">
+                </TableCell>
+                <TableCell className="px-3 py-2 text-right text-sm font-medium tabular-nums">
                   {formatMoney(itemsSum, currency)}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
         </div>
       )}
 

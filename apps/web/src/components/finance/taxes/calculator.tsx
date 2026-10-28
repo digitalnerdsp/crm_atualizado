@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { FinanceMetadata } from "@/fetchers/finance";
 import {
   type CalculationPayload,
@@ -11,7 +12,7 @@ import {
 } from "@/fetchers/finance/taxes";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
 import { toast } from "@/lib/toast";
-import { cents, Field, money, selectClass, today } from "../shared";
+import { cents, Field, money, today } from "../shared";
 import { parseRate } from "./profiles";
 
 type View = {
@@ -107,9 +108,8 @@ export function TaxCalculator({
             className="grid gap-4 sm:grid-cols-2"
           >
             <Field label="Perfil de taxas e impostos">
-              <select
+              <NativeSelect
                 required
-                className={selectClass}
                 value={profileId}
                 onChange={(e) => setProfileId(e.target.value)}
               >
@@ -121,14 +121,13 @@ export function TaxCalculator({
                       {p.name} · v{p.version}
                     </option>
                   ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Data da simulação">
               <Input type="date" name="date" required defaultValue={today()} />
             </Field>
             <Field label="O que deseja calcular?">
-              <select
-                className={selectClass}
+              <NativeSelect
                 value={mode}
                 onChange={(e) => setMode(e.target.value as "gross" | "net")}
               >
@@ -138,7 +137,7 @@ export function TaxCalculator({
                 <option value="gross">
                   Líquido a partir do preço de venda
                 </option>
-              </select>
+              </NativeSelect>
             </Field>
             <Field
               label={
@@ -156,10 +155,9 @@ export function TaxCalculator({
               <Input name="cost" inputMode="decimal" defaultValue="0" />
             </Field>
             <Field label="Serviço">
-              <select
+              <NativeSelect
                 name="service"
                 required={commissionMode === "service"}
-                className={selectClass}
                 defaultValue=""
               >
                 <option value="">Sem vínculo</option>
@@ -168,21 +166,20 @@ export function TaxCalculator({
                     {s.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Vendedor">
-              <select name="seller" className={selectClass} defaultValue="">
+              <NativeSelect name="seller" defaultValue="">
                 <option value="">Sem vínculo</option>
                 {metadata.sellers.map((s) => (
                   <option key={s.id} value={s.id}>
                     {s.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Comissão">
-              <select
-                className={selectClass}
+              <NativeSelect
                 value={commissionMode}
                 onChange={(e) =>
                   setCommissionMode(e.target.value as typeof commissionMode)
@@ -191,7 +188,7 @@ export function TaxCalculator({
                 <option value="manual">Informar percentual</option>
                 <option value="service">Usar regra do serviço na data</option>
                 <option value="none">Sem comissão</option>
-              </select>
+              </NativeSelect>
             </Field>
             {commissionMode === "manual" && (
               <Field label="Comissão sobre a venda (%)">

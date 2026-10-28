@@ -4,16 +4,21 @@ import { useState } from "react";
 import WorkspaceLayout from "@/components/common/workspace-layout";
 import { HostingDigestSettings } from "@/components/crm/hosting/digest-settings";
 import { HostingEditModal } from "@/components/crm/hosting/hosting-edit-modal";
-import {
-  dateLabel,
-  Field,
-  Modal,
-  selectClass,
-  today,
-} from "@/components/finance/shared";
+import { dateLabel, Field, Modal, today } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatusBadge } from "@/components/ui/status-badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getHostingReport } from "@/fetchers/crm/hosting";
 import { useCrmCompanies } from "@/hooks/queries/crm/use-crm-companies";
@@ -61,18 +66,15 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
     <WorkspaceLayout title="Hospedagem">
       <PageTitle title="Hospedagem" />
       <div className="mx-auto w-full max-w-6xl space-y-5 p-4 md:p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl font-semibold">Hospedagem</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Clientes com hospedagem de terceiros e o vencimento de cada uma,
-              para oferecer a nossa antes da renovação.
-            </p>
-          </div>
-          {enabled && canUpdate && (
-            <Button onClick={() => setAdding(true)}>Adicionar cliente</Button>
-          )}
-        </div>
+        <PageHeader
+          title="Hospedagem"
+          description="Clientes com hospedagem de terceiros e o vencimento de cada uma, para oferecer a nossa antes da renovação."
+          actions={
+            enabled && canUpdate ? (
+              <Button onClick={() => setAdding(true)}>Adicionar cliente</Button>
+            ) : null
+          }
+        />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
         ) : !permissions.canViewHosting() ? (
@@ -100,8 +102,7 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                     />
                   </Field>
                   <Field label="Vencimento">
-                    <select
-                      className={selectClass}
+                    <NativeSelect
                       value={window}
                       onChange={(e) => {
                         setWindow(e.target.value);
@@ -114,7 +115,7 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                       </option>
                       <option value="overdue">Vencidos</option>
                       <option value="no_date">Sem data informada</option>
-                    </select>
+                    </NativeSelect>
                   </Field>
                 </div>
                 {report.error && (
@@ -123,9 +124,9 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                   </p>
                 )}
                 <div className="overflow-x-auto">
-                  <table className="w-full text-left text-sm">
-                    <thead>
-                      <tr>
+                  <Table className="w-full text-left text-sm">
+                    <TableHeader>
+                      <TableRow>
                         {[
                           "Empresa",
                           "Provedor e domínio",
@@ -133,16 +134,16 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                           "Situação",
                           "Ações",
                         ].map((h) => (
-                          <th key={h} className="p-3">
+                          <TableHead key={h} className="p-3">
                             {h}
-                          </th>
+                          </TableHead>
                         ))}
-                      </tr>
-                    </thead>
-                    <tbody>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
                       {rows.slice((page - 1) * PAGE, page * PAGE).map((c) => (
-                        <tr key={c.id} className="border-t align-top">
-                          <td className="min-w-48 p-3">
+                        <TableRow key={c.id} className="border-t align-top">
+                          <TableCell className="min-w-48 p-3">
                             <Link
                               className="font-medium underline"
                               to="/dashboard/workspace/$workspaceId/crm/companies/$companyId"
@@ -153,14 +154,14 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                             <p className="mt-1 text-xs text-muted-foreground">
                               {c.ownerName ?? "Sem responsável"}
                             </p>
-                          </td>
-                          <td className="min-w-44 p-3">
+                          </TableCell>
+                          <TableCell className="min-w-44 p-3">
                             {c.hosting.provider || "Provedor não informado"}
                             <p className="text-xs text-muted-foreground">
                               {c.hosting.domain}
                             </p>
-                          </td>
-                          <td className="whitespace-nowrap p-3">
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap p-3">
                             {c.hosting.renewsOn
                               ? dateLabel(c.hosting.renewsOn)
                               : "Sem data"}
@@ -171,14 +172,19 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                                   : `${c.daysRemaining} dias restantes`}
                               </p>
                             )}
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`rounded-full px-2 py-1 text-xs ${
+                          </TableCell>
+                          <TableCell className="p-3">
+                            <StatusBadge
+                              tone={
                                 c.attention === "due"
-                                  ? "bg-amber-100 text-amber-800"
-                                  : "bg-muted"
-                              }`}
+                                  ? c.daysRemaining !== null &&
+                                    c.daysRemaining < 0
+                                    ? "danger"
+                                    : "warning"
+                                  : c.attention === "no_date"
+                                    ? "neutral"
+                                    : "success"
+                              }
                             >
                               {c.attention === "due"
                                 ? c.daysRemaining !== null &&
@@ -188,9 +194,9 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                                 : c.attention === "no_date"
                                   ? "Sem data"
                                   : "Em dia"}
-                            </span>
-                          </td>
-                          <td className="p-3">
+                            </StatusBadge>
+                          </TableCell>
+                          <TableCell className="p-3">
                             {canUpdate && (
                               <Button
                                 size="sm"
@@ -200,11 +206,11 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                                 Editar
                               </Button>
                             )}
-                          </td>
-                        </tr>
+                          </TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
+                    </TableBody>
+                  </Table>
                 </div>
                 {!report.isLoading && !rows.length && (
                   <p className="py-6 text-sm text-muted-foreground">

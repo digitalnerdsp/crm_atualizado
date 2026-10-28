@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BiChart } from "@/components/finance/bi/charts";
 import { hours } from "@/components/finance/portfolio/shared";
 import { money } from "@/components/finance/shared";
+import { StatCard } from "@/components/ui/stat-card";
 import { getPortfolio } from "@/fetchers/finance/portfolio";
 
 /**
@@ -30,13 +31,7 @@ export function PortfolioSummary({
   });
   const d = report.data;
   const metric = (label: string, value: string, detail: string) => (
-    <div className="min-w-0 rounded-xl border bg-card p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <strong className="mt-3 block break-words text-2xl tabular-nums">
-        {value}
-      </strong>
-      <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
-    </div>
+    <StatCard label={label} value={value} detail={detail} />
   );
   if (report.isError) return <p role="alert">{report.error.message}</p>;
   if (!d) return <p className="text-sm">Carregando carteira…</p>;
@@ -79,12 +74,12 @@ export function PortfolioSummary({
           {
             key: "revenue",
             label: "Receita faturada",
-            color: "#3b82f6",
+            color: "var(--info)",
           },
           {
             key: "result",
             label: "Resultado gerencial",
-            color: "#10b981",
+            color: "var(--success)",
           },
         ]}
       />

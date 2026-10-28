@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useCrmContract } from "@/hooks/queries/crm/use-crm-contracts";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { cn } from "@/lib/cn";
@@ -229,35 +230,35 @@ function RouteComponent() {
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-border">
-              <table className="w-full min-w-[480px] text-sm">
-                <tbody>
+              <Table className="w-full min-w-[480px] text-sm">
+                <TableBody>
                   {contract.services.map((line) => (
-                    <tr
+                    <TableRow
                       key={line.id}
                       className="border-b border-border/60 last:border-b-0"
                     >
-                      <td className="px-3 py-2">
+                      <TableCell className="px-3 py-2">
                         {line.name}
                         <Badge variant="outline" size="sm" className="ml-2">
                           {t(
                             `crm:services.${BILLING_LABEL_KEY[line.billingType]}`,
                           )}
                         </Badge>
-                      </td>
-                      <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
+                      </TableCell>
+                      <TableCell className="px-3 py-2 text-right tabular-nums text-muted-foreground">
                         {line.quantity} ×{" "}
                         {formatMoney(line.unitPriceCents, contract.currency)}
                         {line.discountPercent > 0
                           ? ` −${line.discountPercent}%`
                           : ""}
-                      </td>
-                      <td className="w-32 px-3 py-2 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="w-32 px-3 py-2 text-right tabular-nums">
                         {formatMoney(line.totalCents, contract.currency)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           )}
         </section>

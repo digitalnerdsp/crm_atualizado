@@ -8,7 +8,6 @@ import {
   Field,
   Modal,
   money,
-  selectClass,
   today,
 } from "@/components/finance/shared";
 import { TaxCalculator } from "@/components/finance/taxes/calculator";
@@ -17,6 +16,16 @@ import { TaxProfiles } from "@/components/finance/taxes/profiles";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PageHeader } from "@/components/ui/page-header";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@/components/ui/tabs";
 import { getMetadata } from "@/fetchers/finance";
 import { getPerformanceEntry } from "@/fetchers/finance/performance";
@@ -108,16 +117,13 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
     }
   };
   return (
-    <WorkspaceLayout title="Taxas e impostos">
-      <PageTitle title="Taxas e impostos" />
+    <WorkspaceLayout title="Impostos">
+      <PageTitle title="Impostos" />
       <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Taxas e impostos</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Planeje o preço de venda, confira o líquido e acompanhe os encargos
-            registrados no financeiro.
-          </p>
-        </div>
+        <PageHeader
+          title="Impostos"
+          description="Planeje o preço de venda, confira o líquido e acompanhe os encargos registrados no financeiro."
+        />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
         ) : !permissions.canViewFinance() ? (
@@ -157,8 +163,7 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
                 />
               </Field>
               <Field label="Perfil da simulação">
-                <select
-                  className={selectClass}
+                <NativeSelect
                   name="profile"
                   defaultValue={filters.profileId ?? ""}
                 >
@@ -168,7 +173,7 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
                       {p.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
                 <Button type="submit">Aplicar filtros</Button>
@@ -290,45 +295,47 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
                     perfis ou simulações.
                   </p>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm">
-                      <thead>
-                        <tr>
-                          <th className="p-3">Descrição</th>
-                          <th className="p-3">Classificação</th>
-                          <th className="p-3">Competência</th>
-                          <th className="p-3">Valor</th>
-                          <th className="p-3">Ação</th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table className="w-full text-left text-sm">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="p-3">Descrição</TableHead>
+                          <TableHead className="p-3">Classificação</TableHead>
+                          <TableHead className="p-3">Competência</TableHead>
+                          <TableHead className="p-3">Valor</TableHead>
+                          <TableHead className="p-3">Ação</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {report.data?.ledger
                           .slice((ledgerPage - 1) * 25, ledgerPage * 25)
                           .map((e) => (
-                            <tr className="border-t" key={e.id}>
-                              <td className="min-w-48 p-3">{e.description}</td>
-                              <td className="p-3">
+                            <TableRow className="border-t" key={e.id}>
+                              <TableCell className="min-w-48 p-3">
+                                {e.description}
+                              </TableCell>
+                              <TableCell className="p-3">
                                 {e.classification === "tax"
                                   ? "Imposto"
                                   : "Despesa financeira"}
-                              </td>
-                              <td className="whitespace-nowrap p-3">
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap p-3">
                                 {dateLabel(e.competenceDate)}
-                              </td>
-                              <td className="whitespace-nowrap p-3">
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap p-3">
                                 {money(e.amountCents)}
-                              </td>
-                              <td className="p-3">
+                              </TableCell>
+                              <TableCell className="p-3">
                                 <Button
                                   variant="outline"
                                   onClick={() => setDetail(e.id)}
                                 >
                                   Consultar e baixar
                                 </Button>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                   </div>
                   {!report.data?.ledger.length && (
                     <p className="py-6 text-sm text-muted-foreground">

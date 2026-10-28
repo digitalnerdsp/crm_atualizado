@@ -124,7 +124,7 @@ export function DealCard({
         )}
 
         {isStalled ? (
-          <span className="inline-flex items-center gap-1 rounded-sm bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 dark:text-amber-400">
+          <span className="inline-flex items-center gap-1 rounded-sm bg-warning/16 px-1.5 py-0.5 text-[10px] font-medium text-warning-foreground">
             <AlarmClock className="size-2.5" />
             {t("crm:board.stalledDays", { count: stalledDays ?? 0 })}
           </span>

@@ -22,12 +22,23 @@ import {
   Field,
   Modal,
   money,
-  selectClass,
   today,
 } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import { PageHeader } from "@/components/ui/page-header";
+import { StatCard } from "@/components/ui/stat-card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Tabs, TabsList, TabsTab } from "@/components/ui/tabs";
 import { getMetadata } from "@/fetchers/finance";
 import { getPerformanceEntry } from "@/fetchers/finance/performance";
 import {
@@ -125,50 +136,37 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
     }
   };
   const metric = (label: string, value: string, detail: string) => (
-    <div className="min-w-0 rounded-xl border bg-card p-4">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <strong className="mt-3 block break-words text-2xl tabular-nums">
-        {value}
-      </strong>
-      <p className="mt-2 text-xs text-muted-foreground">{detail}</p>
-    </div>
+    <StatCard label={label} value={value} detail={detail} />
   );
   return (
     <WorkspaceLayout title="Gestão da carteira">
       <PageTitle title="Gestão da carteira" />
       <div className="mx-auto w-full max-w-[1500px] space-y-5 p-4 md:p-6">
-        <header className="flex flex-wrap justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-primary">
-              Cobranças · renovações · rentabilidade
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold md:text-3xl">
-              Gestão da carteira
-            </h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Acompanhe compromissos e decisões por cliente. Horas de produção
-              são contabilizadas somente nos projetos de sites vinculados.
-            </p>
-          </div>
-          {enabled && p.canExportFinance() && (
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                disabled={busy || !d}
-                onClick={() => exportFile("xlsx")}
-              >
-                Excel
-              </Button>
-              <Button
-                variant="outline"
-                disabled={busy || !d}
-                onClick={() => exportFile("pdf")}
-              >
-                PDF
-              </Button>
-            </div>
-          )}
-        </header>
+        <PageHeader
+          eyebrow="Cobranças · renovações · rentabilidade"
+          title="Gestão da carteira"
+          description="Acompanhe compromissos e decisões por cliente. Horas de produção são contabilizadas somente nos projetos de sites vinculados."
+          actions={
+            enabled && p.canExportFinance() ? (
+              <>
+                <Button
+                  variant="outline"
+                  disabled={busy || !d}
+                  onClick={() => exportFile("xlsx")}
+                >
+                  Excel
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={busy || !d}
+                  onClick={() => exportFile("pdf")}
+                >
+                  PDF
+                </Button>
+              </>
+            ) : null
+          }
+        />
         {p.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
         ) : !enabled ? (
@@ -194,73 +192,53 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                 <Input required type="date" name="to" defaultValue={f.to} />
               </Field>
               <Field label="Cliente">
-                <select
-                  name="companyId"
-                  className={selectClass}
-                  defaultValue={f.companyId ?? ""}
-                >
+                <NativeSelect name="companyId" defaultValue={f.companyId ?? ""}>
                   <option value="">Todos</option>
                   {base.data?.companies.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Antecedência da fila">
-                <select
-                  name="horizon"
-                  className={selectClass}
-                  defaultValue={f.horizon ?? "90"}
-                >
+                <NativeSelect name="horizon" defaultValue={f.horizon ?? "90"}>
                   {[30, 60, 90].map((n) => (
                     <option key={n} value={n}>
                       Até {n} dias + vencidos
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Origem da fila">
-                <select
-                  name="kind"
-                  className={selectClass}
-                  defaultValue={f.kind ?? ""}
-                >
+                <NativeSelect name="kind" defaultValue={f.kind ?? ""}>
                   <option value="">Todas</option>
                   {Object.entries(origins).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Situação do acompanhamento">
-                <select
-                  name="status"
-                  className={selectClass}
-                  defaultValue={f.status ?? ""}
-                >
+                <NativeSelect name="status" defaultValue={f.status ?? ""}>
                   <option value="">Todas</option>
                   {Object.entries(statuses).map(([key, label]) => (
                     <option key={key} value={key}>
                       {label}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Responsável pela fila">
-                <select
-                  name="ownerId"
-                  className={selectClass}
-                  defaultValue={f.ownerId ?? ""}
-                >
+                <NativeSelect name="ownerId" defaultValue={f.ownerId ?? ""}>
                   <option value="">Todos</option>
                   {base.data?.sellers.map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.name}
                     </option>
                   ))}
-                </select>
+                </NativeSelect>
               </Field>
               <div className="flex items-end gap-2">
                 <Button type="submit">Aplicar filtros</Button>
@@ -289,45 +267,43 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
             {meta.isError && <p role="alert">{meta.error.message}</p>}
             {d && (
               <>
-                <nav
-                  className="flex flex-wrap gap-1 rounded-xl border bg-muted/30 p-1"
-                  aria-label="Gestão da carteira"
-                >
-                  {[
-                    ["queue", "Cobranças e renovações"],
-                    ["history", "Histórico da carteira"],
-                    ["clients", "Rentabilidade por cliente"],
-                    ["sites", "Sites e colaboradores"],
-                    ["drafts", "Minutas e aprovações"],
-                    ["costs", "Custos por hora"],
-                  ]
-                    .filter(
-                      ([key]) => key !== "costs" || p.canManageSiteCosts(),
-                    )
-                    .map(([key, label]) => (
-                      <button
-                        type="button"
-                        key={key}
-                        aria-pressed={tab === key}
-                        className={`rounded-lg px-3 py-2 text-sm ${tab === key ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                        onClick={() => {
-                          setPage(1);
-                          setTab(key);
-                        }}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                </nav>
+                <div className="overflow-x-auto">
+                  <Tabs
+                    value={tab}
+                    onValueChange={(value) => {
+                      setPage(1);
+                      setTab(String(value));
+                    }}
+                  >
+                    <TabsList>
+                      {[
+                        ["queue", "Cobranças e renovações"],
+                        ["history", "Histórico da carteira"],
+                        ["clients", "Rentabilidade por cliente"],
+                        ["sites", "Sites e colaboradores"],
+                        ["drafts", "Minutas e aprovações"],
+                        ["costs", "Custos por hora"],
+                      ]
+                        .filter(
+                          ([key]) => key !== "costs" || p.canManageSiteCosts(),
+                        )
+                        .map(([key, label]) => (
+                          <TabsTab key={key} value={key}>
+                            {label}
+                          </TabsTab>
+                        ))}
+                    </TabsList>
+                  </Tabs>
+                </div>
                 {tab === "queue" && (
                   <section className="min-w-0 rounded-xl border bg-card p-4">
                     <h2 className="mb-4 font-semibold">
                       Fila de acompanhamento
                     </h2>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b text-left">
+                      <Table className="w-full text-sm">
+                        <TableHeader>
+                          <TableRow className="border-b text-left">
                             {[
                               "Cliente / origem",
                               "Data",
@@ -336,44 +312,44 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                               "Próxima ação",
                               "",
                             ].map((h) => (
-                              <th key={h} className="p-2">
+                              <TableHead key={h} className="p-2">
                                 {h}
-                              </th>
+                              </TableHead>
                             ))}
-                          </tr>
-                        </thead>
-                        <tbody>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {d.queue.map((r) => (
-                            <tr
+                            <TableRow
                               key={`${r.sourceKind}-${r.sourceId}-${r.sourceDate}`}
                               className="border-b"
                             >
-                              <td className="min-w-44 p-2">
+                              <TableCell className="min-w-44 p-2">
                                 <strong>{r.companyName}</strong>
                                 <p className="text-xs text-muted-foreground">
                                   {origins[r.sourceKind]} · {r.title}
                                 </p>
-                              </td>
-                              <td className="whitespace-nowrap p-2">
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap p-2">
                                 {dateLabel(r.sourceDate)}
                                 {r.late && (
                                   <p className="text-xs text-destructive">
                                     Vencido
                                   </p>
                                 )}
-                              </td>
-                              <td className="whitespace-nowrap p-2 tabular-nums">
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap p-2 tabular-nums">
                                 {money(r.amountCents)}
-                              </td>
-                              <td className="p-2">
+                              </TableCell>
+                              <TableCell className="p-2">
                                 {statuses[r.status]}
                                 {r.brokenPromise && (
                                   <p className="text-xs text-destructive">
                                     Promessa vencida
                                   </p>
                                 )}
-                              </td>
-                              <td className="min-w-36 p-2">
+                              </TableCell>
+                              <TableCell className="min-w-36 p-2">
                                 {r.follow?.nextAction || "Sem ação definida"}
                                 <p
                                   className={`text-xs ${r.actionLate ? "text-destructive" : "text-muted-foreground"}`}
@@ -382,19 +358,19 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                                     ? dateLabel(r.follow.nextOn)
                                     : ""}
                                 </p>
-                              </td>
-                              <td className="p-2">
+                              </TableCell>
+                              <TableCell className="p-2">
                                 <Button
                                   variant="outline"
                                   onClick={() => setRow(r)}
                                 >
                                   Acompanhar
                                 </Button>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     </div>
                     {!d.queue.length && (
                       <p className="py-6 text-sm text-muted-foreground">
@@ -493,9 +469,9 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                       para filtrar toda a carteira pelo cliente.
                     </p>
                     <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b text-left">
+                      <Table className="w-full text-sm">
+                        <TableHeader>
+                          <TableRow className="border-b text-left">
                             {[
                               "Cliente",
                               "Receita",
@@ -506,47 +482,49 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                               "Horas sites",
                               "",
                             ].map((h) => (
-                              <th key={h} className="p-2">
+                              <TableHead key={h} className="p-2">
                                 {h}
-                              </th>
+                              </TableHead>
                             ))}
-                          </tr>
-                        </thead>
-                        <tbody>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
                           {d.companies.map((c) => (
-                            <tr key={c.id} className="border-b">
-                              <td className="min-w-40 p-2 font-medium">
+                            <TableRow key={c.id} className="border-b">
+                              <TableCell className="min-w-40 p-2 font-medium">
                                 {c.name}
-                              </td>
-                              <td className="whitespace-nowrap p-2">
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap p-2">
                                 {money(c.revenueCents)}
-                              </td>
-                              <td
+                              </TableCell>
+                              <TableCell
                                 className={`whitespace-nowrap p-2 ${c.resultCents < 0 ? "text-destructive" : ""}`}
                               >
                                 {money(c.resultCents)}
                                 <p className="text-xs text-muted-foreground">
                                   Anterior {money(c.previousResultCents)}
                                 </p>
-                              </td>
-                              <td className="p-2">
+                              </TableCell>
+                              <TableCell className="p-2">
                                 {c.margin === null
                                   ? "N/A"
                                   : `${c.margin.toFixed(1)}%`}
-                              </td>
-                              <td className="whitespace-nowrap p-2">
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap p-2">
                                 {money(c.overdueCents)}
-                              </td>
-                              <td className="whitespace-nowrap p-2">
+                              </TableCell>
+                              <TableCell className="whitespace-nowrap p-2">
                                 {money(c.estimatedLaborCents)}
                                 {c.missingSeconds > 0 && (
                                   <p className="text-xs text-destructive">
                                     {hours(c.missingSeconds)} sem custo
                                   </p>
                                 )}
-                              </td>
-                              <td className="p-2">{hours(c.seconds)}</td>
-                              <td className="p-2">
+                              </TableCell>
+                              <TableCell className="p-2">
+                                {hours(c.seconds)}
+                              </TableCell>
+                              <TableCell className="p-2">
                                 <Button
                                   variant="outline"
                                   onClick={() => {
@@ -556,11 +534,11 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                                 >
                                   Analisar
                                 </Button>
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           ))}
-                        </tbody>
-                      </table>
+                        </TableBody>
+                      </Table>
                     </div>
                     {!d.companies.length && (
                       <p className="py-5 text-sm text-muted-foreground">
@@ -675,9 +653,9 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                           </p>
                         )}
                         <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
-                            <thead>
-                              <tr className="border-b text-left">
+                          <Table className="w-full text-sm">
+                            <TableHeader>
+                              <TableRow className="border-b text-left">
                                 {[
                                   "Colaborador",
                                   "Modelo",
@@ -687,37 +665,39 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                                   "Custo já lançado",
                                   "Conferência",
                                 ].map((h) => (
-                                  <th key={h} className="p-2">
+                                  <TableHead key={h} className="p-2">
                                     {h}
-                                  </th>
+                                  </TableHead>
                                 ))}
-                              </tr>
-                            </thead>
-                            <tbody>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
                               {site.workers.map((w) => (
-                                <tr
+                                <TableRow
                                   className="border-b"
                                   key={w.userId ?? "unknown"}
                                 >
-                                  <td className="p-2">{w.name}</td>
-                                  <td className="p-2">
+                                  <TableCell className="p-2">
+                                    {w.name}
+                                  </TableCell>
+                                  <TableCell className="p-2">
                                     {w.mode === "unconfigured"
                                       ? "Não configurado"
                                       : modes[w.mode]}
-                                  </td>
-                                  <td className="p-2">
+                                  </TableCell>
+                                  <TableCell className="p-2">
                                     {hours(w.seconds)}
                                     <p className="text-xs text-muted-foreground">
                                       Planejado: {hours(w.estimateMinutes * 60)}
                                     </p>
-                                  </td>
-                                  <td className="p-2">
+                                  </TableCell>
+                                  <TableCell className="p-2">
                                     {hours(w.totalSeconds)}
-                                  </td>
-                                  <td className="whitespace-nowrap p-2">
+                                  </TableCell>
+                                  <TableCell className="whitespace-nowrap p-2">
                                     {money(w.estimatedCents)}
-                                  </td>
-                                  <td className="whitespace-nowrap p-2">
+                                  </TableCell>
+                                  <TableCell className="whitespace-nowrap p-2">
                                     {w.sourceEntryId ? (
                                       <button
                                         type="button"
@@ -731,8 +711,8 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                                     ) : (
                                       "Sem origem"
                                     )}
-                                  </td>
-                                  <td className="p-2 text-xs">
+                                  </TableCell>
+                                  <TableCell className="p-2 text-xs">
                                     {w.missingSeconds
                                       ? `${hours(w.missingSeconds)} sem taxa/acordo`
                                       : w.needsReconciliation
@@ -740,11 +720,11 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
                                         : w.booked
                                           ? "Conta já representa o custo; sem nova dedução"
                                           : "Estimativa separada"}
-                                  </td>
-                                </tr>
+                                  </TableCell>
+                                </TableRow>
                               ))}
-                            </tbody>
-                          </table>
+                            </TableBody>
+                          </Table>
                         </div>
                         {site.tasks.length > 0 && (
                           <details>

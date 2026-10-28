@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { getEntries } from "@/fetchers/finance";
 import {
   attachEntry,
@@ -15,7 +16,7 @@ import {
   type WorkerInput,
 } from "@/fetchers/finance/portfolio";
 import { toast } from "@/lib/toast";
-import { cents, Field, Modal, money, selectClass, today } from "../shared";
+import { cents, Field, Modal, money, today } from "../shared";
 import { modes } from "./shared";
 export function SiteEditor({
   workspaceId,
@@ -72,9 +73,8 @@ export function SiteEditor({
           />
         </Field>
         <Field label="Cliente">
-          <select
+          <NativeSelect
             required
-            className={selectClass}
             value={company}
             disabled={Boolean(site)}
             onChange={(e) => setCompany(e.target.value)}
@@ -85,21 +85,17 @@ export function SiteEditor({
                 {c.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Contrato de referência (opcional)">
-          <select
-            name="contract"
-            className={selectClass}
-            defaultValue={site?.contractId ?? ""}
-          >
+          <NativeSelect name="contract" defaultValue={site?.contractId ?? ""}>
             <option value="">Sem contrato</option>
             {meta.contracts.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <p className="text-xs text-muted-foreground">
           O servidor confere o cliente do contrato. Vincular contrato não
@@ -107,14 +103,10 @@ export function SiteEditor({
           vinculados individualmente.
         </p>
         <Field label="Situação">
-          <select
-            name="status"
-            className={selectClass}
-            defaultValue={site?.status ?? "active"}
-          >
+          <NativeSelect name="status" defaultValue={site?.status ?? "active"}>
             <option value="active">Em produção</option>
             <option value="completed">Concluído</option>
-          </select>
+          </NativeSelect>
         </Field>
         <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
           <input
@@ -173,14 +165,14 @@ export function RateEditor({
         }}
       >
         <Field label="Colaborador">
-          <select required name="user" className={selectClass}>
+          <NativeSelect required name="user">
             <option value="">Selecione</option>
             {meta.members.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Field>
         <Field label="Vigência inicial">
           <Input required type="date" name="date" defaultValue={today()} />
@@ -288,9 +280,8 @@ export function CostEditor({
         {mode === "worker" && (
           <>
             <Field label="Colaborador">
-              <select
+              <NativeSelect
                 required
-                className={selectClass}
                 value={user}
                 onChange={(e) => setUser(e.target.value)}
               >
@@ -300,12 +291,11 @@ export function CostEditor({
                     {m.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Modelo de custo">
-              <select
+              <NativeSelect
                 name="mode"
-                className={selectClass}
                 defaultValue={
                   worker?.mode === "unconfigured"
                     ? "internal"
@@ -317,7 +307,7 @@ export function CostEditor({
                     {label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Preço fechado R$ — outros modelos usam zero">
               <Input
@@ -344,10 +334,9 @@ export function CostEditor({
               : "Lançamento financeiro"
           }
         >
-          <select
+          <NativeSelect
             required={mode === "entry"}
             name="source"
-            className={selectClass}
             defaultValue={oldSource ?? ""}
           >
             <option value="">
@@ -365,7 +354,7 @@ export function CostEditor({
                   {e.description} · {money(e.amountCents)} · {e.competenceDate}
                 </option>
               ))}
-          </select>
+          </NativeSelect>
         </Field>
         <p className="text-xs text-muted-foreground">
           Opções do período filtrado: {filters.from} a {filters.to}. Ajuste o

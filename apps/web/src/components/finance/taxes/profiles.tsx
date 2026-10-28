@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   getTaxProfileHistory,
   type ProfilePayload,
@@ -10,7 +11,7 @@ import {
 } from "@/fetchers/finance/taxes";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
 import { toast } from "@/lib/toast";
-import { cents, Field, Modal, money, selectClass } from "../shared";
+import { cents, Field, Modal, money } from "../shared";
 
 type Profile = TaxConfig["profiles"][number];
 export function parseRate(value: string) {
@@ -133,14 +134,13 @@ function ProfileForm({
                 />
               </Field>
               <Field label="Tipo">
-                <select
-                  className={selectClass}
+                <NativeSelect
                   value={i.kind}
                   onChange={(e) => update(i.key, "kind", e.target.value)}
                 >
                   <option value="tax">Imposto</option>
                   <option value="fee">Taxa</option>
-                </select>
+                </NativeSelect>
               </Field>
               <Field label="Percentual sobre a venda (%)">
                 <Input

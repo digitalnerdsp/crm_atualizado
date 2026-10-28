@@ -278,7 +278,7 @@ export function CommercialOverview({ workspaceId }: { workspaceId: string }) {
             }))}
             series={[
               { key: "weighted", label: "Previsão", color: "var(--primary)" },
-              { key: "won", label: "Ganhas", color: "#22C55E" },
+              { key: "won", label: "Ganhas", color: "var(--success)" },
             ]}
             formatValue={formatMoney}
             emptyLabel={t("crm:reports.empty")}
@@ -350,8 +350,8 @@ export function CommercialOverview({ workspaceId }: { workspaceId: string }) {
                   values: { own: month.own, third: month.thirdParty },
                 }))}
               series={[
-                { key: "own", label: "Nossa", color: "#2563eb" },
-                { key: "third", label: "Terceiros", color: "#f59e0b" },
+                { key: "own", label: "Nossa", color: "var(--info)" },
+                { key: "third", label: "Terceiros", color: "var(--warning)" },
               ]}
               formatValue={(value) => `${value} empresas`}
               emptyLabel={t("crm:reports.empty")}

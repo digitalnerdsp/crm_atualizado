@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import { useWorkspaceDashboard } from "@/hooks/queries/dashboard/use-workspace-dashboard";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
@@ -193,18 +194,13 @@ function MetricCard({
   }[tone];
 
   return (
-    <Card className="rounded-lg">
-      <CardContent className="flex items-start justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <p className="text-xs font-medium text-muted-foreground">{title}</p>
-          <p className="mt-2 font-semibold text-2xl tabular-nums">{value}</p>
-          <p className="mt-1 text-muted-foreground text-xs">{detail}</p>
-        </div>
-        <div className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
-          <Icon className={cn("size-4", toneClass)} />
-        </div>
-      </CardContent>
-    </Card>
+    <StatCard
+      label={title}
+      value={value}
+      detail={detail}
+      icon={Icon}
+      iconClassName={toneClass}
+    />
   );
 }
 

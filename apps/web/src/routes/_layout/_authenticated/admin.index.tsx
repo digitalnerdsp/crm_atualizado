@@ -40,6 +40,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatCard } from "@/components/ui/stat-card";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -306,22 +307,13 @@ function MetricCard({
   value?: number;
   type: keyof typeof metricIcons;
 }) {
-  const Icon = metricIcons[type];
-
   return (
-    <Card className="rounded-lg">
-      <CardHeader className="grid grid-cols-[1fr_auto] items-center gap-3 p-4">
-        <div className="space-y-1">
-          <CardDescription>{label}</CardDescription>
-          <CardTitle className="text-2xl">
-            {value === undefined ? <Skeleton className="h-7 w-16" /> : value}
-          </CardTitle>
-        </div>
-        <div className="flex size-9 items-center justify-center rounded-md border border-border bg-muted/50">
-          <Icon className="size-4 text-muted-foreground" />
-        </div>
-      </CardHeader>
-    </Card>
+    <StatCard
+      label={label}
+      value={value === undefined ? <Skeleton className="h-7 w-16" /> : value}
+      icon={metricIcons[type]}
+      iconClassName="text-muted-foreground"
+    />
   );
 }
 

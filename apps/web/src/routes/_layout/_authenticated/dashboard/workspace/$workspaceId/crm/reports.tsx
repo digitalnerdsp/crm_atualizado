@@ -249,7 +249,7 @@ function RouteComponent() {
                 {
                   key: "won",
                   label: t("crm:reports.won"),
-                  color: "#22C55E",
+                  color: "var(--success)",
                 },
               ]}
               rows={(forecast.data?.months ?? []).map((month) => ({
@@ -407,7 +407,7 @@ function RouteComponent() {
                   key: reason.reasonId ?? "none",
                   label: reason.reasonName ?? t("crm:reports.noReason"),
                   value: reason.deals,
-                  color: "#EF4444",
+                  color: "var(--destructive)",
                   display: (
                     <>
                       {reason.deals}

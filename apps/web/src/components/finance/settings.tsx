@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type CategoryPayload,
   type FinanceMetadata,
@@ -9,7 +10,7 @@ import {
   saveParty,
 } from "@/fetchers/finance";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
-import { Field, selectClass } from "./shared";
+import { Field } from "./shared";
 export function FinanceSettings({
   workspaceId,
   metadata,
@@ -73,20 +74,18 @@ export function FinanceSettings({
             />
           </Field>
           <Field label="Tipo">
-            <select
-              className={selectClass}
+            <NativeSelect
               value={category?.direction ?? direction}
               disabled={Boolean(category)}
               onChange={(e) => setDirection(e.target.value as typeof direction)}
             >
               <option value="payable">Contas a pagar</option>
               <option value="receivable">Contas a receber</option>
-            </select>
+            </NativeSelect>
           </Field>
           <Field label="Categoria principal">
-            <select
+            <NativeSelect
               key={category?.id ?? direction}
-              className={selectClass}
               name="parentId"
               defaultValue={category?.parentId ?? ""}
               disabled={Boolean(category)}
@@ -105,7 +104,7 @@ export function FinanceSettings({
                     {c.name}
                   </option>
                 ))}
-            </select>
+            </NativeSelect>
           </Field>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -188,8 +187,7 @@ export function FinanceSettings({
             />
           </Field>
           <Field label="Vínculo">
-            <select
-              className={selectClass}
+            <NativeSelect
               name="laborType"
               defaultValue={party?.laborType ?? ""}
             >
@@ -197,7 +195,7 @@ export function FinanceSettings({
               <option value="pj">Colaborador PJ</option>
               <option value="freelance">Freelance</option>
               <option value="clt">Colaborador CLT</option>
-            </select>
+            </NativeSelect>
           </Field>
           <label className="flex items-center gap-2 text-sm">
             <input

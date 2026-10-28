@@ -3,6 +3,14 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   type BiFilters,
   type BiMetric,
   getBiDetail,
@@ -67,21 +75,23 @@ export function BiDetail({
               {q.data.note} Referência: {dateLabel(q.data.referenceDate)}.
             </p>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="p-2">Origem</th>
-                    <th className="p-2">Data</th>
-                    <th className="p-2 text-right">Valor / quantidade</th>
-                  </tr>
-                </thead>
-                <tbody>
+              <Table className="w-full text-sm">
+                <TableHeader>
+                  <TableRow className="border-b text-left">
+                    <TableHead className="p-2">Origem</TableHead>
+                    <TableHead className="p-2">Data</TableHead>
+                    <TableHead className="p-2 text-right">
+                      Valor / quantidade
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
                   {q.data.rows.map((r) => (
-                    <tr
+                    <TableRow
                       key={`${r.kind}-${r.id}-${r.date}-${r.note}-${r.value}`}
                       className="border-b"
                     >
-                      <td className="max-w-72 p-2">
+                      <TableCell className="max-w-72 p-2">
                         <div className="break-words">
                           {r.kind === "entry" ? (
                             <button
@@ -108,11 +118,11 @@ export function BiDetail({
                         <p className="mt-1 text-xs text-muted-foreground">
                           {r.note}
                         </p>
-                      </td>
-                      <td className="whitespace-nowrap p-2">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap p-2">
                         {dateLabel(r.date)}
-                      </td>
-                      <td className="whitespace-nowrap p-2 text-right tabular-nums">
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap p-2 text-right tabular-nums">
                         {[
                           "contracts",
                           "expiry",
@@ -121,11 +131,11 @@ export function BiDetail({
                         ].includes(metric)
                           ? r.value
                           : money(r.value)}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
             {!q.data.total && (
               <p className="text-sm text-muted-foreground">

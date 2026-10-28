@@ -1,5 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { TaxReport } from "@/fetchers/finance/taxes";
 import { dateLabel, Modal, money } from "../shared";
 
@@ -15,9 +23,9 @@ export function TaxHistory({ data }: { data: TaxReport }) {
         perfil não modifica este histórico.
       </p>
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
-          <thead>
-            <tr>
+        <Table className="w-full text-left text-sm">
+          <TableHeader>
+            <TableRow>
               {[
                 "Simulação",
                 "Perfil",
@@ -26,40 +34,40 @@ export function TaxHistory({ data }: { data: TaxReport }) {
                 "Líquido",
                 "Ações",
               ].map((h) => (
-                <th key={h} className="p-3">
+                <TableHead key={h} className="p-3">
                   {h}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
             {data.rows.slice((page - 1) * 25, page * 25).map((s) => (
-              <tr className="border-t align-top" key={s.id}>
-                <td className="min-w-48 p-3 font-medium">
+              <TableRow className="border-t align-top" key={s.id}>
+                <TableCell className="min-w-48 p-3 font-medium">
                   {s.title}
                   <p className="mt-1 text-xs font-normal text-muted-foreground">
                     {dateLabel(s.date)} · {s.serviceName ?? "Sem serviço"} ·{" "}
                     {s.sellerName ?? "Sem vendedor"}
                   </p>
-                </td>
-                <td className="min-w-40 p-3 text-xs">
+                </TableCell>
+                <TableCell className="min-w-40 p-3 text-xs">
                   {s.profileName} · v{s.profileVersion}
-                </td>
-                <td className="whitespace-nowrap p-3">
+                </TableCell>
+                <TableCell className="whitespace-nowrap p-3">
                   {money(s.result.grossCents)}
-                </td>
-                <td className="min-w-44 p-3 text-xs">
+                </TableCell>
+                <TableCell className="min-w-44 p-3 text-xs">
                   Impostos {money(s.result.taxCents)}
                   <p>Taxas {money(s.result.feeCents)}</p>
                   <p>Comissão {money(s.result.commissionCents)}</p>
                   <p>Custo {money(s.result.costCents)}</p>
-                </td>
-                <td
+                </TableCell>
+                <TableCell
                   className={`whitespace-nowrap p-3 ${s.result.netCents < 0 ? "text-destructive" : ""}`}
                 >
                   {money(s.result.netCents)}
-                </td>
-                <td className="p-3">
+                </TableCell>
+                <TableCell className="p-3">
                   <Button
                     variant="outline"
                     size="sm"
@@ -67,11 +75,11 @@ export function TaxHistory({ data }: { data: TaxReport }) {
                   >
                     Detalhar
                   </Button>
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ))}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
       {!data.rows.length && (
         <p className="py-6 text-center text-sm text-muted-foreground">

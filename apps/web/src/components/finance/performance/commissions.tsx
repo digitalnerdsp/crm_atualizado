@@ -3,6 +3,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   applyCommissionRule,
   getPerformanceEntry,
   issueCommission,
@@ -144,7 +152,7 @@ export function Commissions({
       {data.totals.overallocatedCents > 0 && (
         <p
           role="alert"
-          className="rounded-lg border border-amber-500/50 p-3 text-sm"
+          className="rounded-lg border border-warning/50 p-3 text-sm"
         >
           Há comissões emitidas acima do valor atualmente apurado após
           cancelamento ou estorno. Confira os títulos vinculados: cancele os que
@@ -154,9 +162,9 @@ export function Commissions({
       )}
       <section className="rounded-xl border p-4">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr>
+          <Table className="w-full text-left text-sm">
+            <TableHeader>
+              <TableRow>
                 {[
                   "Cobrança / vendedor",
                   "Serviço / regra",
@@ -164,16 +172,16 @@ export function Commissions({
                   "Acumulado / emitido",
                   "Ações",
                 ].map((h) => (
-                  <th key={h} className="p-3">
+                  <TableHead key={h} className="p-3">
                     {h}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {data.rows.slice((page - 1) * 25, page * 25).map((r) => (
-                <tr key={r.id} className="border-t align-top">
-                  <td className="min-w-52 p-3">
+                <TableRow key={r.id} className="border-t align-top">
+                  <TableCell className="min-w-52 p-3">
                     <button
                       type="button"
                       onClick={() => setDetail(r.id)}
@@ -189,19 +197,19 @@ export function Commissions({
                       {money(r.amountCents)}
                       {r.cancelled ? " · Cancelada" : ""}
                     </p>
-                  </td>
-                  <td className="min-w-44 p-3">
+                  </TableCell>
+                  <TableCell className="min-w-44 p-3">
                     {r.serviceName ?? "Sem serviço"}
                     <p className="mt-1 text-xs text-muted-foreground">
                       {r.ruleId
                         ? `${r.rateBps / 100}% sobre ${r.basis === "received" ? "recebido" : "faturado"}`
                         : "Sem regra registrada"}
                     </p>
-                  </td>
-                  <td className="whitespace-nowrap p-3 tabular-nums">
+                  </TableCell>
+                  <TableCell className="whitespace-nowrap p-3 tabular-nums">
                     {money(r.earnedPeriodCents)}
-                  </td>
-                  <td className="min-w-44 p-3 text-xs">
+                  </TableCell>
+                  <TableCell className="min-w-44 p-3 text-xs">
                     Apurado {money(r.earnedCents)}
                     <p>Emitido {money(r.issuedCents)}</p>
                     <p>Disponível {money(r.availableCents)}</p>
@@ -210,8 +218,8 @@ export function Commissions({
                         A maior {money(r.overallocatedCents)}
                       </p>
                     )}
-                  </td>
-                  <td className="min-w-52 space-y-2 p-3">
+                  </TableCell>
+                  <TableCell className="min-w-52 space-y-2 p-3">
                     {canIssue && r.availableTodayCents > 0 && (
                       <Button size="sm" onClick={() => setIssue(r)}>
                         Gerar conta a pagar
@@ -243,11 +251,11 @@ export function Commissions({
                         · baixado {money(p.paidCents)}
                       </button>
                     ))}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         {!data.rows.length && (
           <p className="py-8 text-center text-sm text-muted-foreground">

@@ -1,6 +1,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import type { FinanceMetadata } from "@/fetchers/finance";
 import {
   type PerformanceConfig,
@@ -10,7 +19,7 @@ import {
 } from "@/fetchers/finance/performance";
 import { useFinanceMutation } from "@/hooks/mutations/finance/use-finance-mutation";
 import { toast } from "@/lib/toast";
-import { dateLabel, Field, selectClass, today } from "../shared";
+import { dateLabel, Field, today } from "../shared";
 
 function toMonths(raw: FormDataEntryValue | null) {
   const value = String(raw ?? "").trim();
@@ -84,8 +93,7 @@ export function PerformanceRules({
             }}
           >
             <Field label="Serviço">
-              <select
-                className={selectClass}
+              <NativeSelect
                 required
                 value={service}
                 onChange={(e) => setService(e.target.value)}
@@ -96,7 +104,7 @@ export function PerformanceRules({
                     {s.name}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
             <Field label="Vigência da nova regra">
               <Input
@@ -207,9 +215,9 @@ export function PerformanceRules({
       <section className="rounded-xl border p-5">
         <h2 className="mb-4 font-semibold">Histórico de regras</h2>
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead>
-              <tr>
+          <Table className="w-full text-left text-sm">
+            <TableHeader>
+              <TableRow>
                 {[
                   "Serviço",
                   "Versão",
@@ -218,29 +226,33 @@ export function PerformanceRules({
                   "Na recorrência",
                   "Meses",
                 ].map((v) => (
-                  <th key={v} className="p-2">
+                  <TableHead key={v} className="p-2">
                     {v}
-                  </th>
+                  </TableHead>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {data.rules
                 .slice((historyPage - 1) * 25, historyPage * 25)
                 .map((r) => (
-                  <tr className="border-t" key={r.id}>
-                    <td className="p-2">{r.serviceName}</td>
-                    <td className="p-2">{r.sequence}</td>
-                    <td className="whitespace-nowrap p-2">
+                  <TableRow className="border-t" key={r.id}>
+                    <TableCell className="p-2">{r.serviceName}</TableCell>
+                    <TableCell className="p-2">{r.sequence}</TableCell>
+                    <TableCell className="whitespace-nowrap p-2">
                       {dateLabel(r.effectiveDate)}
-                    </td>
-                    <td className="p-2">{r.rateBps / 100}%</td>
-                    <td className="p-2">{r.recurringRateBps / 100}%</td>
-                    <td className="p-2">{r.recurringMonths ?? "Sem limite"}</td>
-                  </tr>
+                    </TableCell>
+                    <TableCell className="p-2">{r.rateBps / 100}%</TableCell>
+                    <TableCell className="p-2">
+                      {r.recurringRateBps / 100}%
+                    </TableCell>
+                    <TableCell className="p-2">
+                      {r.recurringMonths ?? "Sem limite"}
+                    </TableCell>
+                  </TableRow>
                 ))}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
         {!data.rules.length && (
           <p className="py-4 text-sm text-muted-foreground">

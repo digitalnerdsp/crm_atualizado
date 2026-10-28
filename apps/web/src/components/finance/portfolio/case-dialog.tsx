@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type CaseInput,
   confirmNotice,
@@ -15,7 +16,7 @@ import {
 } from "@/fetchers/finance/portfolio";
 import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { toast } from "@/lib/toast";
-import { cents, dateLabel, Field, Modal, money, selectClass } from "../shared";
+import { cents, dateLabel, Field, Modal, money } from "../shared";
 import { origins, statuses } from "./shared";
 export function CaseDialog({
   workspaceId,
@@ -104,9 +105,8 @@ export function CaseDialog({
           }}
         >
           <Field label="Situação">
-            <select
+            <NativeSelect
               name="status"
-              className={selectClass}
               defaultValue={c?.status ?? "open"}
               disabled={!(p.canManagePortfolio() && !row.resolved)}
             >
@@ -115,12 +115,11 @@ export function CaseDialog({
                   {label}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
           <Field label="Responsável">
-            <select
+            <NativeSelect
               name="owner"
-              className={selectClass}
               defaultValue={c?.ownerUserId ?? ""}
               disabled={!(p.canManagePortfolio() && !row.resolved)}
             >
@@ -130,7 +129,7 @@ export function CaseDialog({
                   {m.name}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
           <Field label="Próxima ação">
             <Input
@@ -321,7 +320,7 @@ function NoticeDialog({
           }}
         >
           <Field label="Contato do cliente">
-            <select name="contact" required className={selectClass}>
+            <NativeSelect name="contact" required>
               <option value="">Selecione</option>
               {contacts.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -329,13 +328,13 @@ function NoticeDialog({
                   {c.email || c.mobile || c.phone || "Sem canal"}
                 </option>
               ))}
-            </select>
+            </NativeSelect>
           </Field>
           <Field label="Canal">
-            <select name="channel" className={selectClass}>
+            <NativeSelect name="channel">
               <option value="email">E-mail</option>
               <option value="whatsapp">WhatsApp assistido</option>
-            </select>
+            </NativeSelect>
           </Field>
           <Field label="Assunto — vazio usa sugestão">
             <Input name="subject" maxLength={200} />
