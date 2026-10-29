@@ -635,7 +635,7 @@ export function LedgerPage({
                 )}
               </Tabs>
             ) : (
-              { ledger }
+              ledger
             )}
             {form && meta && (
               <EntryForm
