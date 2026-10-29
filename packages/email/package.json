@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@react-email/components": "1.0.12",
-    "@types/node": "^25.8.0",
+    "@types/node": "^26.6.5",
     "@types/nodemailer": "^7.0.11",
     "dotenv-mono": "^1.5.1",
     "nodemailer": "^9.0.3",
