@@ -4,7 +4,6 @@ import {
   FileSpreadsheet,
   Plus,
   RefreshCw,
-  SlidersHorizontal,
   X,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -28,6 +27,7 @@ import {
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FilterPanel } from "@/components/ui/filter-panel";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -53,7 +53,6 @@ import { toast } from "@/lib/toast";
 const REMEMBERED = ["from", "to", "status", "sort", "search"] as const;
 const filtersKey = (workspaceId: string, side: string) =>
   `nortys:ledger-filters:${workspaceId}:${side}`;
-const OPEN_KEY = "nortys:ledger-filters-open";
 
 function readRemembered(workspaceId: string, side: string) {
   try {
@@ -86,13 +85,6 @@ export function LedgerPage({
     contractId: selectedContract,
     direction: side,
   }));
-  const [filtersOpen, setFiltersOpen] = useState(() => {
-    try {
-      return localStorage.getItem(OPEN_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkOpen, setBulkOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -115,25 +107,7 @@ export function LedgerPage({
   }, [filters, selectedContract, side, workspaceId]);
   // biome-ignore lint/correctness/useExhaustiveDependencies: a seleção vale só para a página e o recorte atuais
   useEffect(() => setSelected(new Set()), [page, filters]);
-  const toggleFilters = () => {
-    setFiltersOpen((open) => {
-      try {
-        localStorage.setItem(OPEN_KEY, open ? "0" : "1");
-      } catch {
-        // idem
-      }
-      return !open;
-    });
-  };
   const defaults = initialFilters();
-  const activeFilters = [
-    filters.status,
-    filters.sort,
-    filters.search,
-    filters.from !== defaults.from || filters.to !== defaults.to
-      ? "period"
-      : undefined,
-  ].filter(Boolean).length;
   const partyLabel = side === "receivable" ? "Cliente" : "Favorecido";
   const queries = useFinance(workspaceId, filters, page, enabled);
   const meta = queries.metadata.data;
@@ -168,11 +142,8 @@ export function LedgerPage({
     <section className="space-y-4 rounded-xl border bg-card p-4">
       {filters.view && (
         <p className="text-sm text-muted-foreground">
-          Detalhamento de{" "}
-          {filters.view === "overdue" ? "vencidos" : "saldos em aberto"} até{" "}
-          {dateLabel(filters.to)}, considerando baixas até{" "}
-          {dateLabel(filters.asOf ?? today())}. O início do período não limita
-          esta posição.{" "}
+          {filters.view === "overdue" ? "Vencidos" : "Saldos em aberto"} até{" "}
+          {dateLabel(filters.to)}.{" "}
           <Button
             variant="ghost"
             size="sm"
@@ -191,8 +162,7 @@ export function LedgerPage({
       )}
       {filters.contractId && (
         <p className="text-sm text-muted-foreground">
-          Cobranças de um contrato, mês a mês. Use “Dar baixa” em cada mês
-          conforme o pagamento chegar.{" "}
+          Cobranças deste contrato.{" "}
           <Button
             variant="ghost"
             size="sm"
@@ -211,17 +181,13 @@ export function LedgerPage({
       <div className="flex flex-wrap justify-between gap-2">
         <h2 className="font-semibold">{list?.total ?? 0} lançamentos</h2>
         <p className="text-sm text-muted-foreground">
-          Total sem cancelados {money(list?.totals.amountCents ?? 0)} · Em
-          aberto {money(list?.totals.remainingCents ?? 0)}
+          Total {money(list?.totals.amountCents ?? 0)} · Em aberto{" "}
+          {money(list?.totals.remainingCents ?? 0)} ·{" "}
+          {side === "receivable"
+            ? `Recebido ${money(list?.totals.receivedCents ?? 0)}`
+            : `Pago ${money(list?.totals.paidCents ?? 0)}`}
         </p>
       </div>
-      <p className="text-sm text-muted-foreground">
-        Recebido no período {money(list?.totals.receivedCents ?? 0)} · Pago no
-        período {money(list?.totals.paidCents ?? 0)} · Movimento líquido{" "}
-        {money(
-          (list?.totals.receivedCents ?? 0) - (list?.totals.paidCents ?? 0),
-        )}
-      </p>
       {selectedItems.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
           <span className="font-medium">
@@ -459,147 +425,136 @@ export function LedgerPage({
           </p>
         ) : (
           <>
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                aria-expanded={filtersOpen}
-                onClick={toggleFilters}
-              >
-                <SlidersHorizontal className="size-4" />
-                Filtros
-                {activeFilters > 0 && (
-                  <span className="rounded-full bg-primary px-1.5 text-xs text-primary-foreground">
-                    {activeFilters}
-                  </span>
-                )}
-              </Button>
-              {!filtersOpen && (
-                <span className="text-sm text-muted-foreground">
-                  {dateLabel(filters.from)} a {dateLabel(filters.to)}
-                </span>
-              )}
-            </div>
-            <form
-              hidden={!filtersOpen}
-              key={`${filters.from}-${filters.to}-${filters.status}-${filters.sort}-${filters.search}`}
-              className={`${filtersOpen ? "grid" : "hidden"} gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5`}
-              onSubmit={(e) => {
-                e.preventDefault();
-                const f = new FormData(e.currentTarget);
-                const from = String(f.get("from"));
-                const to = String(f.get("to"));
-                if (
-                  from > to ||
-                  Date.parse(to) - Date.parse(from) > 730 * 86400000
-                ) {
-                  toast.error("Selecione um período de até 731 dias.");
-                  return;
-                }
-                setPage(1);
-                setFilters((prev) => ({
-                  ...prev,
-                  from,
-                  to,
-                  search: String(f.get("search")) || undefined,
-                  status:
-                    (String(f.get("status")) as FinanceFilters["status"]) ||
-                    undefined,
-                  sort:
-                    (String(f.get("sort")) as FinanceFilters["sort"]) ||
-                    undefined,
-                }));
-              }}
+            <FilterPanel
+              values={filters as Record<string, unknown>}
+              extraActive={
+                filters.from !== defaults.from || filters.to !== defaults.to
+                  ? 1
+                  : 0
+              }
             >
-              <Field label="De">
-                <Input
-                  type="date"
-                  name="from"
-                  required
-                  defaultValue={filters.from}
-                />
-              </Field>
-              <Field label="Até">
-                <Input
-                  type="date"
-                  name="to"
-                  required
-                  defaultValue={filters.to}
-                />
-              </Field>
-              <Field label="Situação">
-                <NativeSelect name="status" defaultValue={filters.status ?? ""}>
-                  {Object.entries({
-                    "": "Todas",
-                    open: "Em aberto",
-                    partial: "Parcial",
-                    settled: "Liquidado",
-                    overdue: "Vencido",
-                    cancelled: "Cancelado",
-                  }).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <Field label="Ordenar por">
-                <NativeSelect name="sort" defaultValue={filters.sort ?? ""}>
-                  <option value="">Vencimento (mais recente)</option>
-                  <option value="due_asc">Vencimento (mais antigo)</option>
-                  <option value="amount_desc">Maior valor</option>
-                  <option value="amount_asc">Menor valor</option>
-                  <option value="name">Descrição (A-Z)</option>
-                </NativeSelect>
-              </Field>
-              <Field label="Pesquisar">
-                <Input
-                  name="search"
-                  placeholder="Descrição ou cliente"
-                  defaultValue={filters.search}
-                  maxLength={240}
-                />
-              </Field>
-              <div className="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-5">
-                <Button type="submit">Aplicar</Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setPage(1);
-                    setFilters({
-                      ...initialFilters(),
-                      direction: side,
-                    });
-                  }}
-                >
-                  Limpar filtros
-                </Button>
-                {permissions.canExportFinance() && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !list}
-                      onClick={() => exportFile("xlsx")}
-                    >
-                      <Download className="size-4" />
-                      Excel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !list}
-                      onClick={() => exportFile("pdf")}
-                    >
-                      <Download className="size-4" />
-                      PDF
-                    </Button>
-                  </>
-                )}
-              </div>
-            </form>
+              <form
+                key={`${filters.from}-${filters.to}-${filters.status}-${filters.sort}-${filters.search}`}
+                className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-5"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const f = new FormData(e.currentTarget);
+                  const from = String(f.get("from"));
+                  const to = String(f.get("to"));
+                  if (
+                    from > to ||
+                    Date.parse(to) - Date.parse(from) > 730 * 86400000
+                  ) {
+                    toast.error("Selecione um período de até 731 dias.");
+                    return;
+                  }
+                  setPage(1);
+                  setFilters((prev) => ({
+                    ...prev,
+                    from,
+                    to,
+                    search: String(f.get("search")) || undefined,
+                    status:
+                      (String(f.get("status")) as FinanceFilters["status"]) ||
+                      undefined,
+                    sort:
+                      (String(f.get("sort")) as FinanceFilters["sort"]) ||
+                      undefined,
+                  }));
+                }}
+              >
+                <Field label="De">
+                  <Input
+                    type="date"
+                    name="from"
+                    required
+                    defaultValue={filters.from}
+                  />
+                </Field>
+                <Field label="Até">
+                  <Input
+                    type="date"
+                    name="to"
+                    required
+                    defaultValue={filters.to}
+                  />
+                </Field>
+                <Field label="Situação">
+                  <NativeSelect
+                    name="status"
+                    defaultValue={filters.status ?? ""}
+                  >
+                    {Object.entries({
+                      "": "Todas",
+                      open: "Em aberto",
+                      partial: "Parcial",
+                      settled: "Liquidado",
+                      overdue: "Vencido",
+                      cancelled: "Cancelado",
+                    }).map(([v, l]) => (
+                      <option key={v} value={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field label="Ordenar por">
+                  <NativeSelect name="sort" defaultValue={filters.sort ?? ""}>
+                    <option value="">Vencimento (mais recente)</option>
+                    <option value="due_asc">Vencimento (mais antigo)</option>
+                    <option value="amount_desc">Maior valor</option>
+                    <option value="amount_asc">Menor valor</option>
+                    <option value="name">Descrição (A-Z)</option>
+                  </NativeSelect>
+                </Field>
+                <Field label="Pesquisar">
+                  <Input
+                    name="search"
+                    placeholder="Descrição ou cliente"
+                    defaultValue={filters.search}
+                    maxLength={240}
+                  />
+                </Field>
+                <div className="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-5">
+                  <Button type="submit">Aplicar</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setPage(1);
+                      setFilters({
+                        ...initialFilters(),
+                        direction: side,
+                      });
+                    }}
+                  >
+                    Limpar filtros
+                  </Button>
+                  {permissions.canExportFinance() && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !list}
+                        onClick={() => exportFile("xlsx")}
+                      >
+                        <Download className="size-4" />
+                        Excel
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !list}
+                        onClick={() => exportFile("pdf")}
+                      >
+                        <Download className="size-4" />
+                        PDF
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </form>
+            </FilterPanel>
             {error && (
               <div
                 role="alert"

@@ -15,6 +15,7 @@ import { TaxHistory } from "@/components/finance/taxes/history";
 import { TaxProfiles } from "@/components/finance/taxes/profiles";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
+import { FilterPanel } from "@/components/ui/filter-panel";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -122,7 +123,7 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
       <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
         <PageHeader
           title="Impostos"
-          description="Planeje o preço de venda, confira o líquido e acompanhe os encargos registrados no financeiro."
+          description="Preço de venda, líquido e encargos."
         />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
@@ -132,88 +133,88 @@ function TaxWorkspace({ workspaceId }: { workspaceId: string }) {
           </p>
         ) : (
           <>
-            <form
-              key={JSON.stringify(filters)}
-              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const f = new FormData(e.currentTarget);
-                setFilters({
-                  from: String(f.get("from")),
-                  to: String(f.get("to")),
-                  profileId: String(f.get("profile") || "") || undefined,
-                });
-                setLedgerPage(1);
-              }}
-            >
-              <Field label="De">
-                <Input
-                  type="date"
-                  name="from"
-                  required
-                  defaultValue={filters.from}
-                />
-              </Field>
-              <Field label="Até">
-                <Input
-                  type="date"
-                  name="to"
-                  required
-                  defaultValue={filters.to}
-                />
-              </Field>
-              <Field label="Perfil da simulação">
-                <NativeSelect
-                  name="profile"
-                  defaultValue={filters.profileId ?? ""}
-                >
-                  <option value="">Todos</option>
-                  {config.data?.profiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
-                <Button type="submit">Aplicar filtros</Button>
-                <Button
-                  variant="outline"
-                  type="button"
-                  onClick={() => {
-                    setFilters({ from: `${now.slice(0, 7)}-01`, to: now });
-                    setLedgerPage(1);
-                  }}
-                >
-                  Limpar filtros
-                </Button>
-                {permissions.canExportFinance() && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !report.data}
-                      onClick={() => download("xlsx")}
-                    >
-                      Exportar Excel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !report.data}
-                      onClick={() => download("pdf")}
-                    >
-                      Exportar PDF
-                    </Button>
-                  </>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-5">
-                Filtros aplicam-se ao resumo, histórico e exportação. O perfil
-                filtra simulações; lançamentos reais usam serviço e vendedor. A
-                calculadora tem seus próprios parâmetros.
-              </p>
-            </form>
+            <FilterPanel values={filters as Record<string, unknown>}>
+              <form
+                key={JSON.stringify(filters)}
+                className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-3"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const f = new FormData(e.currentTarget);
+                  setFilters({
+                    from: String(f.get("from")),
+                    to: String(f.get("to")),
+                    profileId: String(f.get("profile") || "") || undefined,
+                  });
+                  setLedgerPage(1);
+                }}
+              >
+                <Field label="De">
+                  <Input
+                    type="date"
+                    name="from"
+                    required
+                    defaultValue={filters.from}
+                  />
+                </Field>
+                <Field label="Até">
+                  <Input
+                    type="date"
+                    name="to"
+                    required
+                    defaultValue={filters.to}
+                  />
+                </Field>
+                <Field label="Perfil da simulação">
+                  <NativeSelect
+                    name="profile"
+                    defaultValue={filters.profileId ?? ""}
+                  >
+                    <option value="">Todos</option>
+                    {config.data?.profiles.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-3">
+                  <Button type="submit">Aplicar filtros</Button>
+                  <Button
+                    variant="outline"
+                    type="button"
+                    onClick={() => {
+                      setFilters({ from: `${now.slice(0, 7)}-01`, to: now });
+                      setLedgerPage(1);
+                    }}
+                  >
+                    Limpar filtros
+                  </Button>
+                  {permissions.canExportFinance() && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !report.data}
+                        onClick={() => download("xlsx")}
+                      >
+                        Exportar Excel
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !report.data}
+                        onClick={() => download("pdf")}
+                      >
+                        Exportar PDF
+                      </Button>
+                    </>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground sm:col-span-2 lg:col-span-5">
+                  Valem para resumo, histórico e exportação.
+                </p>
+              </form>
+            </FilterPanel>
             {error && (
               <div
                 role="alert"

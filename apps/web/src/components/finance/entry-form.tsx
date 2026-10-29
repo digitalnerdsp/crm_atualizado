@@ -55,7 +55,7 @@ export function EntryForm({
   return (
     <Modal
       title={entry ? "Editar lançamento" : "Novo lançamento"}
-      description="Cada lançamento pertence a um serviço. Divida vendas com vários serviços em lançamentos separados."
+      description="Um lançamento por serviço."
       onClose={onClose}
     >
       <form

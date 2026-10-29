@@ -26,6 +26,7 @@ import {
 } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
+import { FilterPanel } from "@/components/ui/filter-panel";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -145,7 +146,7 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
         <PageHeader
           eyebrow="Cobranças · renovações · rentabilidade"
           title="Gestão da carteira"
-          description="Acompanhe compromissos e decisões por cliente. Horas de produção são contabilizadas somente nos projetos de sites vinculados."
+          description="Compromissos e decisões por cliente."
           actions={
             enabled && p.canExportFinance() ? (
               <>
@@ -173,84 +174,94 @@ function PortfolioPage({ workspaceId }: { workspaceId: string }) {
           <p role="alert">Você não tem permissão financeira.</p>
         ) : (
           <>
-            <form
-              key={JSON.stringify(f)}
-              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const fd = new FormData(e.currentTarget);
-                const next: Record<string, string> = {};
-                for (const [key, value] of fd.entries())
-                  if (value) next[key] = String(value);
-                apply(next as PortfolioFilters);
-              }}
-            >
-              <Field label="Resultado — de">
-                <Input required type="date" name="from" defaultValue={f.from} />
-              </Field>
-              <Field label="Resultado — até">
-                <Input required type="date" name="to" defaultValue={f.to} />
-              </Field>
-              <Field label="Cliente">
-                <NativeSelect name="companyId" defaultValue={f.companyId ?? ""}>
-                  <option value="">Todos</option>
-                  {base.data?.companies.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <Field label="Antecedência da fila">
-                <NativeSelect name="horizon" defaultValue={f.horizon ?? "90"}>
-                  {[30, 60, 90].map((n) => (
-                    <option key={n} value={n}>
-                      Até {n} dias + vencidos
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <Field label="Origem da fila">
-                <NativeSelect name="kind" defaultValue={f.kind ?? ""}>
-                  <option value="">Todas</option>
-                  {Object.entries(origins).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <Field label="Situação do acompanhamento">
-                <NativeSelect name="status" defaultValue={f.status ?? ""}>
-                  <option value="">Todas</option>
-                  {Object.entries(statuses).map(([key, label]) => (
-                    <option key={key} value={key}>
-                      {label}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <Field label="Responsável pela fila">
-                <NativeSelect name="ownerId" defaultValue={f.ownerId ?? ""}>
-                  <option value="">Todos</option>
-                  {base.data?.sellers.map((m) => (
-                    <option key={m.id} value={m.id}>
-                      {m.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <div className="flex items-end gap-2">
-                <Button type="submit">Aplicar filtros</Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => apply(defaults())}
-                >
-                  Limpar
-                </Button>
-              </div>
-            </form>
+            <FilterPanel values={f as Record<string, unknown>}>
+              <form
+                key={JSON.stringify(f)}
+                className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const next: Record<string, string> = {};
+                  for (const [key, value] of fd.entries())
+                    if (value) next[key] = String(value);
+                  apply(next as PortfolioFilters);
+                }}
+              >
+                <Field label="Resultado — de">
+                  <Input
+                    required
+                    type="date"
+                    name="from"
+                    defaultValue={f.from}
+                  />
+                </Field>
+                <Field label="Resultado — até">
+                  <Input required type="date" name="to" defaultValue={f.to} />
+                </Field>
+                <Field label="Cliente">
+                  <NativeSelect
+                    name="companyId"
+                    defaultValue={f.companyId ?? ""}
+                  >
+                    <option value="">Todos</option>
+                    {base.data?.companies.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field label="Antecedência da fila">
+                  <NativeSelect name="horizon" defaultValue={f.horizon ?? "90"}>
+                    {[30, 60, 90].map((n) => (
+                      <option key={n} value={n}>
+                        Até {n} dias + vencidos
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field label="Origem da fila">
+                  <NativeSelect name="kind" defaultValue={f.kind ?? ""}>
+                    <option value="">Todas</option>
+                    {Object.entries(origins).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field label="Situação do acompanhamento">
+                  <NativeSelect name="status" defaultValue={f.status ?? ""}>
+                    <option value="">Todas</option>
+                    {Object.entries(statuses).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field label="Responsável pela fila">
+                  <NativeSelect name="ownerId" defaultValue={f.ownerId ?? ""}>
+                    <option value="">Todos</option>
+                    {base.data?.sellers.map((m) => (
+                      <option key={m.id} value={m.id}>
+                        {m.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <div className="flex items-end gap-2">
+                  <Button type="submit">Aplicar filtros</Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => apply(defaults())}
+                  >
+                    Limpar
+                  </Button>
+                </div>
+              </form>
+            </FilterPanel>
             <p className="text-xs text-muted-foreground">
               A fila usa a situação atual em{" "}
               {dateLabel(d?.referenceDate ?? today())}. O período filtra os

@@ -11,6 +11,7 @@ import { formatMetric, labels, margins } from "@/components/finance/bi/shared";
 import { dateLabel, Field, money, today } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
+import { FilterPanel } from "@/components/ui/filter-panel";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -192,7 +193,7 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
         <PageHeader
           eyebrow="Inteligência financeira"
           title="Dashboard geral"
-          description="Uma visão da operação, dos resultados e dos compromissos futuros. Clique nos indicadores para entender sua composição."
+          description="Resultados e compromissos. Clique em um indicador para ver a composição."
           actions={
             enabled ? (
               <div className="flex flex-wrap gap-2">
@@ -235,123 +236,85 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
           </p>
         ) : (
           <>
-            <form
-              key={JSON.stringify(filters)}
-              className="space-y-4 rounded-xl border bg-card p-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const f = new FormData(e.currentTarget);
-                const next: Record<string, string> = {};
-                for (const [key, value] of f.entries())
-                  if (value) next[key] = String(value);
-                apply(next as BiFilters);
-              }}
-            >
-              <input
-                type="hidden"
-                name="ranking"
-                value={filters.ranking ?? "revenue"}
-              />
-              <div className="flex flex-wrap gap-2">
-                {[
-                  ["current", "Mês atual"],
-                  ["last", "Mês anterior"],
-                  ["quarter", "Trimestre"],
-                  ["year", "Ano atual"],
-                ].map(([key, label]) => (
-                  <Button
-                    key={key}
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => preset(key)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-                <Field label="De">
-                  <Input
-                    type="date"
-                    required
-                    name="from"
-                    defaultValue={filters.from}
-                  />
-                </Field>
-                <Field label="Até">
-                  <Input
-                    type="date"
-                    required
-                    name="to"
-                    defaultValue={filters.to}
-                  />
-                </Field>
-                <Field label="Comparar com">
-                  <NativeSelect
-                    name="comparison"
-                    defaultValue={filters.comparison}
-                  >
-                    <option value="previous">Período anterior</option>
-                    <option value="year">Mesmo período / ano anterior</option>
-                  </NativeSelect>
-                </Field>
-                <Field label="Agrupamento">
-                  <NativeSelect name="grouping" defaultValue={filters.grouping}>
-                    <option value="month">Mensal</option>
-                    <option value="day">Diário (até 93 dias)</option>
-                  </NativeSelect>
-                </Field>
-                {(
-                  [
-                    ["companyId", "Cliente", meta.data?.companies],
-                    ["sellerId", "Vendedor", meta.data?.sellers],
-                    ["serviceId", "Serviço", meta.data?.services],
-                  ] as const
-                ).map(([key, label, rows]) => (
-                  <Field label={label} key={key}>
-                    <NativeSelect name={key} defaultValue={filters[key] ?? ""}>
-                      <option value="">Todos</option>
-                      {rows?.map((r) => (
-                        <option key={r.id} value={r.id}>
-                          {r.name}
-                        </option>
-                      ))}
+            <FilterPanel values={filters as Record<string, unknown>}>
+              <form
+                key={JSON.stringify(filters)}
+                className="space-y-4 rounded-xl border bg-card p-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const f = new FormData(e.currentTarget);
+                  const next: Record<string, string> = {};
+                  for (const [key, value] of f.entries())
+                    if (value) next[key] = String(value);
+                  apply(next as BiFilters);
+                }}
+              >
+                <input
+                  type="hidden"
+                  name="ranking"
+                  value={filters.ranking ?? "revenue"}
+                />
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    ["current", "Mês atual"],
+                    ["last", "Mês anterior"],
+                    ["quarter", "Trimestre"],
+                    ["year", "Ano atual"],
+                  ].map(([key, label]) => (
+                    <Button
+                      key={key}
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => preset(key)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+                  <Field label="De">
+                    <Input
+                      type="date"
+                      required
+                      name="from"
+                      defaultValue={filters.from}
+                    />
+                  </Field>
+                  <Field label="Até">
+                    <Input
+                      type="date"
+                      required
+                      name="to"
+                      defaultValue={filters.to}
+                    />
+                  </Field>
+                  <Field label="Comparar com">
+                    <NativeSelect
+                      name="comparison"
+                      defaultValue={filters.comparison}
+                    >
+                      <option value="previous">Período anterior</option>
+                      <option value="year">Mesmo período / ano anterior</option>
                     </NativeSelect>
                   </Field>
-                ))}
-              </div>
-              <details>
-                <summary className="cursor-pointer text-sm text-muted-foreground">
-                  Filtros específicos de despesas e contratos
-                </summary>
-                <p className="my-3 text-xs text-muted-foreground">
-                  Os filtros abaixo não alteram os totais gerais. Despesas:
-                  somente o bloco “Recorte de despesas”. Contratos: somente
-                  recorrência e ciclos não emitidos da projeção.
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <Field label="Agrupamento">
+                    <NativeSelect
+                      name="grouping"
+                      defaultValue={filters.grouping}
+                    >
+                      <option value="month">Mensal</option>
+                      <option value="day">Diário (até 93 dias)</option>
+                    </NativeSelect>
+                  </Field>
                   {(
                     [
-                      [
-                        "categoryId",
-                        "Categoria",
-                        meta.data?.categories.filter((c) => !c.parentId),
-                      ],
-                      [
-                        "subcategoryId",
-                        "Subcategoria",
-                        meta.data?.categories.filter((c) => c.parentId),
-                      ],
-                      [
-                        "partyId",
-                        "Colaborador / favorecido",
-                        meta.data?.parties,
-                      ],
-                      ["contractId", "Contrato", meta.data?.contracts],
+                      ["companyId", "Cliente", meta.data?.companies],
+                      ["sellerId", "Vendedor", meta.data?.sellers],
+                      ["serviceId", "Serviço", meta.data?.services],
                     ] as const
                   ).map(([key, label, rows]) => (
-                    <Field key={key} label={label}>
+                    <Field label={label} key={key}>
                       <NativeSelect
                         name={key}
                         defaultValue={filters[key] ?? ""}
@@ -365,69 +328,114 @@ function BiWorkspace({ workspaceId }: { workspaceId: string }) {
                       </NativeSelect>
                     </Field>
                   ))}
-                  <Field label="Vínculo">
-                    <NativeSelect
-                      name="laborType"
-                      defaultValue={filters.laborType ?? ""}
-                    >
-                      <option value="">Todos</option>
-                      <option value="pj">PJ</option>
-                      <option value="freelance">Freelance</option>
-                      <option value="clt">CLT</option>
-                    </NativeSelect>
-                  </Field>
-                  <Field label="Classificação">
-                    <NativeSelect
-                      name="resultClass"
-                      defaultValue={filters.resultClass ?? ""}
-                    >
-                      <option value="">Todas</option>
-                      {[
-                        ["direct", "Custo direto"],
-                        ["operating", "Operacional"],
-                        ["tax", "Imposto"],
-                        ["financial", "Despesa financeira"],
-                        ["commission", "Comissão manual"],
-                        ["unclassified", "Não classificado"],
-                      ].map(([key, label]) => (
-                        <option key={key} value={key}>
-                          {label}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </Field>
-                  <Field label="Situação contratual">
-                    <NativeSelect
-                      name="contractStatus"
-                      defaultValue={filters.contractStatus ?? ""}
-                    >
-                      <option value="">Todas</option>
-                      {[
-                        ["active", "Ativo"],
-                        ["paused", "Suspenso"],
-                        ["cancelled", "Cancelado"],
-                        ["finished", "Encerrado"],
-                        ["not_started", "Não iniciado"],
-                      ].map(([key, label]) => (
-                        <option key={key} value={key}>
-                          {label}
-                        </option>
-                      ))}
-                    </NativeSelect>
-                  </Field>
                 </div>
-              </details>
-              <div className="flex flex-wrap gap-2">
-                <Button type="submit">Aplicar filtros</Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => apply(defaults())}
-                >
-                  Limpar filtros
-                </Button>
-              </div>
-            </form>
+                <details>
+                  <summary className="cursor-pointer text-sm text-muted-foreground">
+                    Filtros específicos de despesas e contratos
+                  </summary>
+                  <p className="my-3 text-xs text-muted-foreground">
+                    Não alteram os totais gerais: valem só para o recorte de
+                    despesas e para a recorrência de contratos.
+                  </p>
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {(
+                      [
+                        [
+                          "categoryId",
+                          "Categoria",
+                          meta.data?.categories.filter((c) => !c.parentId),
+                        ],
+                        [
+                          "subcategoryId",
+                          "Subcategoria",
+                          meta.data?.categories.filter((c) => c.parentId),
+                        ],
+                        [
+                          "partyId",
+                          "Colaborador / favorecido",
+                          meta.data?.parties,
+                        ],
+                        ["contractId", "Contrato", meta.data?.contracts],
+                      ] as const
+                    ).map(([key, label, rows]) => (
+                      <Field key={key} label={label}>
+                        <NativeSelect
+                          name={key}
+                          defaultValue={filters[key] ?? ""}
+                        >
+                          <option value="">Todos</option>
+                          {rows?.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name}
+                            </option>
+                          ))}
+                        </NativeSelect>
+                      </Field>
+                    ))}
+                    <Field label="Vínculo">
+                      <NativeSelect
+                        name="laborType"
+                        defaultValue={filters.laborType ?? ""}
+                      >
+                        <option value="">Todos</option>
+                        <option value="pj">PJ</option>
+                        <option value="freelance">Freelance</option>
+                        <option value="clt">CLT</option>
+                      </NativeSelect>
+                    </Field>
+                    <Field label="Classificação">
+                      <NativeSelect
+                        name="resultClass"
+                        defaultValue={filters.resultClass ?? ""}
+                      >
+                        <option value="">Todas</option>
+                        {[
+                          ["direct", "Custo direto"],
+                          ["operating", "Operacional"],
+                          ["tax", "Imposto"],
+                          ["financial", "Despesa financeira"],
+                          ["commission", "Comissão manual"],
+                          ["unclassified", "Não classificado"],
+                        ].map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </Field>
+                    <Field label="Situação contratual">
+                      <NativeSelect
+                        name="contractStatus"
+                        defaultValue={filters.contractStatus ?? ""}
+                      >
+                        <option value="">Todas</option>
+                        {[
+                          ["active", "Ativo"],
+                          ["paused", "Suspenso"],
+                          ["cancelled", "Cancelado"],
+                          ["finished", "Encerrado"],
+                          ["not_started", "Não iniciado"],
+                        ].map(([key, label]) => (
+                          <option key={key} value={key}>
+                            {label}
+                          </option>
+                        ))}
+                      </NativeSelect>
+                    </Field>
+                  </div>
+                </details>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit">Aplicar filtros</Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => apply(defaults())}
+                  >
+                    Limpar filtros
+                  </Button>
+                </div>
+              </form>
+            </FilterPanel>
             {meta.isError && (
               <p role="alert">
                 Não foi possível carregar os filtros: {meta.error.message}

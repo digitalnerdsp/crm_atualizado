@@ -8,6 +8,7 @@ import { PerformanceRules } from "@/components/finance/performance/rules";
 import { Field, today } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
+import { FilterPanel } from "@/components/ui/filter-panel";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -72,7 +73,7 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
       <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
         <PageHeader
           title="Comissões e resultados"
-          description="Regras por serviço, apuração por vendedor e visão gerencial da rentabilidade."
+          description="Comissões e rentabilidade por serviço e vendedor."
         />
         {permissions.isCheckingPermissions ? (
           <p>Verificando acesso…</p>
@@ -82,81 +83,83 @@ function PerformanceWorkspace({ workspaceId }: { workspaceId: string }) {
           </p>
         ) : (
           <>
-            <form
-              key={JSON.stringify(filters)}
-              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const f = new FormData(event.currentTarget);
-                setFilters({
-                  from: String(f.get("from")),
-                  to: String(f.get("to")),
-                  sellerId: String(f.get("seller") ?? "") || undefined,
-                });
-              }}
-            >
-              <Field label="De">
-                <Input
-                  type="date"
-                  required
-                  name="from"
-                  defaultValue={filters.from}
-                />
-              </Field>
-              <Field label="Até">
-                <Input
-                  type="date"
-                  required
-                  name="to"
-                  defaultValue={filters.to}
-                />
-              </Field>
-              <Field label="Vendedor">
-                <NativeSelect
-                  name="seller"
-                  defaultValue={filters.sellerId ?? ""}
-                >
-                  <option value="">Todos</option>
-                  {meta.data?.sellers.map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
-                <Button type="submit">Aplicar filtros</Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    setFilters({ from: `${now.slice(0, 7)}-01`, to: now })
-                  }
-                >
-                  Limpar filtros
-                </Button>
-                {permissions.canExportFinance() && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !q.data}
-                      onClick={() => download("xlsx")}
-                    >
-                      Exportar Excel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !q.data}
-                      onClick={() => download("pdf")}
-                    >
-                      Exportar PDF
-                    </Button>
-                  </>
-                )}
-              </div>
-            </form>
+            <FilterPanel values={filters as Record<string, unknown>}>
+              <form
+                key={JSON.stringify(filters)}
+                className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  const f = new FormData(event.currentTarget);
+                  setFilters({
+                    from: String(f.get("from")),
+                    to: String(f.get("to")),
+                    sellerId: String(f.get("seller") ?? "") || undefined,
+                  });
+                }}
+              >
+                <Field label="De">
+                  <Input
+                    type="date"
+                    required
+                    name="from"
+                    defaultValue={filters.from}
+                  />
+                </Field>
+                <Field label="Até">
+                  <Input
+                    type="date"
+                    required
+                    name="to"
+                    defaultValue={filters.to}
+                  />
+                </Field>
+                <Field label="Vendedor">
+                  <NativeSelect
+                    name="seller"
+                    defaultValue={filters.sellerId ?? ""}
+                  >
+                    <option value="">Todos</option>
+                    {meta.data?.sellers.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
+                  <Button type="submit">Aplicar filtros</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      setFilters({ from: `${now.slice(0, 7)}-01`, to: now })
+                    }
+                  >
+                    Limpar filtros
+                  </Button>
+                  {permissions.canExportFinance() && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !q.data}
+                        onClick={() => download("xlsx")}
+                      >
+                        Exportar Excel
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !q.data}
+                        onClick={() => download("pdf")}
+                      >
+                        Exportar PDF
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </form>
+            </FilterPanel>
             {error && (
               <div
                 role="alert"

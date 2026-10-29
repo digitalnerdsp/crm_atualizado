@@ -6,6 +6,7 @@ import { BillingDialog } from "@/components/finance/billing-dialog";
 import { dateLabel, Field, money, today } from "@/components/finance/shared";
 import PageTitle from "@/components/page-title";
 import { Button } from "@/components/ui/button";
+import { FilterPanel } from "@/components/ui/filter-panel";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PageHeader } from "@/components/ui/page-header";
@@ -121,101 +122,103 @@ function RecurrenceWorkspace({
           <p role="alert">Você não tem acesso financeiro a este workspace.</p>
         ) : (
           <>
-            <form
-              key={`${filters.from}-${filters.to}`}
-              className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
-              onSubmit={(e) => {
-                e.preventDefault();
-                const f = new FormData(e.currentTarget);
-                const from = String(f.get("from"));
-                const to = String(f.get("to"));
-                if (
-                  from > to ||
-                  Date.parse(to) - Date.parse(from) > 730 * 86400000
-                ) {
-                  toast.error("Selecione um período válido de até 731 dias.");
-                  return;
-                }
-                setPage(1);
-                setFilters((prev) => ({ ...prev, from, to }));
-              }}
-            >
-              <Field label="De">
-                <Input
-                  type="date"
-                  required
-                  name="from"
-                  defaultValue={filters.from}
-                />
-              </Field>
-              <Field label="Até">
-                <Input
-                  type="date"
-                  required
-                  name="to"
-                  defaultValue={filters.to}
-                />
-              </Field>
-              <Field label="Situação">
-                <NativeSelect
-                  value={filters.status ?? ""}
-                  onChange={(e) => set("status", e.target.value)}
-                >
-                  <option value="">Todas</option>
-                  {Object.entries(states).map(([v, l]) => (
-                    <option value={v} key={v}>
-                      {l}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <Field label="Cliente">
-                <NativeSelect
-                  value={filters.companyId ?? ""}
-                  onChange={(e) => set("companyId", e.target.value)}
-                >
-                  <option value="">Todos</option>
-                  {meta?.companies.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </NativeSelect>
-              </Field>
-              <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
-                <Button type="submit">Aplicar período</Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setFilters({ from: `${now.slice(0, 7)}-01`, to: now });
-                    setPage(1);
-                  }}
-                >
-                  Limpar filtros
-                </Button>
-                {permissions.canExportFinance() && (
-                  <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !data}
-                      onClick={() => exportFile("xlsx")}
-                    >
-                      Exportar Excel
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={exporting || !data}
-                      onClick={() => exportFile("pdf")}
-                    >
-                      Exportar PDF
-                    </Button>
-                  </>
-                )}
-              </div>
-            </form>
+            <FilterPanel values={filters as Record<string, unknown>}>
+              <form
+                key={`${filters.from}-${filters.to}`}
+                className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const f = new FormData(e.currentTarget);
+                  const from = String(f.get("from"));
+                  const to = String(f.get("to"));
+                  if (
+                    from > to ||
+                    Date.parse(to) - Date.parse(from) > 730 * 86400000
+                  ) {
+                    toast.error("Selecione um período válido de até 731 dias.");
+                    return;
+                  }
+                  setPage(1);
+                  setFilters((prev) => ({ ...prev, from, to }));
+                }}
+              >
+                <Field label="De">
+                  <Input
+                    type="date"
+                    required
+                    name="from"
+                    defaultValue={filters.from}
+                  />
+                </Field>
+                <Field label="Até">
+                  <Input
+                    type="date"
+                    required
+                    name="to"
+                    defaultValue={filters.to}
+                  />
+                </Field>
+                <Field label="Situação">
+                  <NativeSelect
+                    value={filters.status ?? ""}
+                    onChange={(e) => set("status", e.target.value)}
+                  >
+                    <option value="">Todas</option>
+                    {Object.entries(states).map(([v, l]) => (
+                      <option value={v} key={v}>
+                        {l}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <Field label="Cliente">
+                  <NativeSelect
+                    value={filters.companyId ?? ""}
+                    onChange={(e) => set("companyId", e.target.value)}
+                  >
+                    <option value="">Todos</option>
+                    {meta?.companies.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                </Field>
+                <div className="flex flex-wrap gap-2 sm:col-span-2 lg:col-span-4">
+                  <Button type="submit">Aplicar período</Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setFilters({ from: `${now.slice(0, 7)}-01`, to: now });
+                      setPage(1);
+                    }}
+                  >
+                    Limpar filtros
+                  </Button>
+                  {permissions.canExportFinance() && (
+                    <>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !data}
+                        onClick={() => exportFile("xlsx")}
+                      >
+                        Exportar Excel
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={exporting || !data}
+                        onClick={() => exportFile("pdf")}
+                      >
+                        Exportar PDF
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </form>
+            </FilterPanel>
             {(query.error || metadata.error) && (
               <div
                 role="alert"

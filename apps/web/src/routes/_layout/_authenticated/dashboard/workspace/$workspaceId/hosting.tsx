@@ -68,7 +68,7 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
       <div className="mx-auto w-full max-w-6xl space-y-5 p-4 md:p-6">
         <PageHeader
           title="Hospedagem"
-          description="Clientes com hospedagem de terceiros e o vencimento de cada uma, para oferecer a nossa antes da renovação."
+          description="Hospedagens de terceiros e seus vencimentos."
           actions={
             enabled && canUpdate ? (
               <Button onClick={() => setAdding(true)}>Adicionar cliente</Button>
