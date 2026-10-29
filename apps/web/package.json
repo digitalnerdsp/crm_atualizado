@@ -57,7 +57,7 @@
 		"i18next": "^25.5.3",
 		"immer": "^11.1.15",
 		"input-otp": "^1.4.2",
-		"lucide-react": "^0.577.0",
+		"lucide-react": "^1.57.0",
 		"postcss": "^8.5.19",
 		"radix-ui": "^1.6.2",
 		"react": "^19.2.7",
