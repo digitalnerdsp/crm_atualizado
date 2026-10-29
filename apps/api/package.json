@@ -18,7 +18,7 @@
   },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "esbuild src/index.ts --bundle --platform=node --outdir=dist --format=esm --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --external:pg-native",
+    "build": "esbuild src/index.ts src/seed/demo.ts --bundle --platform=node --outdir=dist --format=esm --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --external:pg-native",
     "lint": "biome check --write .",
     "test": "npm run test:unit",
     "test:coverage": "vitest run --config vitest.config.ts --coverage",
@@ -28,7 +28,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:studio": "drizzle-kit studio",
-    "db:seed:user-data": "tsx scripts/seed-user-data.ts"
+    "db:seed:user-data": "tsx scripts/seed-user-data.ts",
+    "db:seed:demo": "tsx src/seed/demo.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1090.0",
