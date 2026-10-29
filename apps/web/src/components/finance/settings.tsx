@@ -150,7 +150,7 @@ export function FinanceSettings({
               </span>
               <Button
                 size="sm"
-                variant="ghost"
+                variant="soft"
                 onClick={() => {
                   setCategory(c);
                   setCategoryKey((k) => k + 1);
@@ -242,7 +242,7 @@ export function FinanceSettings({
               </span>
               <Button
                 size="sm"
-                variant="ghost"
+                variant="soft"
                 onClick={() => {
                   setParty(p);
                   setPartyKey((k) => k + 1);

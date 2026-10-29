@@ -200,7 +200,7 @@ function HostingWorkspace({ workspaceId }: { workspaceId: string }) {
                             {canUpdate && (
                               <Button
                                 size="sm"
-                                variant="outline"
+                                variant="soft"
                                 onClick={() => setEditing(c.id)}
                               >
                                 Editar

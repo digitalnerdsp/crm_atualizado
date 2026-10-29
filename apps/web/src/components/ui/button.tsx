@@ -37,7 +37,8 @@ export const buttonVariants = cva(
         "destructive-outline":
           "border-input bg-popover not-dark:bg-clip-padding text-destructive-foreground shadow-xs/5 not-disabled:not-active:not-data-pressed:before:shadow-[0_1px_--theme(--color-black/4%)] hover:border-destructive/32 hover:bg-destructive/4 data-pressed:border-destructive/32 data-pressed:bg-destructive/4 *:data-[slot=button-loading-indicator]:text-foreground dark:bg-input/32 dark:not-disabled:before:shadow-[0_-1px_--theme(--color-white/2%)] dark:not-disabled:not-active:not-data-pressed:before:shadow-[0_-1px_--theme(--color-white/6%)] [:disabled,:active,[data-pressed]]:shadow-none",
         success:
-          "not-disabled:inset-shadow-[0_1px_--theme(--color-white/16%)] border-success bg-success text-white shadow-success/24 shadow-xs hover:bg-success/90 data-pressed:bg-success/90 dark:text-[#04200f] *:data-[slot=button-loading-indicator]:text-white [:disabled,:active,[data-pressed]]:shadow-none",
+          "not-disabled:inset-shadow-[0_1px_--theme(--color-white/16%)] border-success bg-success text-white shadow-success/24 shadow-xs hover:bg-success/90 data-pressed:bg-success/90 *:data-[slot=button-loading-indicator]:text-white [:disabled,:active,[data-pressed]]:shadow-none",
+        soft: "border-transparent bg-primary/12 text-primary hover:bg-primary/20 data-pressed:bg-primary/20 dark:text-info-foreground *:data-[slot=button-loading-indicator]:text-primary",
         warning:
           "not-disabled:inset-shadow-[0_1px_--theme(--color-white/16%)] border-warning bg-warning text-[#2b1700] shadow-warning/24 shadow-xs hover:bg-warning/90 data-pressed:bg-warning/90 *:data-[slot=button-loading-indicator]:text-[#2b1700] [:disabled,:active,[data-pressed]]:shadow-none",
         ghost:

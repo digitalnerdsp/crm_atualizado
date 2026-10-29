@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import {
   Activity,
   BriefcaseBusiness,
@@ -15,8 +15,14 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import type { FormEvent, ReactNode, SelectHTMLAttributes } from "react";
+import type { FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  ErrorText,
+  Field,
+  SelectInput,
+  UserFormPage,
+} from "@/components/admin/user-form-page";
 import PageTitle from "@/components/page-title";
 import Layout from "@/components/settings/embedded-layout";
 import { Badge } from "@/components/ui/badge";
@@ -38,10 +44,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard } from "@/components/ui/stat-card";
-import { Switch } from "@/components/ui/switch";
 import {
   Table,
   TableBody,
@@ -53,18 +57,14 @@ import {
 import { getAdminMe } from "@/fetchers/admin/get-admin-me";
 import type { AdminUser } from "@/fetchers/admin/get-admin-users";
 import {
-  useCreateAdminUser,
   useDeleteAdminUser,
   useResetAdminUserPassword,
   useRevokeAdminUserSessions,
-  useUpdateAdminUser,
 } from "@/hooks/mutations/admin/use-admin-user-mutations";
 import { useAdminMe } from "@/hooks/queries/admin/use-admin-me";
 import { useAdminOverview } from "@/hooks/queries/admin/use-admin-overview";
-import { useAdminProjects } from "@/hooks/queries/admin/use-admin-projects";
 import { useAdminRoles } from "@/hooks/queries/admin/use-admin-roles";
 import { useAdminUsers } from "@/hooks/queries/admin/use-admin-users";
-import { useAdminWorkspaces } from "@/hooks/queries/admin/use-admin-workspaces";
 
 export const Route = createFileRoute("/_layout/_authenticated/admin/")({
   beforeLoad: async () => {
@@ -74,6 +74,9 @@ export const Route = createFileRoute("/_layout/_authenticated/admin/")({
       throw redirect({ to: "/dashboard" });
     }
   },
+  validateSearch: (search: Record<string, unknown>) => ({
+    user: typeof search.user === "string" ? search.user : undefined,
+  }),
   component: AdminPage,
 });
 
@@ -87,29 +90,6 @@ const metricIcons = {
 };
 
 type GlobalRole = string;
-/* O papel é o nome de uma linha de `workspace_role`: além dos semeados, valem
- * os papéis que a equipe criou nas configurações do workspace. */
-type WorkspaceRole = string;
-
-/** Semeados em todo workspace. Definir isto no cadastro do usuário é o que
- * evita alguém entrar como "membro" e só descobrir depois que não enxerga o
- * funil. Painel de administração é escrito em português direto, sem i18n. */
-const WORKSPACE_ROLE_OPTIONS = [
-  { value: "owner", label: "Dono" },
-  { value: "admin", label: "Admin" },
-  { value: "sales_manager", label: "Gestor comercial" },
-  { value: "finance_legal", label: "Financeiro/Jurídico" },
-  { value: "sales", label: "Vendedor" },
-  { value: "member", label: "Membro" },
-  { value: "viewer", label: "Visualizador" },
-] as const;
-type WorkspaceMembershipForm = {
-  workspaceId: string;
-  role: WorkspaceRole;
-};
-
-type SelectProps = SelectHTMLAttributes<HTMLSelectElement>;
-
 function hasPermission(permissions: string[] | undefined, permission: string) {
   return Boolean(
     permissions?.includes("*") || permissions?.includes(permission),
@@ -123,179 +103,6 @@ function formatDate(value?: string | null) {
     dateStyle: "short",
     timeStyle: "short",
   }).format(new Date(value));
-}
-
-function SelectInput({ className = "", ...props }: SelectProps) {
-  return (
-    <select
-      className={`h-8 w-full rounded-lg border border-input bg-background px-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring ${className}`}
-      {...props}
-    />
-  );
-}
-
-function Field({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
-
-function ErrorText({ message }: { message?: string | null }) {
-  if (!message) return null;
-
-  return <p className="text-destructive text-sm">{message}</p>;
-}
-
-function WorkspaceProjectFields({
-  workspaceMemberships,
-  ownedProjectIds,
-  onWorkspaceMembershipsChange,
-  onOwnedProjectIdsChange,
-}: {
-  workspaceMemberships: WorkspaceMembershipForm[];
-  ownedProjectIds: string[];
-  onWorkspaceMembershipsChange: (
-    memberships: WorkspaceMembershipForm[],
-  ) => void;
-  onOwnedProjectIdsChange: (projectIds: string[]) => void;
-}) {
-  const { data: workspacesData } = useAdminWorkspaces({
-    status: "all",
-    limit: "100",
-  });
-  const { data: projectsData } = useAdminProjects({
-    status: "all",
-    limit: "100",
-  });
-  const selectedWorkspaceIds = new Set(
-    workspaceMemberships.map((membership) => membership.workspaceId),
-  );
-  const selectedProjectIds = new Set(ownedProjectIds);
-
-  function toggleWorkspace(workspaceId: string, checked: boolean) {
-    if (checked) {
-      onWorkspaceMembershipsChange([
-        ...workspaceMemberships,
-        { workspaceId, role: "member" },
-      ]);
-      return;
-    }
-
-    onWorkspaceMembershipsChange(
-      workspaceMemberships.filter(
-        (membership) => membership.workspaceId !== workspaceId,
-      ),
-    );
-    onOwnedProjectIdsChange(
-      ownedProjectIds.filter((projectId) => {
-        const project = projectsData?.projects.find(
-          (item) => item.id === projectId,
-        );
-        return project ? project.workspaceId !== workspaceId : true;
-      }),
-    );
-  }
-
-  function updateWorkspaceRole(workspaceId: string, role: WorkspaceRole) {
-    onWorkspaceMembershipsChange(
-      workspaceMemberships.map((membership) =>
-        membership.workspaceId === workspaceId
-          ? { ...membership, role }
-          : membership,
-      ),
-    );
-  }
-
-  function toggleProject(projectId: string, checked: boolean) {
-    onOwnedProjectIdsChange(
-      checked
-        ? Array.from(new Set([...ownedProjectIds, projectId]))
-        : ownedProjectIds.filter((id) => id !== projectId),
-    );
-  }
-
-  return (
-    <div className="grid gap-4">
-      <div className="space-y-2">
-        <Label>Workspaces</Label>
-        <div className="max-h-44 space-y-2 overflow-auto rounded-md border border-border p-2">
-          {(workspacesData?.workspaces ?? []).map((workspace) => {
-            const membership = workspaceMemberships.find(
-              (item) => item.workspaceId === workspace.id,
-            );
-
-            return (
-              <div
-                className="grid gap-2 rounded-md bg-muted/20 p-2 sm:grid-cols-[1fr_120px]"
-                key={workspace.id}
-              >
-                <label className="flex min-w-0 items-center gap-2 text-sm">
-                  <input
-                    checked={Boolean(membership)}
-                    type="checkbox"
-                    onChange={(event) =>
-                      toggleWorkspace(workspace.id, event.target.checked)
-                    }
-                  />
-                  <span className="truncate">{workspace.name}</span>
-                </label>
-                <SelectInput
-                  disabled={!membership}
-                  value={membership?.role ?? "member"}
-                  onChange={(event) =>
-                    updateWorkspaceRole(
-                      workspace.id,
-                      event.target.value as WorkspaceRole,
-                    )
-                  }
-                >
-                  {WORKSPACE_ROLE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </SelectInput>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label>Projetos como owner</Label>
-        <div className="max-h-44 space-y-2 overflow-auto rounded-md border border-border p-2">
-          {(projectsData?.projects ?? []).map((project) => {
-            const enabled = selectedWorkspaceIds.has(project.workspaceId);
-
-            return (
-              <label
-                className="flex min-w-0 items-start gap-2 rounded-md bg-muted/20 p-2 text-sm"
-                key={project.id}
-              >
-                <input
-                  checked={selectedProjectIds.has(project.id)}
-                  disabled={!enabled}
-                  type="checkbox"
-                  onChange={(event) =>
-                    toggleProject(project.id, event.target.checked)
-                  }
-                />
-                <span className="min-w-0">
-                  <span className="block truncate">{project.name}</span>
-                  <span className="block truncate text-muted-foreground text-xs">
-                    {project.workspaceName}
-                  </span>
-                </span>
-              </label>
-            );
-          })}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function MetricCard({
@@ -350,380 +157,6 @@ function HealthBadge({
     <Badge variant={status ? "success" : "warning"}>
       {status ? okLabel : badLabel}
     </Badge>
-  );
-}
-
-function CreateUserDialog({
-  open,
-  onOpenChange,
-  canManageRoles,
-  roles,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  canManageRoles: boolean;
-  roles: string[];
-}) {
-  const createUser = useCreateAdminUser();
-  const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "user" as GlobalRole,
-    emailVerified: true,
-    banned: false,
-    workspaceMemberships: [] as WorkspaceMembershipForm[],
-    ownedProjectIds: [] as string[],
-  });
-
-  useEffect(() => {
-    if (open) {
-      setError(null);
-      setForm({
-        name: "",
-        email: "",
-        password: "",
-        role: "user",
-        emailVerified: true,
-        banned: false,
-        workspaceMemberships: [],
-        ownedProjectIds: [],
-      });
-    }
-  }, [open]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
-
-    try {
-      await createUser.mutateAsync({
-        name: form.name,
-        email: form.email,
-        password: form.password,
-        role: form.role,
-        emailVerified: form.emailVerified,
-        banned: form.banned,
-        workspaceMemberships: form.workspaceMemberships,
-        ownedProjectIds: form.ownedProjectIds,
-      });
-      onOpenChange(false);
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Falha ao criar usuário.",
-      );
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Novo usuário</DialogTitle>
-            <DialogDescription>
-              Crie uma conta com senha inicial e papel global.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogPanel className="grid gap-4">
-            <Field label="Nome">
-              <Input
-                required
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Email">
-              <Input
-                required
-                type="email"
-                value={form.email}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Senha inicial">
-              <Input
-                required
-                minLength={8}
-                type="password"
-                value={form.password}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    password: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Papel global">
-              <SelectInput
-                disabled={!canManageRoles}
-                value={form.role}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    role: event.target.value as GlobalRole,
-                  }))
-                }
-              >
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
-            <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
-              <Label>Email verificado</Label>
-              <Switch
-                checked={form.emailVerified}
-                onCheckedChange={(checked) =>
-                  setForm((current) => ({
-                    ...current,
-                    emailVerified: checked,
-                  }))
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
-              <Label>Bloquear no cadastro</Label>
-              <Switch
-                checked={form.banned}
-                onCheckedChange={(checked) =>
-                  setForm((current) => ({ ...current, banned: checked }))
-                }
-              />
-            </div>
-            <WorkspaceProjectFields
-              ownedProjectIds={form.ownedProjectIds}
-              workspaceMemberships={form.workspaceMemberships}
-              onOwnedProjectIdsChange={(ownedProjectIds) =>
-                setForm((current) => ({ ...current, ownedProjectIds }))
-              }
-              onWorkspaceMembershipsChange={(workspaceMemberships) =>
-                setForm((current) => ({ ...current, workspaceMemberships }))
-              }
-            />
-            <ErrorText message={error} />
-          </DialogPanel>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            <Button loading={createUser.isPending} type="submit">
-              Criar
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function EditUserDialog({
-  user,
-  onOpenChange,
-  canManageRoles,
-  roles,
-}: {
-  user: AdminUser | null;
-  onOpenChange: (open: boolean) => void;
-  canManageRoles: boolean;
-  roles: string[];
-}) {
-  const updateUser = useUpdateAdminUser();
-  const initializedUserIdRef = useRef<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    role: "user" as GlobalRole,
-    emailVerified: false,
-    banned: false,
-    workspaceMemberships: [] as WorkspaceMembershipForm[],
-    ownedProjectIds: [] as string[],
-  });
-  const userId = user?.id ?? null;
-  const userName = user?.name ?? "";
-  const userEmail = user?.email ?? "";
-  const userRole = user?.role ?? "user";
-  const userEmailVerified = user?.emailVerified ?? false;
-  const userBanned = user?.banned ?? false;
-  const userWorkspaces = user?.workspaces ?? [];
-  const userOwnedProjects = user?.ownedProjects ?? [];
-
-  useEffect(() => {
-    if (!userId) {
-      initializedUserIdRef.current = null;
-      return;
-    }
-
-    if (initializedUserIdRef.current === userId) return;
-
-    initializedUserIdRef.current = userId;
-    setError(null);
-    setForm({
-      name: userName,
-      email: userEmail,
-      role: userRole,
-      emailVerified: userEmailVerified,
-      banned: userBanned,
-      workspaceMemberships: userWorkspaces.map((workspace) => ({
-        workspaceId: workspace.id,
-        role: workspace.role as WorkspaceRole,
-      })),
-      ownedProjectIds: userOwnedProjects.map((project) => project.id),
-    });
-  }, [
-    userBanned,
-    userEmail,
-    userEmailVerified,
-    userId,
-    userName,
-    userOwnedProjects,
-    userRole,
-    userWorkspaces,
-  ]);
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!user) return;
-
-    setError(null);
-    try {
-      await updateUser.mutateAsync({
-        userId: user.id,
-        name: form.name,
-        email: form.email,
-        role: form.role,
-        emailVerified: form.emailVerified,
-        banned: form.banned,
-        workspaceMemberships: form.workspaceMemberships,
-        ownedProjectIds: form.ownedProjectIds,
-      });
-      onOpenChange(false);
-    } catch (cause) {
-      setError(
-        cause instanceof Error ? cause.message : "Falha ao atualizar usuário.",
-      );
-    }
-  }
-
-  return (
-    <Dialog open={Boolean(user)} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle>Editar usuário</DialogTitle>
-            <DialogDescription>{user?.email}</DialogDescription>
-          </DialogHeader>
-          <DialogPanel className="grid gap-4">
-            <Field label="Nome">
-              <Input
-                required
-                value={form.name}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    name: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Email">
-              <Input
-                required
-                type="email"
-                value={form.email}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    email: event.target.value,
-                  }))
-                }
-              />
-            </Field>
-            <Field label="Papel global">
-              <SelectInput
-                disabled={!canManageRoles}
-                value={form.role}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    role: event.target.value as GlobalRole,
-                  }))
-                }
-              >
-                {roles.map((role) => (
-                  <option key={role} value={role}>
-                    {role}
-                  </option>
-                ))}
-              </SelectInput>
-            </Field>
-            <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
-              <Label>Email verificado</Label>
-              <Switch
-                checked={form.emailVerified}
-                onCheckedChange={(checked) =>
-                  setForm((current) => ({
-                    ...current,
-                    emailVerified: checked,
-                  }))
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between gap-4 rounded-md border border-border p-3">
-              <Label>Bloqueado</Label>
-              <Switch
-                checked={form.banned}
-                onCheckedChange={(checked) =>
-                  setForm((current) => ({ ...current, banned: checked }))
-                }
-              />
-            </div>
-            <WorkspaceProjectFields
-              ownedProjectIds={form.ownedProjectIds}
-              workspaceMemberships={form.workspaceMemberships}
-              onOwnedProjectIdsChange={(ownedProjectIds) =>
-                setForm((current) => ({ ...current, ownedProjectIds }))
-              }
-              onWorkspaceMembershipsChange={(workspaceMemberships) =>
-                setForm((current) => ({ ...current, workspaceMemberships }))
-              }
-            />
-            <ErrorText message={error} />
-          </DialogPanel>
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancelar
-            </Button>
-            <Button loading={updateUser.isPending} type="submit">
-              Salvar
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 }
 
@@ -943,8 +376,8 @@ function AdminPage() {
   const [query, setQuery] = useState("");
   const [role, setRole] = useState<GlobalRole | "all">("all");
   const [status, setStatus] = useState<"active" | "blocked" | "all">("all");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const search = Route.useSearch();
+  const navigate = useNavigate();
   const [passwordUser, setPasswordUser] = useState<AdminUser | null>(null);
   const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null);
   const revokeSessions = useRevokeAdminUserSessions();
@@ -975,6 +408,44 @@ function AdminPage() {
       ],
     [rolesData?.roles],
   );
+
+  if (search.user) {
+    const target =
+      search.user === "new"
+        ? undefined
+        : usersData?.users.find((item) => item.id === search.user);
+    if (search.user !== "new" && !target) {
+      return (
+        <Layout>
+          <PageTitle title="Editar usuário" />
+          <Layout.Content className="bg-sidebar p-6 text-sm">
+            {usersLoading ? (
+              "Carregando usuário…"
+            ) : (
+              <>
+                Usuário não encontrado.{" "}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate({ to: "/admin", search: {} })}
+                >
+                  Voltar
+                </Button>
+              </>
+            )}
+          </Layout.Content>
+        </Layout>
+      );
+    }
+    return (
+      <UserFormPage
+        canManageRoles={canManageRoles}
+        key={search.user}
+        roles={roleOptions}
+        user={target}
+      />
+    );
+  }
 
   async function handleRevokeSessions(user: AdminUser) {
     await revokeSessions.mutateAsync(user.id);
@@ -1133,7 +604,11 @@ function AdminPage() {
                   </CardDescription>
                 </div>
                 {canCreate && (
-                  <Button onClick={() => setCreateOpen(true)}>
+                  <Button
+                    onClick={() =>
+                      navigate({ to: "/admin", search: { user: "new" } })
+                    }
+                  >
                     <UserPlus />
                     Novo usuário
                   </Button>
@@ -1239,7 +714,12 @@ function AdminPage() {
                                     aria-label="Editar usuário"
                                     size="icon-sm"
                                     variant="ghost"
-                                    onClick={() => setEditingUser(user)}
+                                    onClick={() =>
+                                      navigate({
+                                        to: "/admin",
+                                        search: { user: user.id },
+                                      })
+                                    }
                                   >
                                     <Pencil />
                                   </Button>
@@ -1347,18 +827,6 @@ function AdminPage() {
           </section>
         </main>
       </Layout.Content>
-      <CreateUserDialog
-        canManageRoles={canManageRoles}
-        open={createOpen}
-        roles={roleOptions}
-        onOpenChange={setCreateOpen}
-      />
-      <EditUserDialog
-        canManageRoles={canManageRoles}
-        roles={roleOptions}
-        user={editingUser}
-        onOpenChange={(open) => !open && setEditingUser(null)}
-      />
       <ResetPasswordDialog
         user={passwordUser}
         onOpenChange={(open) => !open && setPasswordUser(null)}

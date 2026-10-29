@@ -353,7 +353,7 @@ export function LedgerPage({
                         !entry.cancelledAt &&
                         remaining(entry) === entry.amountCents && (
                           <Button
-                            variant="ghost"
+                            variant="soft"
                             size="sm"
                             onClick={() => setForm(entry)}
                           >
