@@ -134,7 +134,7 @@ export function BulkSettleDialog({
           <Button variant="ghost" disabled={busy} onClick={onClose}>
             Cancelar
           </Button>
-          <Button disabled={busy || !date} onClick={confirm}>
+          <Button variant="success" disabled={busy || !date} onClick={confirm}>
             {busy
               ? `Baixando ${progress}/${entries.length}…`
               : "Confirmar baixas"}

@@ -186,12 +186,12 @@ function MetricCard({
   icon: typeof Gauge;
   tone?: "neutral" | "good" | "warning" | "critical";
 }) {
-  const toneClass = {
-    neutral: "text-muted-foreground",
-    good: "text-success-foreground",
-    warning: "text-warning-foreground",
-    critical: "text-destructive",
-  }[tone];
+  const statTone = {
+    neutral: "primary",
+    good: "success",
+    warning: "warning",
+    critical: "danger",
+  }[tone] as "primary" | "success" | "warning" | "danger";
 
   return (
     <StatCard
@@ -199,7 +199,7 @@ function MetricCard({
       value={value}
       detail={detail}
       icon={Icon}
-      iconClassName={toneClass}
+      tone={statTone}
     />
   );
 }

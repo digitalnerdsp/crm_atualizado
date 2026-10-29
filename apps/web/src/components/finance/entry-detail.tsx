@@ -223,6 +223,7 @@ export function EntryDetail({
             </p>
             <Button
               type="submit"
+              variant="success"
               className="sm:col-span-2"
               disabled={pay.isPending}
             >
@@ -264,7 +265,7 @@ export function EntryDetail({
                   !s.reversedAt && (
                     <Button
                       type="button"
-                      variant="outline"
+                      variant="warning"
                       size="sm"
                       disabled={pay.isPending || change.isPending}
                       onClick={() => {

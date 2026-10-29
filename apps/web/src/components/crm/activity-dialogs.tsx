@@ -382,6 +382,7 @@ export function CompleteActivityDialog({
           </Button>
           <Button
             type="button"
+            variant="success"
             disabled={isPending}
             onClick={() => finish("record")}
           >

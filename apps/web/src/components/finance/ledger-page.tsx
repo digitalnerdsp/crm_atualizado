@@ -234,7 +234,11 @@ export function LedgerPage({
           </span>
           <div className="ml-auto flex flex-wrap gap-2">
             {permissions.canSettleFinance() && settleable.length > 0 && (
-              <Button size="sm" onClick={() => setBulkOpen(true)}>
+              <Button
+                size="sm"
+                variant="success"
+                onClick={() => setBulkOpen(true)}
+              >
                 <CheckCheck className="size-4" />
                 Dar baixa nas selecionadas ({settleable.length})
               </Button>
@@ -366,7 +370,11 @@ export function LedgerPage({
                   <TableCell>
                     <div className="flex gap-1">
                       <Button
-                        variant="outline"
+                        variant={
+                          remaining(entry) > 0 && !entry.cancelledAt
+                            ? "success"
+                            : "outline"
+                        }
                         size="sm"
                         onClick={() => setDetail(entry)}
                       >
