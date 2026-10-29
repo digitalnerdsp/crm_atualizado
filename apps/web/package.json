@@ -52,7 +52,7 @@
 		"clsx": "^2.1.1",
 		"date-fns": "^4.4.0",
 		"file-saver": "^2.0.5",
-		"framer-motion": "^12.42.2",
+		"framer-motion": "^14.2.0",
 		"hono": "^4.12.31",
 		"i18next": "^25.5.3",
 		"immer": "^11.1.15",
