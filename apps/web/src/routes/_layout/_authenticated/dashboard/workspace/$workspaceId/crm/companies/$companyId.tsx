@@ -159,7 +159,7 @@ function RouteComponent() {
 
         {/* O cadastro em si: é o que responde de onde o cliente veio, há
             quanto tempo é cliente e como ele é faturado. */}
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium">
             {t("crm:company.sectionClassification")}
           </h2>
@@ -209,7 +209,7 @@ function RouteComponent() {
 
         {/* Contratos antes do comercial: o que o cliente paga todo mês é a
             primeira coisa que se quer saber de um cliente ativo. */}
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-medium">
               {t("crm:contracts.blockTitle")}
@@ -254,7 +254,7 @@ function RouteComponent() {
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium">{t("crm:company.commercial")}</h2>
           <dl className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-4">
             <div>
@@ -298,7 +298,7 @@ function RouteComponent() {
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-medium">{t("crm:company.people")}</h2>
             {canManageContacts() ? (
@@ -355,7 +355,7 @@ function RouteComponent() {
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-medium">{t("crm:company.delivery")}</h2>
             {company.openTaskCount > 0 ? (
@@ -425,7 +425,7 @@ function RouteComponent() {
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium">{t("crm:timeline.title")}</h2>
           <CrmTimeline workspaceId={workspaceId} companyId={companyId} />
         </section>

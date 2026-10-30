@@ -94,8 +94,8 @@ function RouteComponent() {
     <WorkspaceLayout title="Vendas" headerActions={headerActions}>
       <PageTitle title="Vendas" />
 
-      <div className="mx-auto w-full max-w-6xl space-y-4 px-5 py-6">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="mx-auto w-full max-w-7xl space-y-4 p-4 md:p-6">
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card p-3">
           <div className="relative">
             <Search className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -173,7 +173,7 @@ function RouteComponent() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="overflow-x-auto rounded-xl border bg-card shadow-xs">
             <Table>
               <TableHeader>
                 <TableRow>

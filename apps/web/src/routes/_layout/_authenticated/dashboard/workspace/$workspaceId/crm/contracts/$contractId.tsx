@@ -222,7 +222,7 @@ function RouteComponent() {
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium">{t("crm:contracts.services")}</h2>
           {contract.services.length === 0 ? (
             <p className="text-sm text-muted-foreground">
@@ -267,7 +267,7 @@ function RouteComponent() {
 
         {/* O histórico é o que torna o MRR auditável: cada linha diz quanto o
             contrato contava na receita antes e depois. */}
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium">{t("crm:contracts.history")}</h2>
           <ol className="space-y-2">
             {contract.events.map((event) => {

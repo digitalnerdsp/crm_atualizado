@@ -139,7 +139,7 @@ export function CommercialOverview({ workspaceId }: { workspaceId: string }) {
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl space-y-5 px-5 py-6">
+    <div className="mx-auto w-full max-w-7xl space-y-5 p-4 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold">Visão geral do Comercial</h1>

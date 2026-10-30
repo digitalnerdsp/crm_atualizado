@@ -152,7 +152,7 @@ function RouteComponent() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="overflow-x-auto rounded-xl border bg-card shadow-xs">
             <Table>
               <TableHeader>
                 <TableRow>

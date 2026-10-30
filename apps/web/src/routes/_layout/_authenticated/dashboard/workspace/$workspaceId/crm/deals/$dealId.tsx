@@ -229,7 +229,7 @@ function RouteComponent() {
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <div className="flex items-baseline justify-between">
             <h2 className="text-sm font-medium">
               {t("crm:deal.deliveryTasks")}
@@ -274,14 +274,14 @@ function RouteComponent() {
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium">{t("crm:timeline.title")}</h2>
           <CrmTimeline workspaceId={workspaceId} dealId={dealId} />
         </section>
 
         <Separator className="my-6" />
 
-        <section className="space-y-3">
+        <section className="space-y-3 rounded-xl border bg-card p-4">
           <h2 className="text-sm font-medium">{t("crm:deal.history")}</h2>
           {deal.stageHistory.length === 0 ? (
             <p className="text-sm text-muted-foreground">

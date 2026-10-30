@@ -76,7 +76,7 @@ function RouteComponent() {
     >
       <PageTitle title={t("crm:company.title")} />
 
-      <div className="mx-auto w-full max-w-6xl px-5 py-6">
+      <div className="mx-auto w-full max-w-7xl p-4 md:p-6">
         {isLoading ? (
           <div className="space-y-2">
             {[0, 1, 2, 3, 4].map((index) => (
@@ -93,7 +93,7 @@ function RouteComponent() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-border">
+          <div className="overflow-x-auto rounded-xl border bg-card shadow-xs">
             <Table>
               <TableHeader>
                 <TableRow>

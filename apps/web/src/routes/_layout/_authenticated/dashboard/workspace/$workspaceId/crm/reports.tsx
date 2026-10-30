@@ -188,7 +188,7 @@ function RouteComponent() {
           da semana, empresa é a do trimestre. */}
       <Tabs
         defaultValue="commercial"
-        className="mx-auto w-full max-w-5xl px-5 py-6"
+        className="mx-auto w-full max-w-7xl p-4 md:p-6"
       >
         <TabsList className="mb-4">
           <TabsTab value="commercial">{t("crm:reports.tabCommercial")}</TabsTab>
