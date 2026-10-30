@@ -243,7 +243,7 @@ export function DealServicesEditor({
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-medium">{t("crm:services.title")}</h2>
+        <h2 className="text-sm font-semibold">{t("crm:services.title")}</h2>
         {canEdit && !isEditing ? (
           <Button
             size="sm"

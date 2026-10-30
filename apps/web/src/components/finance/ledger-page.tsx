@@ -293,7 +293,7 @@ export function LedgerPage({
                   <TableCell className="min-w-48">
                     <button
                       type="button"
-                      className="text-left font-medium hover:underline"
+                      className="text-left font-semibold hover:underline"
                       onClick={() => setDetail(entry)}
                     >
                       {entry.description}

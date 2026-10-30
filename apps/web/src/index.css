@@ -241,6 +241,14 @@ input:-webkit-autofill:active {
   h5,
   h6 {
     @apply font-heading font-semibold tracking-tight;
+    word-spacing: 0.12em;
+  }
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply tracking-normal;
   }
 
   * {
@@ -1326,4 +1334,18 @@ input:-webkit-autofill:active {
     background: color-mix(in srgb, var(--primary) 18%, transparent);
   }
 
+}
+
+/* Dados em destaque: valores, datas e o nome principal de cada linha ficam em
+   negrito; rótulos e textos de apoio continuam leves. Fica em "components"
+   para que uma classe utilitária (ex.: font-normal) ainda possa sobrescrever. */
+@layer components {
+  [data-slot="table-body"]
+    tr
+    > td:first-child:not(:has([role="checkbox"], input)),
+  [data-slot="table-body"] tr > td:has([role="checkbox"]) + td,
+  [data-slot="table-cell"].tabular-nums,
+  dd {
+    font-weight: 600;
+  }
 }

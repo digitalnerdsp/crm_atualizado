@@ -11,7 +11,6 @@ import { BILLING_LABEL_KEY } from "@/components/crm/deal-services-editor";
 import PageTitle from "@/components/page-title";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { useCrmContract } from "@/hooks/queries/crm/use-crm-contracts";
@@ -149,26 +148,24 @@ function RouteComponent() {
     <WorkspaceLayout title={contract.title} headerActions={headerActions}>
       <PageTitle title={contract.title} />
 
-      <div className="mx-auto w-full max-w-4xl px-5 py-6">
+      <div className="mx-auto w-full max-w-7xl space-y-4 p-4 md:p-6">
         <Link
           to="/dashboard/workspace/$workspaceId/crm/contracts"
           params={{ workspaceId }}
-          className="mb-4 inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+          className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="size-3.5" />
           {t("crm:contracts.title")}
         </Link>
 
-        <header className="space-y-2">
+        <header className="space-y-2 rounded-xl border bg-card p-5">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono text-xs text-muted-foreground">
               #{contract.number}
             </span>
             <ContractStatusBadge status={contract.status} size="default" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">
-            {contract.title}
-          </h1>
+          <h1 className="text-2xl font-bold">{contract.title}</h1>
           <Link
             to="/dashboard/workspace/$workspaceId/crm/companies/$companyId"
             params={{ workspaceId, companyId: contract.company.id }}
@@ -182,8 +179,6 @@ function RouteComponent() {
             })}
           </p>
         </header>
-
-        <Separator className="my-6" />
 
         <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm sm:grid-cols-4">
           <Fact label={t("crm:contracts.startsAt")}>
@@ -220,10 +215,10 @@ function RouteComponent() {
           ) : null}
         </dl>
 
-        <Separator className="my-6" />
-
         <section className="space-y-3 rounded-xl border bg-card p-4">
-          <h2 className="text-sm font-medium">{t("crm:contracts.services")}</h2>
+          <h2 className="text-sm font-semibold">
+            {t("crm:contracts.services")}
+          </h2>
           {contract.services.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               {t("crm:contracts.noServices")}
@@ -263,12 +258,12 @@ function RouteComponent() {
           )}
         </section>
 
-        <Separator className="my-6" />
-
         {/* O histórico é o que torna o MRR auditável: cada linha diz quanto o
             contrato contava na receita antes e depois. */}
         <section className="space-y-3 rounded-xl border bg-card p-4">
-          <h2 className="text-sm font-medium">{t("crm:contracts.history")}</h2>
+          <h2 className="text-sm font-semibold">
+            {t("crm:contracts.history")}
+          </h2>
           <ol className="space-y-2">
             {contract.events.map((event) => {
               const delta =
