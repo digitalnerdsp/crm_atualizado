@@ -1,13 +1,13 @@
 import { type PropsWithChildren, useEffect, useMemo } from "react";
 import { I18nextProvider } from "react-i18next";
 import useAuth from "@/components/providers/auth-provider/hooks/use-auth";
-import { getBrowserLocale, i18n, resolveLocale } from "./index";
+import { i18n, resolveLocale } from "./index";
 
 export function AppI18nProvider({ children }: PropsWithChildren) {
   const { user } = useAuth();
 
   const resolvedLocale = useMemo(
-    () => resolveLocale(user?.locale, getBrowserLocale()),
+    () => resolveLocale(user?.locale, null),
     [user?.locale],
   );
 

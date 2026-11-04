@@ -108,7 +108,7 @@ function RouteComponent() {
 
   const { data, isLoading } = useCrmCompanies({
     workspaceId,
-    limit: 200,
+    limit: "200",
     ...(search.trim() ? { search: search.trim() } : {}),
   });
   const items = data?.items ?? [];

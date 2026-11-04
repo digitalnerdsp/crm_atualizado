@@ -42,7 +42,8 @@ export function getBrowserLocale(): string | null {
 
 void i18n.use(initReactI18next).init({
   resources,
-  lng: resolveLocale(null, getBrowserLocale()),
+  // Idioma padrão do sistema é pt-BR; o idioma do navegador não decide mais.
+  lng: defaultLocale,
   fallbackLng: defaultLocale,
   ns: Object.keys(resources[defaultLocale]),
   defaultNS: "common",

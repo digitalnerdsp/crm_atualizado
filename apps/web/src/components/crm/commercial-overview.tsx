@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { Briefcase, RefreshCw, Server, Trophy, Users } from "lucide-react";
+import {
+  Briefcase,
+  type LucideIcon,
+  RefreshCw,
+  Server,
+  Trophy,
+  Users,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import BarList from "@/components/crm/charts/bar-list";
@@ -17,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { StatCard } from "@/components/ui/stat-card";
+import { StatCard, type StatTone } from "@/components/ui/stat-card";
 import { getHostingReport } from "@/fetchers/crm/hosting";
 import { useCrmPipelines } from "@/hooks/queries/crm/use-crm-pipelines";
 import {
@@ -112,7 +119,13 @@ export function CommercialOverview({ workspaceId }: { workspaceId: string }) {
   const activeClients =
     portfolio.data?.byStatus.find((row) => row.key === "active")?.companies ??
     0;
-  const stats = [
+  const stats: {
+    label: string;
+    value: string;
+    hint: string;
+    icon: LucideIcon;
+    tone: StatTone;
+  }[] = [
     {
       label: "Negócios em aberto",
       value: String(open),
