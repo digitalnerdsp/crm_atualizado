@@ -322,7 +322,7 @@ export function LedgerPage({
                   <TableCell className="whitespace-nowrap">
                     {dateLabel(entry.dueDate)}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap tabular-nums">
+                  <TableCell className="whitespace-nowrap font-bold tabular-nums">
                     {money(entry.amountCents)}
                   </TableCell>
                   <TableCell className="whitespace-nowrap tabular-nums">

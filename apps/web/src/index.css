@@ -1344,7 +1344,6 @@ input:-webkit-autofill:active {
     tr
     > td:first-child:not(:has([role="checkbox"], input)),
   [data-slot="table-body"] tr > td:has([role="checkbox"]) + td,
-  [data-slot="table-cell"].tabular-nums,
   dd {
     font-weight: 600;
   }
