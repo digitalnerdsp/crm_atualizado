@@ -68,10 +68,8 @@ export const member = ac.newRole({
   label: ["create", "read", "update", "delete"],
   calendar: ["create", "read", "update", "delete"],
   workspace: ["read"],
-  // Sem escrita: quem trabalha comercial recebe o papel `sales`.
-  crmDeal: ["read"],
-  crmContact: ["read"],
-  crmCompany: ["read"],
+  // Colaborador operacional: projetos e tarefas, sem CRM e sem financeiro.
+  // Quem trabalha comercial recebe o papel `sales`.
 });
 
 export const admin = ac.newRole({

@@ -45,6 +45,14 @@ export const BACKFILL_RESOURCES = [
 
 const FINANCE_LEGAL_REPORT_TOKEN = "grant:finance_legal:crmReport";
 
+/**
+ * O papel `member` (colaborador operacional) deixou de ter acesso ao CRM: ele só
+ * trabalha projetos e tarefas. Quem trabalha comercial usa `sales`. Este item
+ * remove, uma única vez, o CRM das linhas `member` que já existiam.
+ */
+const REVOKE_MEMBER_CRM_TOKEN = "revoke:member:crm";
+const MEMBER_CRM_RESOURCES = ["crmDeal", "crmContact", "crmCompany"] as const;
+
 export type WorkspaceRoleRow = {
   id: string;
   workspaceId: string;
@@ -71,6 +79,7 @@ export function allBackfillTokens(): string[] {
     ...BACKFILL_ROLE_NAMES.map(roleToken),
     ...BACKFILL_RESOURCES.map(resourceToken),
     FINANCE_LEGAL_REPORT_TOKEN,
+    REVOKE_MEMBER_CRM_TOKEN,
   ];
 }
 
@@ -131,6 +140,7 @@ export function planWorkspaceRoleBackfill({
     (resource) => !applied.has(resourceToken(resource)),
   );
   const pendingFinanceLegalReport = !applied.has(FINANCE_LEGAL_REPORT_TOKEN);
+  const pendingMemberCrmRevoke = !applied.has(REVOKE_MEMBER_CRM_TOKEN);
 
   const plan: RoleBackfillPlan = {
     inserts: [],
@@ -139,13 +149,15 @@ export function planWorkspaceRoleBackfill({
       ...pendingRoles.map(roleToken),
       ...pendingResources.map(resourceToken),
       ...(pendingFinanceLegalReport ? [FINANCE_LEGAL_REPORT_TOKEN] : []),
+      ...(pendingMemberCrmRevoke ? [REVOKE_MEMBER_CRM_TOKEN] : []),
     ],
   };
 
   if (
     pendingRoles.length === 0 &&
     pendingResources.length === 0 &&
-    !pendingFinanceLegalReport
+    !pendingFinanceLegalReport &&
+    !pendingMemberCrmRevoke
   ) {
     return plan;
   }
@@ -174,7 +186,11 @@ export function planWorkspaceRoleBackfill({
 
   // 2. Resources absent from rows that already exist. Only whole missing keys
   //    are added — actions an admin removed from a resource stay removed.
-  if (pendingResources.length > 0 || pendingFinanceLegalReport) {
+  if (
+    pendingResources.length > 0 ||
+    pendingFinanceLegalReport ||
+    pendingMemberCrmRevoke
+  ) {
     for (const row of existingRows) {
       if (!isDefaultRoleName(row.role)) continue;
 
@@ -197,6 +213,15 @@ export function planWorkspaceRoleBackfill({
         if (!actions) continue;
         stored[resource] = [...actions];
         changed = true;
+      }
+
+      if (pendingMemberCrmRevoke && row.role === "member") {
+        for (const resource of MEMBER_CRM_RESOURCES) {
+          if (resource in stored) {
+            delete stored[resource];
+            changed = true;
+          }
+        }
       }
 
       if (changed) {

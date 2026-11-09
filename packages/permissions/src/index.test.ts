@@ -114,12 +114,12 @@ describe("built-in role privileges", () => {
     expect(viewer.statements.crmCompany).toBeUndefined();
   });
 
-  it("member can read its own CRM records but never write them", () => {
-    expect(member.statements.crmDeal).toEqual(["read"]);
-    expect(member.statements.crmDeal).not.toContain("read_all");
-    expect(member.statements.crmDeal).not.toContain("create");
-    expect(member.statements.crmContact).toEqual(["read"]);
-    expect(member.statements.crmCompany).toEqual(["read"]);
+  it("member has no CRM and no finance access (operational collaborator)", () => {
+    expect(member.statements.crmDeal).toBeUndefined();
+    expect(member.statements.crmContact).toBeUndefined();
+    expect(member.statements.crmCompany).toBeUndefined();
+    expect(member.statements.finance).toBeUndefined();
+    expect(member.statements.project).toContain("read");
   });
 
   it("sales works its own pipeline without seeing the team's", () => {

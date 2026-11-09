@@ -69,21 +69,52 @@ describe("planWorkspaceRoleBackfill", () => {
       );
     }
 
-    // admin and member gain CRM keys; viewer has no CRM in the defaults so it
-    // must not gain any.
+    // admin gains CRM keys; viewer and member have no CRM in the defaults so
+    // they must not gain any.
     const updated = Object.fromEntries(
       plan.updates.map((update) => [
         update.id,
         JSON.parse(update.permission) as Record<string, string[]>,
       ]),
     );
-    expect(Object.keys(updated).sort()).toEqual(["w1-admin", "w1-member"]);
+    expect(Object.keys(updated)).toEqual(["w1-admin"]);
     expect(updated["w1-admin"].crmDeal).toContain("read_all");
     expect(updated["w1-admin"].crmPipeline).toEqual(["read", "manage"]);
-    expect(updated["w1-member"].crmDeal).toEqual(["read"]);
-    expect(updated["w1-member"].crmPipeline).toBeUndefined();
 
     expect(plan.tokens.sort()).toEqual(allBackfillTokens().sort());
+  });
+
+  it("removes CRM from existing member rows once, keeping their projects and tasks", () => {
+    const member = row("w1-member", "w1", "member", {
+      project: ["create", "read"],
+      task: ["create", "read", "update"],
+      crmDeal: ["read"],
+      crmContact: ["read"],
+      crmCompany: ["read"],
+    });
+    const everythingElse = allBackfillTokens().filter(
+      (token) => token !== "revoke:member:crm",
+    );
+
+    const plan = planWorkspaceRoleBackfill({
+      workspaceIds: ["w1"],
+      existingRows: [member],
+      appliedTokens: everythingElse,
+    });
+
+    expect(plan.updates).toHaveLength(1);
+    expect(JSON.parse(plan.updates[0].permission)).toEqual({
+      project: ["create", "read"],
+      task: ["create", "read", "update"],
+    });
+    expect(plan.tokens).toEqual(["revoke:member:crm"]);
+
+    const again = planWorkspaceRoleBackfill({
+      workspaceIds: ["w1"],
+      existingRows: [member],
+      appliedTokens: allBackfillTokens(),
+    });
+    expect(again.updates).toEqual([]);
   });
 
   it("preserves permissions an admin already edited", () => {
