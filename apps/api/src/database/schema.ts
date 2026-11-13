@@ -3946,3 +3946,45 @@ export const portfolioDraftTable = pgTable(
   },
   (t) => [index("portfolio_draft_workspace_idx").on(t.workspaceId)],
 );
+
+/* Documentos anexados ao contrato (contrato assinado, aditivos, proposta). O
+ * arquivo fica no volume de uploads; aqui só o que é preciso para listar e
+ * abrir. `title` diz do que se trata o documento. */
+export const crmContractAttachmentTable = pgTable(
+  "crm_contract_attachment",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    contractId: text("contract_id")
+      .notNull()
+      .references(() => crmContractTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    title: text("title").notNull(),
+    filename: text("filename").notNull(),
+    contentType: text("content_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    storageKey: text("storage_key").notNull(),
+    uploadedBy: text("uploaded_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("crm_contract_attachment_contractId_idx").on(table.contractId),
+    index("crm_contract_attachment_workspaceId_idx").on(table.workspaceId),
+  ],
+);

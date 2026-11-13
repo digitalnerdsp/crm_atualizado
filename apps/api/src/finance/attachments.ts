@@ -8,7 +8,7 @@ import * as schema from "../database/schema";
 
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
-const allowedTypes = new Set([
+export const allowedTypes = new Set([
   "application/pdf",
   "image/jpeg",
   "image/png",
@@ -18,7 +18,7 @@ const allowedTypes = new Set([
   "image/heif",
   "image/avif",
 ]);
-const extensions: Record<string, string> = {
+export const extensions: Record<string, string> = {
   "application/pdf": "pdf",
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -29,7 +29,7 @@ const extensions: Record<string, string> = {
   "image/avif": "avif",
 };
 
-function uploadRoot() {
+export function uploadRoot() {
   return path.resolve(
     process.env.LOCAL_UPLOAD_DIR?.trim() ||
       process.env.FILES_UPLOAD_DIR?.trim() ||
@@ -39,7 +39,7 @@ function uploadRoot() {
 
 // O tipo declarado pelo navegador não basta: confere os primeiros bytes dos
 // formatos mais comuns para não aceitar outro conteúdo com extensão trocada.
-function matchesSignature(type: string, bytes: Buffer) {
+export function matchesSignature(type: string, bytes: Buffer) {
   const starts = (sig: number[], offset = 0) =>
     sig.every((b, i) => bytes[offset + i] === b);
   if (type === "application/pdf") return starts([0x25, 0x50, 0x44, 0x46]);

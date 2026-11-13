@@ -3,6 +3,7 @@ import { ArrowLeft, FolderKanban, Globe, Pencil, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import WorkspaceLayout from "@/components/common/workspace-layout";
+import CompanyContractDocuments from "@/components/crm/company-contract-documents";
 import CompanyStatusBadge from "@/components/crm/company-status-badge";
 import ContractStatusBadge from "@/components/crm/contract-status-badge";
 import CreateContactModal from "@/components/crm/forms/create-contact-modal";
@@ -245,6 +246,12 @@ function RouteComponent() {
               </ul>
             )}
           </section>
+
+          <CompanyContractDocuments
+            workspaceId={workspaceId}
+            companyId={company.id}
+            contracts={company.contracts}
+          />
 
           <section className="mb-4 break-inside-avoid space-y-3 rounded-xl border bg-card p-4">
             <h2 className="text-sm font-semibold">

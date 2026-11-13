@@ -3,6 +3,10 @@ import activity from "./activity";
 import company from "./company";
 import contact from "./contact";
 import contract from "./contract";
+import {
+  companyContractDocuments,
+  contractDocuments,
+} from "./contract/attachment-routes";
 import deal from "./deal";
 import field from "./field";
 import hosting from "./hosting";
@@ -36,5 +40,7 @@ const crm = new Hono()
 
 // Fora da cadeia tipada acima (limite de profundidade de tipos do cliente RPC).
 crm.route("/seller-panel", sellerPanel);
+crm.route("/contract", contractDocuments);
+crm.route("/company", companyContractDocuments);
 
 export default crm;

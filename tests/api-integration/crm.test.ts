@@ -3195,4 +3195,115 @@ describe("API integration: CRM", () => {
     expect(current?.valueCents).toBe(100_000);
     expect(body.commission).toEqual({ monthCents: 0, forecastCents: 0 });
   });
+
+  it("attaches documents to a contract, lists them per company and opens them back", async () => {
+    const member = await seedCrmWorkspace();
+    mockAuthenticatedSession(member.user);
+    const { app } = createApp();
+    const workspaceId = member.workspace.id;
+    const { companyId } = await seedWonDeal(app, workspaceId);
+    const contract = (await (
+      await post(app, "/api/crm/contract", {
+        workspaceId,
+        companyId,
+        title: "Retainer",
+        startsAt: "2026-01-01T12:00:00.000Z",
+        monthlyValueCents: 300_000,
+      })
+    ).json()) as { id: string };
+
+    const upload = (file: File, title: string) => {
+      const form = new FormData();
+      form.set("file", file);
+      form.set("title", title);
+      return app.request(
+        `/api/crm/contract/${contract.id}/documents?workspaceId=${workspaceId}`,
+        { method: "POST", body: form },
+      );
+    };
+    const pdf = new File([Buffer.from("%PDF-1.4 contrato")], "contrato.pdf", {
+      type: "application/pdf",
+    });
+
+    const saved = (await (await upload(pdf, "Contrato assinado")).json()) as {
+      id: string;
+      title: string;
+    };
+    expect(saved.title).toBe("Contrato assinado");
+
+    // sem título, tipo errado e conteúdo que não bate com o tipo são recusados
+    expect((await upload(pdf, "  ")).status).toBe(400);
+    expect(
+      (
+        await upload(
+          new File([Buffer.from("MZ")], "x.exe", {
+            type: "application/x-msdownload",
+          }),
+          "Programa",
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await upload(
+          new File([Buffer.from("não é pdf")], "falso.pdf", {
+            type: "application/pdf",
+          }),
+          "Falso",
+        )
+      ).status,
+    ).toBe(400);
+
+    const list = (await (
+      await app.request(
+        `/api/crm/contract/${contract.id}/documents?workspaceId=${workspaceId}`,
+      )
+    ).json()) as { id: string }[];
+    expect(list.map((d) => d.id)).toEqual([saved.id]);
+
+    const byCompany = (await (
+      await app.request(
+        `/api/crm/company/${companyId}/contract-documents?workspaceId=${workspaceId}`,
+      )
+    ).json()) as { id: string; contractId: string; title: string }[];
+    expect(byCompany).toHaveLength(1);
+    expect(byCompany[0]?.contractId).toBe(contract.id);
+
+    const file = await app.request(
+      `/api/crm/contract/documents/${saved.id}/file?workspaceId=${workspaceId}`,
+    );
+    expect(file.status).toBe(200);
+    expect(file.headers.get("content-type")).toBe("application/pdf");
+    expect(Buffer.from(await file.arrayBuffer()).toString()).toContain(
+      "%PDF-1.4",
+    );
+
+    // outro workspace não alcança o documento
+    const other = await createWorkspaceMember({ role: "admin" });
+    mockAuthenticatedSession(other.user);
+    expect(
+      (
+        await app.request(
+          `/api/crm/contract/documents/${saved.id}/file?workspaceId=${other.workspace.id}`,
+        )
+      ).status,
+    ).toBe(404);
+
+    mockAuthenticatedSession(member.user);
+    expect(
+      (
+        await app.request(
+          `/api/crm/contract/documents/${saved.id}?workspaceId=${workspaceId}`,
+          { method: "DELETE" },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await app.request(
+          `/api/crm/contract/documents/${saved.id}/file?workspaceId=${workspaceId}`,
+        )
+      ).status,
+    ).toBe(404);
+  });
 });

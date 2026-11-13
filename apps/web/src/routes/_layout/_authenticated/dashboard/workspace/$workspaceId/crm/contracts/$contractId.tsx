@@ -6,6 +6,7 @@ import WorkspaceLayout from "@/components/common/workspace-layout";
 import ContractActionDialog, {
   type ContractActionKind,
 } from "@/components/crm/contract-action-dialog";
+import ContractDocuments from "@/components/crm/contract-documents";
 import ContractStatusBadge from "@/components/crm/contract-status-badge";
 import { BILLING_LABEL_KEY } from "@/components/crm/deal-services-editor";
 import PageTitle from "@/components/page-title";
@@ -257,6 +258,12 @@ function RouteComponent() {
             </div>
           )}
         </section>
+
+        <ContractDocuments
+          workspaceId={workspaceId}
+          contractId={contractId}
+          canEdit={canUpdateDeals()}
+        />
 
         {/* O histórico é o que torna o MRR auditável: cada linha diz quanto o
             contrato contava na receita antes e depois. */}
