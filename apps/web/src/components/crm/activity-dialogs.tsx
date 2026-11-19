@@ -1,5 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import ActivityFilesPicker from "@/components/crm/timeline/activity-files-picker";
 import {
   ACTIVITY_TYPES,
   ActivityIcon,
@@ -24,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadActivityFiles } from "@/fetchers/crm/activity-attachments";
 import {
   useCompleteActivity,
   useCreateActivity,
@@ -86,6 +89,10 @@ export function ActivityFormDialog({
   const [time, setTime] = useState("09:00");
   const [companyId, setCompanyId] = useState(defaults?.companyId ?? "");
   const [ownerUserId, setOwnerUserId] = useState(defaults?.ownerUserId ?? "");
+  const [done, setDone] = useState(false);
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const queryClient = useQueryClient();
   const company = companies?.items.find((entry) => entry.id === companyId);
   const owner = members.find((member) => member.id === ownerUserId);
 
@@ -97,7 +104,7 @@ export function ActivityFormDialog({
       return;
     }
     try {
-      await mutateAsync({
+      const created = await mutateAsync({
         workspaceId,
         type,
         subject: subject.trim(),
@@ -106,11 +113,25 @@ export function ActivityFormDialog({
         ...(defaults?.contactId ? { contactId: defaults.contactId } : {}),
         ...(companyId ? { companyId } : {}),
         ...(ownerUserId ? { ownerUserId } : {}),
-        ...(date
-          ? { dueAt: new Date(`${date}T${time || "09:00"}:00`).toISOString() }
-          : {}),
+        ...(done
+          ? { completedAt: new Date().toISOString() }
+          : date
+            ? { dueAt: new Date(`${date}T${time || "09:00"}:00`).toISOString() }
+            : {}),
       });
-      toast.success("Atividade agendada.");
+      toast.success(done ? "Atendimento registrado." : "Atividade agendada.");
+      if (files.length > 0) {
+        setUploading(true);
+        const failed = await uploadActivityFiles(
+          workspaceId,
+          created.id,
+          files,
+        );
+        setUploading(false);
+        await queryClient.invalidateQueries({ queryKey: ["crm"] });
+        if (failed.length > 0)
+          toast.error(`Não foi possível anexar: ${failed.join(", ")}`);
+      }
       onClose();
     } catch (error) {
       toast.error(errorMessage(error));
@@ -128,10 +149,34 @@ export function ActivityFormDialog({
         <DialogHeader>
           <DialogTitle>Nova atividade</DialogTitle>
           <DialogDescription>
-            Agende o próximo passo com o cliente.
+            {done
+              ? "Registre um atendimento já feito no histórico do cliente."
+              : "Agende o próximo passo com o cliente."}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-4 px-6 pb-2">
+          <div className="flex gap-1 rounded-md border p-1">
+            <Button
+              type="button"
+              size="sm"
+              className="flex-1"
+              variant={done ? "ghost" : "secondary"}
+              aria-pressed={!done}
+              onClick={() => setDone(false)}
+            >
+              Agendar
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              className="flex-1"
+              variant={done ? "secondary" : "ghost"}
+              aria-pressed={done}
+              onClick={() => setDone(true)}
+            >
+              Já realizado
+            </Button>
+          </div>
           <div className="flex flex-wrap gap-1">
             {ACTIVITY_TYPES.map((activityType) => (
               <Button
@@ -166,7 +211,7 @@ export function ActivityFormDialog({
               </p>
             )}
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className={done ? "hidden" : "grid gap-3 sm:grid-cols-2"}>
             <div className="space-y-2">
               <Label htmlFor="activity-date">Data</Label>
               <Input
@@ -232,6 +277,12 @@ export function ActivityFormDialog({
               </Select>
             </div>
           </div>
+          {!companyId && !defaults?.dealId && !defaults?.contactId ? (
+            <p className="text-xs text-muted-foreground">
+              Escolha a empresa para esta atividade aparecer no histórico do
+              cliente.
+            </p>
+          ) : null}
           {defaults?.dealId ? (
             <p className="text-xs text-muted-foreground">
               Vinculada ao mesmo negócio da atividade anterior.
@@ -246,12 +297,13 @@ export function ActivityFormDialog({
               onChange={(event) => setBody(event.target.value)}
             />
           </div>
+          <ActivityFilesPicker files={files} onChange={setFiles} />
           <DialogFooter className="px-0">
             <Button type="button" variant="ghost" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isPending}>
-              Agendar
+            <Button type="submit" disabled={isPending || uploading}>
+              {done ? "Registrar" : "Agendar"}
             </Button>
           </DialogFooter>
         </form>
