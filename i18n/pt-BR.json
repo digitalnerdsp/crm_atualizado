@@ -2134,6 +2134,8 @@
 			"allStatuses": "Todas"
 		},
 		"timeline": {
+			"history": "Histórico",
+			"attach": "Anexar arquivo",
 			"title": "Timeline",
 			"empty": "Nada registrado ainda.",
 			"today": "Hoje",

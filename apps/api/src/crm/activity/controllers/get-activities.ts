@@ -11,7 +11,9 @@ import {
 } from "drizzle-orm";
 import db from "../../../database";
 import {
+  crmActivityAttachmentTable,
   crmActivityTable,
+  crmContactTable,
   crmDealTable,
   userTable,
 } from "../../../database/schema";
@@ -66,12 +68,45 @@ async function getActivities({
           ),
         );
 
+  // Histórico do cliente: tudo o que a equipe registrou sobre a empresa, direto
+  // nela ou nos negócios e contatos dela. Quem abre a empresa vê o histórico
+  // inteiro, não só as atividades que são suas.
+  const companyScope = companyId
+    ? or(
+        eq(crmActivityTable.companyId, companyId),
+        inArray(
+          crmActivityTable.dealId,
+          db
+            .select({ id: crmDealTable.id })
+            .from(crmDealTable)
+            .where(
+              allOf(
+                eq(crmDealTable.workspaceId, workspaceId),
+                eq(crmDealTable.companyId, companyId),
+              ),
+            ),
+        ),
+        inArray(
+          crmActivityTable.contactId,
+          db
+            .select({ id: crmContactTable.id })
+            .from(crmContactTable)
+            .where(
+              allOf(
+                eq(crmContactTable.workspaceId, workspaceId),
+                eq(crmContactTable.companyId, companyId),
+              ),
+            ),
+        ),
+      )
+    : undefined;
+
   const where = allOf(
     eq(crmActivityTable.workspaceId, workspaceId),
-    ownScope,
+    companyId ? undefined : ownScope,
     dealId ? eq(crmActivityTable.dealId, dealId) : undefined,
     contactId ? eq(crmActivityTable.contactId, contactId) : undefined,
-    companyId ? eq(crmActivityTable.companyId, companyId) : undefined,
+    companyScope,
     ownerUserId ? eq(crmActivityTable.ownerUserId, ownerUserId) : undefined,
     pendingOnly ? isNull(crmActivityTable.completedAt) : undefined,
     dueBefore ? lte(crmActivityTable.dueAt, dueBefore) : undefined,
@@ -108,11 +143,37 @@ async function getActivities({
     .limit(pageSize)
     .offset(offset ?? 0);
 
+  const files =
+    rows.length === 0
+      ? []
+      : await db
+          .select({
+            id: crmActivityAttachmentTable.id,
+            activityId: crmActivityAttachmentTable.activityId,
+            filename: crmActivityAttachmentTable.filename,
+            contentType: crmActivityAttachmentTable.contentType,
+            sizeBytes: crmActivityAttachmentTable.sizeBytes,
+          })
+          .from(crmActivityAttachmentTable)
+          .where(
+            inArray(
+              crmActivityAttachmentTable.activityId,
+              rows.map((row) => row.activity.id),
+            ),
+          )
+          .orderBy(asc(crmActivityAttachmentTable.createdAt));
+
   return {
     total: total?.value ?? 0,
     limit: pageSize,
     offset: offset ?? 0,
-    items: rows.map((row) => ({ ...row.activity, owner: row.owner })),
+    items: rows.map((row) => ({
+      ...row.activity,
+      owner: row.owner,
+      attachments: files
+        .filter((file) => file.activityId === row.activity.id)
+        .map(({ activityId: _activityId, ...file }) => file),
+    })),
   };
 }
 

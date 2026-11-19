@@ -1,5 +1,7 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import ActivityFilesPicker from "@/components/crm/timeline/activity-files-picker";
 import {
   ACTIVITY_TYPES,
   ActivityIcon,
@@ -8,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { uploadActivityFiles } from "@/fetchers/crm/activity-attachments";
 import { useCreateActivity } from "@/hooks/mutations/crm/use-crm-contact-mutations";
 import { toast } from "@/lib/toast";
 
@@ -30,6 +33,9 @@ export function ActivityComposer({
 }: ActivityComposerProps) {
   const { t } = useTranslation();
   const { mutateAsync, isPending } = useCreateActivity();
+  const queryClient = useQueryClient();
+  const [files, setFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
 
   const [type, setType] = useState<CrmActivityType>("note");
   const [subject, setSubject] = useState("");
@@ -43,7 +49,7 @@ export function ActivityComposer({
     if (!subject.trim()) return;
 
     try {
-      await mutateAsync({
+      const created = await mutateAsync({
         workspaceId,
         type,
         subject: subject.trim(),
@@ -59,6 +65,19 @@ export function ActivityComposer({
       setBody("");
       setDueAt("");
       toast.success(t("crm:timeline.logged"));
+      if (files.length > 0) {
+        setUploading(true);
+        const failed = await uploadActivityFiles(
+          workspaceId,
+          created.id,
+          files,
+        );
+        setUploading(false);
+        setFiles([]);
+        await queryClient.invalidateQueries({ queryKey: ["crm"] });
+        if (failed.length > 0)
+          toast.error(`Não foi possível anexar: ${failed.join(", ")}`);
+      }
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : t("crm:timeline.logError"),
@@ -105,6 +124,8 @@ export function ActivityComposer({
             rows={3}
           />
 
+          <ActivityFilesPicker files={files} onChange={setFiles} />
+
           <div className="flex flex-wrap items-center justify-between gap-2">
             <label
               htmlFor="crm-activity-due"
@@ -119,7 +140,7 @@ export function ActivityComposer({
                 className="h-8 w-40"
               />
             </label>
-            <Button type="submit" size="sm" disabled={isPending}>
+            <Button type="submit" size="sm" disabled={isPending || uploading}>
               {isScheduling
                 ? t("crm:timeline.schedule")
                 : t("crm:timeline.log")}

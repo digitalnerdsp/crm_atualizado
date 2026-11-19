@@ -3306,4 +3306,168 @@ describe("API integration: CRM", () => {
       ).status,
     ).toBe(404);
   });
+
+  it("builds the client history from deal and contact activities and takes attachments", async () => {
+    const admin = await seedCrmWorkspace();
+    mockAuthenticatedSession(admin.user);
+    const { app } = createApp();
+    const workspaceId = admin.workspace.id;
+    const { companyId, dealId } = await seedWonDeal(app, workspaceId);
+
+    const [colleague] = await db
+      .insert(schema.userTable)
+      .values({
+        id: "user-seller",
+        email: "seller@example.com",
+        emailVerified: true,
+        name: "Seller",
+      })
+      .returning();
+    await db.insert(schema.workspaceUserTable).values({
+      workspaceId,
+      userId: colleague.id,
+      role: "sales",
+      joinedAt: new Date(),
+    });
+    await db.insert(schema.workspaceRoleTable).values({
+      workspaceId,
+      role: "sales",
+      permission: JSON.stringify(defaultRolePayloads.sales),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const [contact] = await db
+      .select()
+      .from(schema.crmContactTable)
+      .where(eq(schema.crmContactTable.companyId, companyId));
+
+    const log = async (extra: Record<string, unknown>) =>
+      (await (
+        await post(app, "/api/crm/activity", {
+          workspaceId,
+          type: "note",
+          completedAt: new Date().toISOString(),
+          ...extra,
+        })
+      ).json()) as { id: string };
+
+    // registradas pelo negócio e pelo contato, sem a empresa informada
+    const onDeal = await log({ subject: "Ligação no negócio", dealId });
+    await log({ subject: "Conversa com o contato", contactId: contact.id });
+    await log({ subject: "Direto na empresa", companyId });
+    await log({ subject: "De outro cliente" });
+
+    const history = async () =>
+      (
+        (await (
+          await app.request(
+            `/api/crm/activity?workspaceId=${workspaceId}&companyId=${companyId}`,
+          )
+        ).json()) as { items: { subject: string; attachments: unknown[] }[] }
+      ).items.map((a) => a.subject);
+
+    expect((await history()).sort()).toEqual([
+      "Conversa com o contato",
+      "Direto na empresa",
+      "Ligação no negócio",
+    ]);
+
+    // o vendedor vê o histórico inteiro do cliente, não só o que é dele
+    mockAuthenticatedSession(colleague);
+    expect((await history()).sort()).toEqual([
+      "Conversa com o contato",
+      "Direto na empresa",
+      "Ligação no negócio",
+    ]);
+    mockAuthenticatedSession(admin.user);
+
+    // anexos: PDF e imagem entram, outro tipo e conteúdo falso não
+    const upload = (file: File) => {
+      const form = new FormData();
+      form.set("file", file);
+      return app.request(
+        `/api/crm/activity/${onDeal.id}/attachments?workspaceId=${workspaceId}`,
+        { method: "POST", body: form },
+      );
+    };
+    const pdf = await upload(
+      new File([Buffer.from("%PDF-1.4 ata")], "ata.pdf", {
+        type: "application/pdf",
+      }),
+    );
+    expect(pdf.status).toBe(200);
+    const saved = (await pdf.json()) as { id: string };
+    expect(
+      (
+        await upload(
+          new File([Buffer.from([0x89, 0x50, 0x4e, 0x47, 1, 2, 3])], "p.png", {
+            type: "image/png",
+          }),
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await upload(
+          new File([Buffer.from("MZ")], "x.exe", {
+            type: "application/x-msdownload",
+          }),
+        )
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await upload(
+          new File([Buffer.from("falso")], "f.pdf", {
+            type: "application/pdf",
+          }),
+        )
+      ).status,
+    ).toBe(400);
+
+    const listed = (await (
+      await app.request(
+        `/api/crm/activity?workspaceId=${workspaceId}&companyId=${companyId}`,
+      )
+    ).json()) as { items: { id: string; attachments: { id: string }[] }[] };
+    expect(
+      listed.items.find((a) => a.id === onDeal.id)?.attachments,
+    ).toHaveLength(2);
+
+    const file = await app.request(
+      `/api/crm/activity/attachments/${saved.id}/file?workspaceId=${workspaceId}`,
+    );
+    expect(file.status).toBe(200);
+    expect(file.headers.get("content-type")).toBe("application/pdf");
+
+    // outro workspace não alcança o arquivo
+    const other = await createWorkspaceMember({ role: "admin" });
+    mockAuthenticatedSession(other.user);
+    expect(
+      (
+        await app.request(
+          `/api/crm/activity/attachments/${saved.id}/file?workspaceId=${other.workspace.id}`,
+        )
+      ).status,
+    ).toBe(404);
+    mockAuthenticatedSession(admin.user);
+
+    // apagar a atividade leva os anexos junto
+    expect(
+      (
+        await app.request(
+          `/api/crm/activity/${onDeal.id}?workspaceId=${workspaceId}`,
+          { method: "DELETE" },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await app.request(
+          `/api/crm/activity/attachments/${saved.id}/file?workspaceId=${workspaceId}`,
+        )
+      ).status,
+    ).toBe(404);
+  });
 });

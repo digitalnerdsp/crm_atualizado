@@ -2134,6 +2134,8 @@
 			"allStatuses": "All"
 		},
 		"timeline": {
+			"history": "History",
+			"attach": "Attach file",
 			"title": "Timeline",
 			"empty": "Nothing logged yet.",
 			"today": "Today",

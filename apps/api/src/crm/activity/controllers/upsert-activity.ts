@@ -2,8 +2,13 @@ import { and, asc, desc, eq, gt, isNotNull, isNull } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import db from "../../../database";
 import type { CrmActivityType } from "../../../database/schema";
-import { crmActivityTable, crmDealTable } from "../../../database/schema";
+import {
+  crmActivityAttachmentTable,
+  crmActivityTable,
+  crmDealTable,
+} from "../../../database/schema";
 import { publishEvent } from "../../../events";
+import { removeCrmFile } from "../../shared/store-upload";
 
 export type ActivityInput = {
   type?: CrmActivityType;
@@ -241,6 +246,17 @@ export async function deleteActivity({
   workspaceId: string;
   activityId: string;
 }) {
+  // Os registros dos anexos caem junto (cascade); os arquivos, não.
+  const files = await db
+    .select({ storageKey: crmActivityAttachmentTable.storageKey })
+    .from(crmActivityAttachmentTable)
+    .where(
+      and(
+        eq(crmActivityAttachmentTable.activityId, activityId),
+        eq(crmActivityAttachmentTable.workspaceId, workspaceId),
+      ),
+    );
+
   const deleted = await db.transaction(async (tx) => {
     const [row] = await tx
       .delete(crmActivityTable)
@@ -260,6 +276,8 @@ export async function deleteActivity({
   if (!deleted) {
     throw new HTTPException(404, { message: "Activity not found" });
   }
+
+  await Promise.all(files.map((file) => removeCrmFile(file.storageKey)));
 
   return deleted;
 }

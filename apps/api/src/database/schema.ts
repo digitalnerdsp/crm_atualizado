@@ -3988,3 +3988,43 @@ export const crmContractAttachmentTable = pgTable(
     index("crm_contract_attachment_workspaceId_idx").on(table.workspaceId),
   ],
 );
+
+/* Arquivos (imagem ou PDF) anexados a uma atividade do CRM: print de conversa,
+ * foto, ata. O arquivo fica no volume de uploads. */
+export const crmActivityAttachmentTable = pgTable(
+  "crm_activity_attachment",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    activityId: text("activity_id")
+      .notNull()
+      .references(() => crmActivityTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    filename: text("filename").notNull(),
+    contentType: text("content_type").notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    storageKey: text("storage_key").notNull(),
+    uploadedBy: text("uploaded_by").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("crm_activity_attachment_activityId_idx").on(table.activityId),
+    index("crm_activity_attachment_workspaceId_idx").on(table.workspaceId),
+  ],
+);

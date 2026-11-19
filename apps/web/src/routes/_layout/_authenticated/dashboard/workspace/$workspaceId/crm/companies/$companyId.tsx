@@ -425,7 +425,9 @@ function RouteComponent() {
           </section>
 
           <section className="mb-4 break-inside-avoid space-y-3 rounded-xl border bg-card p-4">
-            <h2 className="text-sm font-semibold">{t("crm:timeline.title")}</h2>
+            <h2 className="text-sm font-semibold">
+              {t("crm:timeline.history")}
+            </h2>
             <CrmTimeline workspaceId={workspaceId} companyId={companyId} />
           </section>
         </div>

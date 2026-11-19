@@ -14,8 +14,13 @@ import {
 
 type Props = {
   workspaceId: string;
-  document: ContractDocument | null;
+  document: Pick<
+    ContractDocument,
+    "id" | "title" | "filename" | "contentType"
+  > | null;
   onClose: () => void;
+  /** Por padrão busca o documento de um contrato; outras origens passam a sua. */
+  load?: (workspaceId: string, documentId: string) => Promise<Blob>;
 };
 
 /** Mostra o documento na própria tela, sem baixar: PDF e imagem abrem aqui. */
@@ -23,6 +28,7 @@ export default function ContractDocumentViewer({
   workspaceId,
   document,
   onClose,
+  load = fetchContractDocumentBlob,
 }: Props) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +40,7 @@ export default function ContractDocumentViewer({
     let cancelled = false;
     setUrl(null);
     setError(null);
-    fetchContractDocumentBlob(workspaceId, documentId)
+    load(workspaceId, documentId)
       .then((blob) => {
         if (cancelled) return;
         objectUrl = URL.createObjectURL(blob);
@@ -47,7 +53,7 @@ export default function ContractDocumentViewer({
       cancelled = true;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [workspaceId, documentId]);
+  }, [workspaceId, documentId, load]);
 
   const isPdf = document?.contentType === "application/pdf";
 

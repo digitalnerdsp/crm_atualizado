@@ -1,9 +1,16 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Check, Clock } from "lucide-react";
+import { Check, Clock, FileText, ImageIcon, Paperclip } from "lucide-react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import ContractDocumentViewer from "@/components/crm/contract-document-viewer";
 import { ActivityIcon } from "@/components/crm/timeline/activity-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import {
+  fetchActivityAttachmentBlob,
+  uploadActivityFiles,
+} from "@/fetchers/crm/activity-attachments";
 import { useCompleteActivity } from "@/hooks/mutations/crm/use-crm-contact-mutations";
 import { getInitials } from "@/lib/get-initials";
 import { toast } from "@/lib/toast";
@@ -22,6 +29,21 @@ export function ActivityRow({
 }: ActivityRowProps) {
   const { t } = useTranslation();
   const { mutateAsync: complete, isPending } = useCompleteActivity();
+  const queryClient = useQueryClient();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [viewing, setViewing] = useState<
+    CrmActivity["attachments"][number] | null
+  >(null);
+
+  async function addFiles(list: FileList | null) {
+    const files = Array.from(list ?? []);
+    if (inputRef.current) inputRef.current.value = "";
+    if (files.length === 0) return;
+    const failed = await uploadActivityFiles(workspaceId, activity.id, files);
+    await queryClient.invalidateQueries({ queryKey: ["crm"] });
+    if (failed.length > 0)
+      toast.error(`Não foi possível anexar: ${failed.join(", ")}`);
+  }
 
   const isPendingActivity = activity.completedAt === null;
   const isOverdue =
@@ -60,6 +82,47 @@ export function ActivityRow({
           <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
             {activity.body}
           </p>
+        ) : null}
+
+        {activity.attachments.length > 0 || !readOnly ? (
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {activity.attachments.map((file) => (
+              <button
+                key={file.id}
+                type="button"
+                onClick={() => setViewing(file)}
+                className="inline-flex max-w-52 items-center gap-1.5 rounded-md border bg-muted/40 px-2 py-1 text-xs font-medium hover:bg-muted"
+              >
+                {file.contentType === "application/pdf" ? (
+                  <FileText className="size-3.5 shrink-0" />
+                ) : (
+                  <ImageIcon className="size-3.5 shrink-0" />
+                )}
+                <span className="truncate">{file.filename}</span>
+              </button>
+            ))}
+            {readOnly ? null : (
+              <>
+                <input
+                  ref={inputRef}
+                  type="file"
+                  multiple
+                  hidden
+                  accept="application/pdf,image/*"
+                  onChange={(event) => addFiles(event.target.files)}
+                />
+                <button
+                  type="button"
+                  title={t("crm:timeline.attach")}
+                  aria-label={t("crm:timeline.attach")}
+                  onClick={() => inputRef.current?.click()}
+                  className="inline-flex items-center rounded-md border border-dashed px-1.5 py-1 text-muted-foreground hover:bg-muted"
+                >
+                  <Paperclip className="size-3.5" />
+                </button>
+              </>
+            )}
+          </div>
         ) : null}
 
         <div className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
@@ -105,6 +168,12 @@ export function ActivityRow({
           <span className="hidden sm:inline">{t("crm:timeline.complete")}</span>
         </Button>
       ) : null}
+      <ContractDocumentViewer
+        workspaceId={workspaceId}
+        document={viewing ? { ...viewing, title: viewing.filename } : null}
+        load={fetchActivityAttachmentBlob}
+        onClose={() => setViewing(null)}
+      />
     </li>
   );
 }
