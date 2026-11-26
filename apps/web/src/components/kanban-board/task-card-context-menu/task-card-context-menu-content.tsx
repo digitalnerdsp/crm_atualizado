@@ -76,7 +76,8 @@ export default function TaskCardContextMenuContent({
   const { mutateAsync: updateTaskTitle } = useUpdateTaskTitle();
   const { mutateAsync: updateTaskDescription } = useUpdateTaskDescription();
   const { mutateAsync: updateTaskDueDate } = useUpdateTaskDueDate();
-  const { canManageTasks, canAssignTasks } = useWorkspacePermission();
+  const { canManageTasks, canAssignTasks, canDeleteTasks } =
+    useWorkspacePermission();
   const canEdit = canManageTasks();
   const canAssign = canAssignTasks();
 
@@ -335,19 +336,23 @@ export default function TaskCardContextMenuContent({
             <span>{t("tasks:actions.markAsPlanned")}</span>
           </ContextMenuItem>
 
-          <ContextMenuSeparator />
+          {canDeleteTasks() && (
+            <>
+              <ContextMenuSeparator />
 
-          <ContextMenuItem
-            className="text-destructive"
-            onClick={(e) => {
-              e.preventDefault();
-              setTimeout(() => {
-                onDeleteClick();
-              }, 0);
-            }}
-          >
-            <span>{t("tasks:actions.delete")}</span>
-          </ContextMenuItem>
+              <ContextMenuItem
+                className="text-destructive"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setTimeout(() => {
+                    onDeleteClick();
+                  }, 0);
+                }}
+              >
+                <span>{t("tasks:actions.delete")}</span>
+              </ContextMenuItem>
+            </>
+          )}
         </>
       )}
     </ContextMenuContent>

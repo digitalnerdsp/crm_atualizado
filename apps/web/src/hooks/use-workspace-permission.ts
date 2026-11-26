@@ -34,7 +34,10 @@ const CAPABILITIES = {
   viewProjects: { project: ["read"] },
   createProjects: { project: ["create"] },
   deleteProjects: { project: ["delete"] },
-  manageTasks: { task: ["create", "update", "delete"] },
+  // "manageTasks" = poder editar/mover cards (task:update). Criar e excluir têm
+  // capacidades próprias, para um vendedor poder criar e editar sem excluir.
+  manageTasks: { task: ["update"] },
+  deleteTasks: { task: ["delete"] },
   createTasks: { task: ["create"] },
   updateTasks: { task: ["update"] },
   assignTasks: { task: ["assign"] },
@@ -167,6 +170,7 @@ export function useWorkspacePermission() {
       canCreateProjects: () => can.createProjects,
       canDeleteProjects: () => can.deleteProjects,
       canManageTasks: () => can.manageTasks,
+      canDeleteTasks: () => can.deleteTasks,
       canCreateTasks: () => can.createTasks,
       canUpdateTasks: () => can.updateTasks,
       canAssignTasks: () => can.assignTasks,
