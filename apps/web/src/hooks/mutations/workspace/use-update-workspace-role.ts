@@ -1,37 +1,20 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { authClient } from "@/lib/auth-client";
+import { updateWorkspaceRolePermissions } from "@/fetchers/workspace/roles";
 
 type UpdateWorkspaceRoleRequest = {
   workspaceId: string;
   roleName: string;
   permission: Record<string, string[]>;
 };
-type OrganizationRoleClient = {
-  updateRole(input: {
-    organizationId: string;
-    roleName: string;
-    data: { permission: Record<string, string[]> };
-  }): Promise<{ data: unknown; error: { message?: string } | null }>;
-};
-
 function useUpdateWorkspaceRole() {
   const queryClient = useQueryClient();
-  const organization =
-    authClient.organization as unknown as OrganizationRoleClient;
   return useMutation({
     mutationFn: async ({
       workspaceId,
       roleName,
       permission,
-    }: UpdateWorkspaceRoleRequest) => {
-      const { data, error } = await organization.updateRole({
-        organizationId: workspaceId,
-        roleName,
-        data: { permission },
-      });
-      if (error) throw new Error(error.message || "Failed to update role");
-      return data;
-    },
+    }: UpdateWorkspaceRoleRequest) =>
+      updateWorkspaceRolePermissions(workspaceId, roleName, permission),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({
         queryKey: ["workspace-roles", variables.workspaceId],

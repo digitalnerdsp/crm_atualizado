@@ -4,6 +4,7 @@ import * as v from "valibot";
 import { requireWorkspacePermission } from "../utils/require-workspace-permission";
 import { workspaceAccess } from "../utils/workspace-access-middleware";
 import getWorkspaceMembersCtrl from "./controllers/get-workspace-members";
+import { workspaceRoles } from "./role-routes";
 
 const workspace = new Hono<{
   Variables: {
@@ -47,5 +48,8 @@ const workspace = new Hono<{
     return c.json(members);
   },
 );
+
+// Fora da cadeia tipada: o front usa fetch (ver fetchers/workspace/roles).
+workspace.route("/", workspaceRoles);
 
 export default workspace;
